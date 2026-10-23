@@ -1,0 +1,228 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{brand}} GEO Readiness Report · {{domain}}</title>
+<meta name="description" content="GEO on-site readiness report for {{domain}}: readiness {{overall_score}}/100 ({{grade}}).">
+<style>{{style}}</style></head><body>
+<div class="topbar"><div class="topbar-in">
+  <span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="doc">{{brand}} · GEO on-site readiness assessment · {{domain}}</span>
+  <span class="right"><span class="now">Section <b id="now-page">01 / {{total_pages_pad}}</b></span>
+  <button class="btn" type="button" onclick="document.getElementById('index').classList.add('show')">Index</button></span>
+</div><div class="progress"><i></i></div></div>
+
+<div class="deck">
+<!-- 1 cover -->
+<section class="page page-dark cover" id="p1" data-page="1" aria-label="Section 1 of {{total_pages}}">
+  <div class="cover-top"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#fff"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="#312E81"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="#312E81" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="#312E81" opacity=".62"/></svg><b>GEO Checker</b></span>
+    <span class="cover-no mono">Beansmile · GEO Checker</span></div>
+  <div class="cover-mid">
+    <div class="pkicker light">Generative Engine Optimization · Technical &amp; content readiness assessment</div>
+    <h1>{{brand}}<br>GEO Readiness Report</h1>
+    <p class="cover-sub">Checks whether your website states clearly who you are, what you offer and where your numbers come from — the foundation for AI to understand, trust and recommend you.</p>
+    <div class="cover-score"><div class="cbig">{{overall_score}}<small>/100</small><em>On-site readiness {{grade}}</em></div><div><div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{{overall_score}}%"></span></div>
+    <div class="cm-scale"><span>0</span><span>Pass 60</span><span>Good 80</span><span>100</span></div></div><p class="cover-score-note">Below 60 means not ready. This is not a search ranking, and it does not measure how often AI actually mentions you.</p></div></div>
+  </div>
+  <dl class="cover-facts">
+    <div class="wide"><dt>Site</dt><dd class="mono">{{url}}</dd></div>
+    <div><dt>Report date</dt><dd class="mono">{{date}}</dd></div>
+    <div><dt>Scope</dt><dd>{{sitemap_count}} pages found, {{sampled_count}} key pages sampled</dd></div>
+    <div><dt>Grade scale</dt><dd class="mono">A+&ge;90 · A&ge;80 · B&ge;70 · C&ge;60 · D&lt;60</dd></div>
+  </dl>
+  <div class="cover-sev"><div class="sevstrip"><div class="ss-track">{{sev_strip}}</div><div class="ss-legend">{{sev_legend}}</div></div></div>
+  <div class="cover-sign"><span>Prepared by Beansmile · GEO Checker</span><span class="mono">{{total_pages}} sections</span></div><p class="cover-read">Only have 5 minutes? Read the Overall assessment, Priority actions and Conclusion pages.</p>
+</section>
+
+<!-- 2 orientation -->
+<section class="page" id="p2" data-page="2" aria-label="Section 2 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">Orientation</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 02 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">Orientation</div><h2>Read this report in three minutes</h2></div></div>
+  <div class="nextgrid">
+    <div><span class="dimcell-n mono">1 · What we checked</span><p>Whether your website can be understood, trusted and cited by AI search and answer engines such as ChatGPT, Perplexity and Google AI Overviews.</p></div>
+    <div><span class="dimcell-n mono">2 · What {{overall_score}} / 100 ({{grade}}) means</span><p>It is not an exam grade or a search ranking. It reports whether the site states clearly who the brand is and whether its content can be used as fact — and whether AI can read and trust it.</p></div>
+    <div><span class="dimcell-n mono">3 · Why it matters now</span><p>Buyers are shifting from search engines to asking AI directly. Which supplier AI recommends depends on whose website it can read and trust.</p></div>
+    <div><span class="dimcell-n mono">4 · What you need to do</span><p>Most issues are one-off legacy problems: a single focused clean-up resolves the majority. Start with the action list under Priority actions.</p></div>
+  </div>
+  <div class="sublab">How to read this report</div>
+  <div class="readguide">
+    <div><b>Quick scan</b><span class="mono">~3 min</span><p>This page &rarr; Overall assessment &rarr; Action list &rarr; Conclusion.</p></div>
+    <div><b>Full read</b><span class="mono">~30 min</span><p>Overall assessment &rarr; Key findings &rarr; Dimension assessment &rarr; Action list.</p></div>
+    <div><b>Technical reference</b><span class="mono">as needed</span><p>Scoring method, dimension assessment, and reference code for your web vendor.</p></div>
+  </div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 3 index -->
+<section class="page" id="p3" data-page="3" aria-label="Section 3 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">Report index</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 03 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">Report index</div><h2>Contents</h2></div>
+  <div class="pmeta mono dim">{{total_pages}} sections</div></div>
+  <ol class="toc">
+    <li><span class="n mono">04</span><a href="#p4">Overall assessment</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">05</span><a href="#p5">What's already working</a><span class="dots"></span><span class="c mono">02</span></li>
+    <li><span class="n mono">06</span><a href="#p6">Scoring method (reproducible)</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">07</span><a href="#p7">Key findings</a><span class="dots"></span><span class="c mono">03</span></li>
+    {{toc_findings_html}}
+    <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">Dimension assessment</a><span class="dots"></span><span class="c mono">04</span></li>
+    {{toc_dims_html}}
+    <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">Priority actions</a><span class="dots"></span><span class="c mono">05</span></li>
+    <li><span class="n mono">{{p_scope}}</span><a href="#p{{p_scope}}">Scope</a><span class="dots"></span><span class="c mono">06</span></li>
+    <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">Conclusion</a><span class="dots"></span><span class="c mono">07</span></li>
+    <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">Appendix · Glossary</a><span class="dots"></span><span class="c mono">A</span></li>
+  </ol>
+  <p class="note">To navigate: scroll, or press &larr; / &rarr; to move a section, ESC to open the index. Each section is self-contained.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 4 overall -->
+<section class="page" id="p4" data-page="4" aria-label="Section 4 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 Overall assessment</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 04 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 Overall assessment</div><h2>On-site GEO readiness: {{overall_score}} / 100 ({{grade}})</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="narr lead">{{overall_summary}}</div>
+  <div class="sublab">How these issues break down</div>
+  <div class="statlist">
+    <div><span class="statn">Issue composition</span><p>This round detected <b>{{findings_count}}</b> findings, of which <b>{{advisory_count}}</b> are advisory and not scored. Most stem from the same small set of root causes, so one focused clean-up removes the bulk of them.</p></div>
+    <div><span class="statn">Impact</span><p>These issues make it harder for AI and search engines to confirm <b>who the brand is and whether a given passage can be treated as fact</b>. Whether they reduce how often ChatGPT, Perplexity or Google AI Overviews name you was not measured here; that remains an inference to be verified later.</p></div>
+  </div>
+  <div class="callout"><b>One-line conclusion</b><p>{{closing}}</p></div>
+  <p class="note">The score in this report measures readiness to be correctly understood, trusted and cited by generative search engines. It is not a ranking or traffic outcome.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 5 strengths -->
+<section class="page" id="p5" data-page="5" aria-label="Section 5 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">02 What's already working</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 05 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">02 What's already working</div><h2>Existing foundations</h2></div></div>
+  <ul class="plain">{{#strengths}}<li>{{.}}</li>{{/strengths}}</ul>
+  <p class="note">These are the existing foundations confirmed as sound during the assessment. Keep them intact through any changes.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 6 method -->
+<section class="page" id="p6" data-page="6" aria-label="Section 6 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 Overall assessment · Scoring method</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 06 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 Overall assessment · Scoring method</div><h2>How the {{overall_score}} / 100 readiness score is calculated</h2>
+    <div class="pmeta-line"><span>All figures come from this assessment's scoring record and can be checked line by line</span></div></div>
+    <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="method">
+    <div>
+      <span class="statn">Step 1 · Nine dimension scores (capped at each maximum)</span>
+      <table class="mtable"><thead><tr><th>Dimension</th><th>Score</th><th>Max</th><th class="r">Grade</th></tr></thead>
+      <tbody>{{#dim_pages}}<tr><td>{{name}}</td><td class="num mono">{{score}}</td><td class="dim mono">/{{max}}</td><td class="dim mono r">{{grade}}</td></tr>{{/dim_pages}}<tr class="total"><td>Dimension total</td><td class="num mono">{{dim_sum}}</td><td class="dim mono">/100</td><td class="r"></td></tr></tbody></table>
+    </div>
+    <div>
+      <div class="stepbox"><span class="statn">Step 2 · Ceilings and adjustments</span>
+        {{#adj_rows}}<p>{{type}} <b>{{points}}</b>: {{reason}}</p>{{/adj_rows}}
+        {{ceiling_block}}
+        {{adj_note}}</div>
+      <div class="stepbox"><span class="statn">Step 3 · Calculation</span>
+        <p class="calc mono">Final score = <b>{{overall_score}}</b> / 100 ({{grade}})</p>
+        <p>{{calc_rule}}</p>
+        <p>Governance penalties are already folded into the dimension scores (the same root cause is counted once), so the nine-dimension sum already reflects them.</p></div>
+    </div>
+  </div>
+  <p class="note">Grade scale: A+ 90 and above · A 80–89 · B 70–79 · C 60–69 · D below 60. The score is meant to locate weaknesses and order fixes, not to compare you against other sites.</p>
+  <div class="sublab">Scope boundaries and where the thresholds come from</div>
+  <ul class="plain">
+    <li>This score is <b>on-site GEO readiness (technical and content readiness)</b>: how prepared the site is to be correctly understood, trusted and cited by generative search engines.</li>
+    <li>Title and meta description length, number of headings per page and similar items are <b>hygiene checks</b> used to keep the assessment consistent. They are not hard search engine requirements. What matters is whether content can be cited as a block and carries verifiable facts.</li>
+    <li>Checked against official guidance: Google states meta descriptions have no fixed length limit (longer ones are simply truncated in display); structured data is not a general ranking factor; FAQ rich results stopped showing on 7 May 2026 (the Search Console report retired in June 2026 and API support in August 2026), and HowTo rich results were retired in 2023; an organisation's official accounts (sameAs) and contact points (contactPoint) are recommended where applicable, not required.</li>
+  </ul><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 7 findings overview -->
+<section class="page" id="p7" data-page="7" aria-label="Section 7 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 Key findings</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 07 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">03 Key findings</div><h2>The {{findings_count}} issues to prioritise</h2></div>
+  <div class="pmeta mono dim">Ordered by impact</div></div>
+  <ol class="toc">{{toc_findings_html}}</ol>
+  <p class="note">Each issue has its own page with the original evidence and a recommended fix; some include paste-ready reference code (examples only — replace with your real values).</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- findings (one page each) -->
+{{#findings}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="Section {{page}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 Key findings · {{n}}</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{page_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">Key finding · {{n}}</div><h2>{{title}}</h2>
+  <div class="pmeta-line"><span class="owner {{owner_class}}">Owner · {{owner}}</span><span>{{evcount}} evidence items</span></div></div>
+  <div class="pmeta">{{sev_span}}</div></div>
+  <div class="impact"><b>What this means for you</b><p>{{impact}}</p></div>
+  <p class="fix lead-fix">{{solution}}</p>
+  {{evidence_html}}
+  {{code_html}}
+  <footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>{{/findings}}
+
+<!-- dimension overview -->
+<section class="page" id="p{{p_dims_index}}" data-page="{{p_dims_index}}" aria-label="Section {{p_dims_index}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 Dimension assessment</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_dims_index_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">04 Dimension assessment</div><h2>Nine dimensions: scores and headroom</h2></div>
+  <div class="pmeta mono dim">Out of 100</div></div>
+  <figure class="chart" role="img" aria-label="Scores and headroom across the nine dimensions"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
+    <div class="lc-track"><span class="lc-fill" style="width:{{pct}}%;background:{{bar}}"></span><span class="lc-space" style="width:{{remaining}}%"></span></div>
+    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>The dark bar is the current score; the light bar is the remaining headroom. Each bar is scaled to that dimension's own maximum (15 / 10 / 5).</figcaption></figure>
+  <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- dimensions (one page each) -->
+{{#dim_pages}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="Section {{page}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 Dimension · {{idx}}</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{page_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">Dimension assessment · {{idx}}</div><h2>{{name}}</h2></div>
+  <div class="pmeta"><span class="scorechip {{c_class}}"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></span></div></div>
+  <div class="mini"><i style="width:{{pct}}%;background:{{bar}}"></i></div>
+  <div class="narr">{{narr}}</div>
+  <div class="sublab">Main findings in this dimension</div>{{findings_html}}
+  <div class="callout"><b>How to improve</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
+
+<!-- priority actions -->
+<section class="page" id="p{{p_actions}}" data-page="{{p_actions}}" aria-label="Section {{p_actions}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">05 Priority actions</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_actions_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">05 Priority actions</div><h2>Action list, ordered by priority</h2></div></div>
+  <p class="narr">Expectation: completing the first few items should visibly improve the score under this report's scale. <b>This is a directional estimate — it reflects only the removal of scored deductions, and does not guarantee more actual AI citations.</b></p>
+  <div class="actions">{{#action_rows}}<div class="arow"><div><h4>{{action}}</h4><p>{{detail}}</p></div><span class="owner {{owner_class}}">{{owner}}</span>{{sev_span}}</div>{{/action_rows}}</div>
+  <p class="note">The fix text doubles as the acceptance criterion. Scores are left for internal re-testing.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- scope -->
+<section class="page" id="p{{p_scope}}" data-page="{{p_scope}}" aria-label="Section {{p_scope}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">06 Scope</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_scope_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">06 Scope</div><h2>Crawl scope and page composition</h2></div></div>
+  <p class="narr">{{scope_text}}</p>
+  {{scope_note_html}}
+  {{scope_warning_html}}
+  <div class="sevbar"><div class="sb-track">{{scope_bars}}</div><div class="sb-legend">{{scope_legend}}<span class="muted">{{sampled_count}} pages sampled</span></div></div>
+  <p class="note">Assessment is based on the site snapshot taken on {{date}}. Findings must be re-verified after page content or structure changes.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- conclusion -->
+<section class="page" id="p{{p_conclusion}}" data-page="{{p_conclusion}}" aria-label="Section {{p_conclusion}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">07 Conclusion</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_conclusion_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">07 Conclusion</div><h2>Conclusion and next steps</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="narr lead">{{closing}}</div>
+  <div class="nextgrid">{{#next_steps}}<div><span class="dimcell-n mono">{{label}}</span><b>{{title}}</b><p>{{body}}</p></div>{{/next_steps}}</div>
+  <p class="note">Methodology: rules {{rules_version}}</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- appendix glossary -->
+<section class="page" id="p{{p_glossary}}" data-page="{{p_glossary}}" aria-label="Section {{p_glossary}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">Appendix · Glossary</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_glossary_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">Appendix · Glossary</div><h2>Jargon in plain English</h2></div></div>
+  <table class="mtable"><thead><tr><th style="width:30%">Term used</th><th>Plain English</th></tr></thead><tbody>
+    <tr><td><b>GEO / Generative Engine Optimization</b></td><td>Making sure AI assistants like ChatGPT, Perplexity and Google AI Overviews can find you, describe you correctly and cite you when answering questions</td></tr>
+    <tr><td><b>On-site readiness / grade</b></td><td>Whether AI can read and trust your site. Below 60 means not ready. It is not a search ranking</td></tr>
+    <tr><td><b>Entity / entity mapping</b></td><td>"Which company are you, exactly?" Mapping means pointing every name, domain and account at the same organisation</td></tr>
+    <tr><td><b>Structured data / schema</b></td><td>A machine-readable "company card" written into the page. Visitors do not see it; AI reads it</td></tr>
+    <tr><td><b>Answer absorbability / answer block</b></td><td>Whether the site contains a passage that works as a complete answer, with facts rather than slogans</td></tr>
+    <tr><td><b>Open Graph / meta description</b></td><td>The preview card shown when a link is shared, and the two lines of text under a search result title</td></tr>
+    <tr><td><b>H1 / sitemap / index bloat</b></td><td>The largest heading on each page (one per page); the "table of contents" handed to search engines; and template pages with no real content creeping into it</td></tr>
+    <tr><td><b>Lorem ipsum</b></td><td>Placeholder filler text left in a template — an empty shop sign</td></tr>
+    <tr><td><b>canonical / robots.txt</b></td><td>Tells machines which is the official URL, and who is allowed in to read the site</td></tr>
+    <tr><td><b>Recoverable deductions</b></td><td>Removing these deductions raises the score on our scale. It does not guarantee AI mentions you more often</td></tr>
+  </tbody></table><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+</div>
+
+<div class="index" id="index" role="dialog" aria-modal="true" aria-label="Report index">
+  <div class="index-panel"><button class="btn close" type="button">Close (ESC)</button><h2>Report index</h2>
+  <div class="index-list">{{index_html}}</div></div>
+</div>
+<p class="docfoot">Note: this is an on-site assessment measuring whether the website can be correctly read, trusted and cited by AI. It does not cover search rankings or traffic, and it does not measure actual AI citations (whether you are mentioned).</p>
+<script>{{script}}</script>
+</body></html>

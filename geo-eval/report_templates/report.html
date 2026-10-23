@@ -1,0 +1,228 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{brand}} GEO 评测报告 · {{domain}}</title>
+<meta name="description" content="GEO 站内准备度评测报告：{{domain}}，站内准备度 {{overall_score}}/100（{{grade}}）。">
+<style>{{style}}</style></head><body>
+<div class="topbar"><div class="topbar-in">
+  <span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="doc">{{brand}} GEO 站内准备度评测 · {{domain}}</span>
+  <span class="right"><span class="now">节 <b id="now-page">01 / {{total_pages_pad}}</b></span>
+  <button class="btn" type="button" onclick="document.getElementById('index').classList.add('show')">索引</button></span>
+</div><div class="progress"><i></i></div></div>
+
+<div class="deck">
+<!-- 1 封面 -->
+<section class="page page-dark cover" id="p1" data-page="1" aria-label="第 1 节，共 {{total_pages}} 节">
+  <div class="cover-top"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#fff"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="#312E81"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="#312E81" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="#312E81" opacity=".62"/></svg><b>GEO Checker</b></span>
+    <span class="cover-no mono">Beansmile · GEO Checker</span></div>
+  <div class="cover-mid">
+    <div class="pkicker light">生成式引擎优化 · 技术与内容准备度评测报告</div>
+    <h1>{{brand}}<br>GEO 评测报告</h1>
+    <p class="cover-sub">检查官网有没有把「我们是谁、卖什么、数字从哪来」写清楚——这是 AI 能否读懂、信任并推荐你的基础。</p>
+    <div class="cover-score"><div class="cbig">{{overall_score}}<small>/100</small><em>站内准备度 {{grade}}</em></div><div><div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{{overall_score}}%"></span></div>
+    <div class="cm-scale"><span>0</span><span>及格 60</span><span>良好 80</span><span>100</span></div></div><p class="cover-score-note">60 分以下＝准备不足；它不是搜索排名，也不代表 AI 实际提到你的次数。</p></div></div>
+  </div>
+  <dl class="cover-facts">
+    <div class="wide"><dt>站点</dt><dd class="mono">{{url}}</dd></div>
+    <div><dt>报告日期</dt><dd class="mono">{{date}}</dd></div>
+    <div><dt>检测范围</dt><dd>发现 {{sitemap_count}} 个页面，抽查了 {{sampled_count}} 个重点页</dd></div>
+    <div><dt>等级映射</dt><dd class="mono">A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60</dd></div>
+  </dl>
+  <div class="cover-sev"><div class="sevstrip"><div class="ss-track">{{sev_strip}}</div><div class="ss-legend">{{sev_legend}}</div></div></div>
+  <div class="cover-sign"><span>署名：Beansmile · GEO Checker</span><span class="mono">共 {{total_pages}} 节</span></div><p class="cover-read">只有 5 分钟？看「总体评价」「优先改进建议」「结论」三页即可。</p>
+</section>
+
+<!-- 2 导读 -->
+<section class="page" id="p2" data-page="2" aria-label="第 2 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">导读</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 02 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">导读</div><h2>三分钟看懂这份报告</h2></div></div>
+  <div class="nextgrid">
+    <div><span class="dimcell-n mono">1 · 查了什么</span><p>检查你的网站在 ChatGPT、豆包、Kimi 等 AI 搜索 / 问答里“能不能被读懂、被信任、被引用”。</p></div>
+    <div><span class="dimcell-n mono">2 · {{overall_score}} 分（{{grade}}）是什么意思</span><p>不是考试评分、也不是搜索排名——它说的是：网站是否把「品牌是谁、内容能不能当事实」说清楚，AI 能否读懂并信任。</p></div>
+    <div><span class="dimcell-n mono">3 · 为什么要现在管</span><p>买家找供应商，正在从搜索引擎转向直接问 AI。AI 推荐谁，取决于它能不能读懂并信任谁的网站。</p></div>
+    <div><span class="dimcell-n mono">4 · 你需要做什么</span><p>大部分问题是一次性遗留问题，集中清一轮就能解决大半。先看「优先改进建议」的行动清单。</p></div>
+  </div>
+  <div class="sublab">阅读建议</div>
+  <div class="readguide">
+    <div><b>快速浏览</b><span class="mono">约 3 分钟</span><p>本页 → 总体评价 → 行动清单 → 结论。</p></div>
+    <div><b>通读全篇</b><span class="mono">约 30 分钟</span><p>总体评价 → 关键发现 → 分维度评估 → 行动清单。</p></div>
+    <div><b>技术落地参考</b><span class="mono">按需</span><p>评分方法、分维度评估、给建站商的参考代码。</p></div>
+  </div><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 3 索引 -->
+<section class="page" id="p3" data-page="3" aria-label="第 3 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">报告索引</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 03 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">报告索引</div><h2>目录</h2></div>
+  <div class="pmeta mono dim">共 {{total_pages}} 节</div></div>
+  <ol class="toc">
+    <li><span class="n mono">04</span><a href="#p4">总体评价</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">05</span><a href="#p5">表现良好的部分</a><span class="dots"></span><span class="c mono">02</span></li>
+    <li><span class="n mono">06</span><a href="#p6">评分方法（可复现）</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">07</span><a href="#p7">关键发现</a><span class="dots"></span><span class="c mono">03</span></li>
+    {{toc_findings_html}}
+    <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">分维度评估</a><span class="dots"></span><span class="c mono">04</span></li>
+    {{toc_dims_html}}
+    <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">优先改进建议</a><span class="dots"></span><span class="c mono">05</span></li>
+    <li><span class="n mono">{{p_scope}}</span><a href="#p{{p_scope}}">检测范围</a><span class="dots"></span><span class="c mono">06</span></li>
+    <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">结论</a><span class="dots"></span><span class="c mono">07</span></li>
+    <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">附录 · 术语表</a><span class="dots"></span><span class="c mono">附</span></li>
+  </ol>
+  <p class="note">阅读方式：向下滚动或按 ← / → 翻节，按 ESC 打开索引。每一节对应一个独立小节。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 4 总体评价 -->
+<section class="page" id="p4" data-page="4" aria-label="第 4 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 总体评价</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 04 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 总体评价</div><h2>站内 GEO 准备度：{{overall_score}} 分（{{grade}}）</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="narr lead">{{overall_summary}}</div>
+  <div class="sublab">本次问题分布</div>
+  <div class="statlist">
+    <div><span class="statn">问题构成</span><p>本次共检出 <b>{{findings_count}}</b> 项问题（其中 <b>{{advisory_count}}</b> 项为只报不评的建议项）。多数问题由同一批根因所致，集中清理一轮即可消除大部分。</p></div>
+    <div><span class="statn">影响</span><p>这些问题会让 AI 与搜索引擎更难确认“<b>品牌是谁、这段话能不能当事实</b>”。至于是否会因此减少被 ChatGPT、豆包、Kimi 等点名，本次未做引用实测，属于需要后续验证的推断。</p></div>
+  </div>
+  <div class="callout"><b>一句话结论</b><p>{{closing}}</p></div>
+  <p class="note">本报告分数衡量的是网站在生成式搜索中被正确理解、信任与引用的准备度，而非排名或流量结果。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 5 表现良好 -->
+<section class="page" id="p5" data-page="5" aria-label="第 5 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">02 表现良好</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 05 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">02 表现良好的部分</div><h2>已有基础</h2></div></div>
+  <ul class="plain">{{#strengths}}<li>{{.}}</li>{{/strengths}}</ul>
+  <p class="note">以上为检测中确认可用的既有基础，建议在后续改动中保持。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 6 评分方法 -->
+<section class="page" id="p6" data-page="6" aria-label="第 6 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 总体评价 · 评分方法</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 06 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 总体评价 · 评分方法</div><h2>站内准备度 {{overall_score}} 分是怎么算出来的</h2>
+    <div class="pmeta-line"><span>全部数值取自本次评分记录，可逐项核对</span></div></div>
+    <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="method">
+    <div>
+      <span class="statn">第 1 步 · 九个维度得分（上限内计分）</span>
+      <table class="mtable"><thead><tr><th>维度</th><th>得分</th><th>满分</th><th class="r">等级</th></tr></thead>
+      <tbody>{{#dim_pages}}<tr><td>{{name}}</td><td class="num mono">{{score}}</td><td class="dim mono">/{{max}}</td><td class="dim mono r">{{grade}}</td></tr>{{/dim_pages}}<tr class="total"><td>九维合计</td><td class="num mono">{{dim_sum}}</td><td class="dim mono">/100</td><td class="r"></td></tr></tbody></table>
+    </div>
+    <div>
+      <div class="stepbox"><span class="statn">第 2 步 · 上限约束与加减分</span>
+        {{#adj_rows}}<p>{{type}} <b>{{points}}</b>：{{reason}}</p>{{/adj_rows}}
+        {{ceiling_block}}
+        {{adj_note}}</div>
+      <div class="stepbox"><span class="statn">第 3 步 · 计算</span>
+        <p class="calc mono">最终总分 = <b>{{overall_score}}</b> / 100（{{grade}}）</p>
+        <p>{{calc_rule}}</p>
+        <p>治理扣分已并入各维度得分（同一根因只计一次），因此九维合计本身已包含这些扣分。</p></div>
+    </div>
+  </div>
+  <p class="note">等级映射：A+ 90 分以上 · A 80–89 · B 70–79 · C 60–69 · D 60 分以下。分数用于定位短板与排序修复优先级，不用于横向比较其它站点。</p>
+  <div class="sublab">口径边界与阈值来源</div>
+  <ul class="plain">
+    <li>本分数是<b>站内 GEO 准备度（技术与内容准备度）</b>：衡量站点被生成式搜索正确理解、信任与引用的准备情况。</li>
+    <li>标题/元描述长度、每页标题数量等为<b>卫生项</b>，用作统一检查口径，不是搜索引擎硬性要求；内容是否“能整块被引用、且带可核验事实”才是关键。</li>
+    <li>官方口径核对：Google 说明元描述无固定长度限制（超出仅在展示时截断）；结构化数据不是通用排名因子；FAQ 富媒体结果已于 2026-05-07 停止展示（Search Console 报告 2026-06 退役、API 2026-08 移除），HowTo 富媒体结果已于 2023 年退役；组织信息的官方账号（sameAs）/ 联系方式（contactPoint）属“适用时推荐”而非必填。</li>
+  </ul><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 7 关键发现总览 -->
+<section class="page" id="p7" data-page="7" aria-label="第 7 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 关键发现</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 07 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">03 关键发现</div><h2>本次最需要优先处理的 {{findings_count}} 项问题</h2></div>
+  <div class="pmeta mono dim">按影响程度排序</div></div>
+  <ol class="toc">{{toc_findings_html}}</ol>
+  <p class="note">每条问题单独成页，含问题原文与修复建议，部分附可直接套用的示例（示例仅供参考，请替换占位信息）。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 关键发现（每条一页） -->
+{{#findings}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="第 {{page}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 关键发现 · {{n}}</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{page_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">关键发现 · {{n}}</div><h2>{{title}}</h2>
+  <div class="pmeta-line"><span class="owner {{owner_class}}">执行方 · {{owner}}</span><span>检测证据 {{evcount}} 条</span></div></div>
+  <div class="pmeta">{{sev_span}}</div></div>
+  <div class="impact"><b>这对您意味着什么</b><p>{{impact}}</p></div>
+  <p class="fix lead-fix">{{solution}}</p>
+  {{evidence_html}}
+  {{code_html}}
+  <footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>{{/findings}}
+
+<!-- 分维度评估总览 -->
+<section class="page" id="p{{p_dims_index}}" data-page="{{p_dims_index}}" aria-label="第 {{p_dims_index}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 分维度评估</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_dims_index_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">04 分维度评估</div><h2>9 个维度得分与提升空间</h2></div>
+  <div class="pmeta mono dim">满分 100 分</div></div>
+  <figure class="chart" role="img" aria-label="九个维度的得分与提升空间"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
+    <div class="lc-track"><span class="lc-fill" style="width:{{pct}}%;background:{{bar}}"></span><span class="lc-space" style="width:{{remaining}}%"></span></div>
+    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>深色为当前得分，浅色为该维度剩余提升空间；每条为各维度自身满分（15 / 10 / 5）。</figcaption></figure>
+  <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 分维度评估（每维一页） -->
+{{#dim_pages}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="第 {{page}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 分维度 · {{idx}}</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{page_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">分维度评估 · {{idx}}</div><h2>{{name}}</h2></div>
+  <div class="pmeta"><span class="scorechip {{c_class}}"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></span></div></div>
+  <div class="mini"><i style="width:{{pct}}%;background:{{bar}}"></i></div>
+  <div class="narr">{{narr}}</div>
+  <div class="sublab">本维度主要发现</div>{{findings_html}}
+  <div class="callout"><b>提升建议</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
+
+<!-- 优先改进建议 -->
+<section class="page" id="p{{p_actions}}" data-page="{{p_actions}}" aria-label="第 {{p_actions}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">05 优先改进建议</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_actions_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">05 优先改进建议</div><h2>按优先级排列的行动清单</h2></div></div>
+  <p class="narr">预期：完成前几项后，本报告口径的分数会有明显改善。<b>此为方向性预估，仅反映本量表的扣分项消失，不保证 AI 实际引用增加。</b></p>
+  <div class="actions">{{#action_rows}}<div class="arow"><div><h4>{{action}}</h4><p>{{detail}}</p></div><span class="owner {{owner_class}}">{{owner}}</span>{{sev_span}}</div>{{/action_rows}}</div>
+  <p class="note">“完成标准”即改完后的样子，用于验收；分数留给内部复测。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 检测范围 -->
+<section class="page" id="p{{p_scope}}" data-page="{{p_scope}}" aria-label="第 {{p_scope}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">06 检测范围</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_scope_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">06 检测范围</div><h2>抓取范围与页面构成</h2></div></div>
+  <p class="narr">{{scope_text}}</p>
+  {{scope_note_html}}
+  {{scope_warning_html}}
+  <div class="sevbar"><div class="sb-track">{{scope_bars}}</div><div class="sb-legend">{{scope_legend}}<span class="muted">共 {{sampled_count}} 个抽样页</span></div></div>
+  <p class="note">检测基于 {{date}} 的站点快照；页面内容或结构更新后，结论需重新核验。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 结论 -->
+<section class="page" id="p{{p_conclusion}}" data-page="{{p_conclusion}}" aria-label="第 {{p_conclusion}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">07 结论</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_conclusion_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">07 结论</div><h2>结论与后续步骤</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
+  <div class="narr lead">{{closing}}</div>
+  <div class="nextgrid">{{#next_steps}}<div><span class="dimcell-n mono">{{label}}</span><b>{{title}}</b><p>{{body}}</p></div>{{/next_steps}}</div>
+  <p class="note">方法论：规则 {{rules_version}}</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 附录 术语表 -->
+<section class="page" id="p{{p_glossary}}" data-page="{{p_glossary}}" aria-label="第 {{p_glossary}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">附录 · 术语表</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_glossary_pad}} / {{total_pages_pad}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">附录 · 术语表</div><h2>术语人话对照表</h2></div></div>
+  <table class="mtable"><thead><tr><th style="width:30%">报告用词</th><th>人话</th></tr></thead><tbody>
+    <tr><td><b>GEO / 生成式引擎优化</b></td><td>让 ChatGPT、豆包、Kimi 这类 AI 在回答问题时能找到你、说对你、引用你</td></tr>
+    <tr><td><b>站内准备度 / 等级</b></td><td>网站在 AI 眼里“读不读得懂、敢不敢信”；60 分以下＝准备不足，不是搜索排名</td></tr>
+    <tr><td><b>实体 / 实体映射</b></td><td>“你这家公司到底是谁”；映射＝把各种名字/域名/账号都指向同一家</td></tr>
+    <tr><td><b>结构化数据 / schema</b></td><td>写在网页里、专门给机器看的“公司名片”，人看不见、AI 会读</td></tr>
+    <tr><td><b>答案可吸收性 / 证据块</b></td><td>网站上有没有“一整段能当答案的干货”（带事实，不靠空口号）</td></tr>
+    <tr><td><b>开放图谱 / 元描述</b></td><td>链接转发到微信/WhatsApp 时显示的卡片；搜索结果标题下那两行小字</td></tr>
+    <tr><td><b>H1 / 站点地图 / 索引膨胀</b></td><td>每页最大的标题（一页一个）；交给搜索引擎的“全书目录”；目录里混进了没内容的模板页</td></tr>
+    <tr><td><b>Lorem ipsum</b></td><td>建站模板自带的占位假文字，等于空招牌</td></tr>
+    <tr><td><b>canonical / robots.txt</b></td><td>告诉机器“正式地址是哪个”“谁可以进来读”</td></tr>
+    <tr><td><b>扣分项可恢复</b></td><td>这些扣分项消失后，我们这份量表上的分会上去；不保证 AI 更常提到你</td></tr>
+  </tbody></table><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+</div>
+
+<div class="index" id="index" role="dialog" aria-modal="true" aria-label="报告索引">
+  <div class="index-panel"><button class="btn close" type="button">关闭 (ESC)</button><h2>报告索引</h2>
+  <div class="index-list">{{index_html}}</div></div>
+</div>
+<p class="docfoot">说明：本报告为站内评测，衡量网站能否被 AI 正确读懂、信任与引用；不涉及搜索排名与网站流量，也不包含 AI 实际引用情况（是否被提到）的实测。</p>
+<script>{{script}}</script>
+</body></html>
