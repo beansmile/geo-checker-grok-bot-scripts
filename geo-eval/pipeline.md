@@ -73,3 +73,17 @@ runs/<site>/<date>_runNN/
 ├── expert_review*.json
 └── report/          # Step 5 报告
 ```
+
+
+## Content GEO track (parallel, does not alter technical scoring)
+
+```
+content_eval.py
+  → content_extract.py   (page inventory / writing signals)
+  → content_analyze.py   (Content GEO 6-dim engine scores)
+  → Agent enrichment     (content_prompts.md → content_report.json)
+  → build_content_report.py → report/content_report.md + .html
+```
+
+Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
+Technical `scoring.md` / `analyze.py` 9-dim formula remains untouched.

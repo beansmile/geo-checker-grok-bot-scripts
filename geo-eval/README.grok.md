@@ -14,3 +14,17 @@ ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skill
 Reports are **English by default** (`build_report.py --lang en`). Enrichment is done by the Bot (no `GEO_EVAL_LLM_API_KEY` on the Grok Bot path).
 
 Customer-facing reports show **GEO Checker** and attribution **Beansmile · GEO Checker**. Do not show Report ID / file numbers, sign-off blocks, or “pending review” copy.
+
+
+## Content GEO (separate report)
+
+Content evaluation (SEO discoverability + GEO citability + AI/search question checks) is **standalone** from the technical 9-dimension score.
+
+```bash
+cd /workspace/skills/geo-eval
+python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16
+# Agent enriches runs/.../content_report.json using content_prompts.md
+python3 scripts/build_content_report.py runs/<domain>/<run>
+```
+
+Rubric: `content_scoring.md`. Design: `docs/content_geo_design_spec.md`.
