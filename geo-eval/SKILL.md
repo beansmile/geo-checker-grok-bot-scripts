@@ -68,3 +68,20 @@ Grades: 90–100 A+｜80–89 A｜70–79 B｜60–69 C｜0–59 D.
 - Every conclusion needs evidence; drop false positives.
 - If a crawl returns 0 sitemap URLs, re-run once.
 - Deliverable is Agent+script output branded GEO Checker (Beansmile). No client sign-off / file-number / “pending review” UI.
+
+## SEO content discoverability (technical add-on)
+
+After a normal technical run, `report.json` includes `seo_discoverability` (score /25). Rubric: `seo_scoring.md`. It is rendered as its own chapter in the technical report and **must not** be merged into the nine-dimension `overall_score`. Enrich `seo_discoverability.narr` / `callout` when present.
+
+## Content GEO evaluation (standalone report)
+
+When the user asks for content architecture, writing, authority evidence, buyer-question coverage, or a content report separate from the technical score:
+
+1. `python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16` (or `--from-run …`).
+2. Attach `evidence/ai_checks.json` (+ optional `evidence/offsite.json`); re-run `content_analyze.py` with those files.
+3. Enrich `content_report.json` in English per `content_prompts.md`. Explain what Content GEO evaluates; do **not** open with a “not the nine-dimension score” disclaimer.
+4. `python3 scripts/build_content_report.py runs/<domain>/<run>` → `report/content_report.md` + `.html`.
+
+Content GEO rubric (`content_scoring.md` v1.1): IA 20 · taxonomy 15 · writing 20 · authority 20 · query coverage 25. SEO discoverability is **not** part of this score (see technical SEO chapter). Never blend Content GEO and technical 100 into one total.
+
+Refs: `content_scoring.md`, `content_prompts.md`, `seo_scoring.md`, `docs/content_geo_design_spec.md`, `docs/SKILL_content_geo_delta.md`.
