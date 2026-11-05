@@ -1,44 +1,51 @@
-# Content GEO Scoring Rubric (v1.0)
+# Content GEO Scoring Rubric (v1.1)
 
 > **GEO = Generative Engine Optimization** (websites / generative-engine readiness). Never geography.
 > Brand: **GEO Checker** by **Beansmile**.
-> This score is **separate** from the technical 9-dimension 100-point score in `scoring.md`. Do **not** merge or re-weight the technical formula.
+>
+> This score is **standalone**. It evaluates whether site **content** can be understood, trusted, and cited — information architecture, page types and gaps, writing quality, authority evidence, and buyer-question coverage (including labeled AI/search visibility checks).
+>
+> **SEO content discoverability** is scored in the **technical** report (`seo_scoring.md`), not here.
+> Do **not** merge this score with the technical nine-dimension 100-point total in `scoring.md`.
 
 ## Purpose
 
-Content GEO evaluates whether a site’s **pages and knowledge** can be discovered by search, understood by AI retrieval systems, and cited as evidence when buyers ask real questions.
+Content GEO answers: after a page can be fetched, does it give generative engines enough structured, answerable, evidence-backed knowledge to describe the brand correctly and cite official URLs when buyers ask real questions?
 
 It covers:
 
-1. SEO content discoverability (if search cannot find pages, AI cannot use them either)
-2. Information architecture and page structure
-3. Content taxonomy and gaps
-4. Writing quality (answer-first, extractable, evidence-backed)
-5. Authority / evidence publishing
-6. Target query coverage + knowledge completeness
-7. **Live / proxy AI-mention checks** for those target questions (first-version requirement)
+1. Information architecture and page structure
+2. Content taxonomy and gaps
+3. Writing quality (answer-first, extractable, evidence-backed)
+4. Authority / evidence publishing
+5. Target query coverage + knowledge completeness
+6. **Live / proxy AI-mention checks** for those target questions (required evidence for query coverage)
 
 It does **not** replace full rank-tracking SEO, backlink audits, or paid AI-visibility dashboards. Scope limits must be disclosed in every report.
 
-## Relationship to technical scoring
+## Why SEO left this rubric (v1.1)
 
-| Track | File | What it measures |
-|---|---|---|
-| Technical GEO | `scoring.md` (v1.1) | On-site readiness signals: schema, entity, OGP, robots/HTTPS heuristics, absorption block counts, trust pages, etc. |
-| Content GEO | this file | Whether content is findable, structured for questions, written for citation, backed by evidence, and actually referenced for buyer questions |
+Titles, H1/meta intent match, thin/duplicate discoverability, internal crawl paths, and sitemap/robots as discovery aids are **technical discoverability** concerns. They belong next to Access / on-page hygiene in the technical report so the Content GEO chapter can stay focused on *what the content says and whether it can be cited*.
 
-Reports are **standalone**. Never invent a blended “overall” that mixes the two 100-point scales.
+**Weight redistribution (from v1.0):** former C-SEO 25 points were removed. Remaining five dimensions still sum to 100:
+
+| Change | Rationale |
+|---|---|
+| C-IA 15 → 20 | Architecture is the scaffold for every citable URL |
+| C-TAX 10 → 15 | Taxonomy gaps drive missing page types |
+| C-WRITE 15 → 20 | Answer-first writing is the core GEO citability signal |
+| C-AUTH 15 → 20 | Evidence system is what AI prefers over slogans |
+| C-QUERY 20 → 25 | Buyer-question coverage + AI checks are the outcome metric |
 
 ## Dimensions (100 points)
 
 | ID | Dimension | Max | What we score |
 |---|---|---|---|
-| C-SEO | SEO content discoverability | 25 | Unique intent-matched pages; descriptive titles/H1/meta; heading structure; thin/duplicate risk; internal crawl paths to important content; sitemap/robots as they affect **content discovery**; image alt / extractable docs when observed. Honest: not a full ranking audit. |
-| C-IA | Information architecture | 15 | Current vs recommended tree; independent URLs for products, solutions, cases, R&D/specs, company proof, knowledge hub |
-| C-TAX | Content taxonomy & gaps | 10 | Page-type inventory vs required types for the site class; missing / thin / overlapping categories |
-| C-WRITE | Writing quality | 15 | Answer-first openings; self-contained extractable passages; specs/scenarios/standards vs slogans; tables/lists/FAQ where useful |
-| C-AUTH | Authority & evidence publishing | 15 | Cases, certifications, specs, awards, patents, media on official URLs with verifiable source links; recovery of off-site evidence onto the site |
-| C-QUERY | Target query coverage | 20 | Buyer/user question set for this business; on-site answerability + knowledge completeness fields (what / who-for / specs / standards / cases / inquiry path). **Includes AI-engine mention/citation checks** as evidence for this dimension (see § AI checks). |
+| C-IA | Information architecture | 20 | Current vs recommended tree; independent URLs for products, solutions, cases, R&D/specs, company proof, knowledge hub |
+| C-TAX | Content taxonomy & gaps | 15 | Page-type inventory vs required types for the site class; missing / thin / overlapping categories |
+| C-WRITE | Writing quality | 20 | Answer-first openings; self-contained extractable passages; specs/scenarios/standards vs slogans; tables/lists/FAQ where useful |
+| C-AUTH | Authority & evidence publishing | 20 | Cases, certifications, specs, awards, patents, media on official URLs with verifiable source links; recovery of off-site evidence onto the site |
+| C-QUERY | Target query coverage | 25 | Buyer/user question set for this business; on-site answerability + knowledge completeness fields (what / who-for / specs / standards / cases / inquiry path). **Includes AI-engine mention/citation checks** as evidence (see § AI checks). |
 
 Grade map (same bands as technical, separate label **Content GEO**):
 
@@ -58,35 +65,43 @@ Grade map (same bands as technical, separate label **Content GEO**):
 3. **If homepage body cannot be obtained by any honest path** → overall Content GEO = unevaluable; still publish IA/query/off-site recommendations.
 4. **Provisional scores** are allowed when evidence comes from alternate public fetchers or search snippets while direct box crawl fails — label `confidence: provisional` and list blockers (e.g. HTTP 500 / SSL / WAF).
 5. **Company-specific prose.** Ban generic template advice that could fit any manufacturer.
-6. **English client reports** by default.
+6. **English client reports** by default (Chinese copies only when requested for review).
+7. **Intro copy** explains what Content GEO evaluates. Do **not** open with a disclaimer comparing it to the nine-dimension technical score.
+
+## What is scored vs advisory
+
+| Scored | Advisory only (narrate, do not invent precision) |
+|---|---|
+| Dimension points above | Live AI UI availability limits |
+| On-site support 0–3 per target question | Suggested English localization roadmap |
+| Presence/depth of page types in sample | Exact SERP rank positions |
+| Evidence of official-domain citation in labeled checks | Guaranteed future citation rates |
 
 ## Sub-score guidance (heuristic)
 
-### C-SEO (25)
-
-| Band | Points | Signals |
-|---|---|---|
-| Strong | 20–25 | Distinct titles/H1 per intent; meta descriptions present; clear nav + internal links to products/cases; sitemap reachable; little thin/duplicate |
-| Partial | 10–19 | Some indexable pages exist in search, but titles generic, thin product pages, weak internal links, or sitemap/robots unverifiable |
-| Weak | 0–9 | Critical pages hard to discover; homepage/robots/sitemap failing; thin slogan pages only |
-
-### C-IA (15)
+### C-IA (20)
 
 Score against a **site-type recommended tree**. Corporate B2B lighting example: Products (each line), Industry solutions, Project cases, R&D/specs, Company strength (certs/awards), Knowledge hub (selection/FAQ), Contact.
 
-### C-TAX (10)
+| Band | Points | Signals |
+|---|---|---|
+| Strong | 16–20 | Independent URLs for products, solutions, cases, proof, knowledge |
+| Partial | 10–15 | Some hubs exist; proof/knowledge folded into About or news |
+| Weak | 0–9 | Homepage + About dump; missing product/case URLs |
+
+### C-TAX (15)
 
 Inventory observed page types vs recommended. Deduct for missing product detail, missing case depth, news-only “evidence”, collapsed “About” dumping.
 
-### C-WRITE (15)
+### C-WRITE (20)
 
 Prefer pages that open with a direct answer, then specs/modules/scenarios. Penalize slogan-only copy (“professional”, “excellent quality”) without parameters.
 
-### C-AUTH (15)
+### C-AUTH (20)
 
-On-site pages for awards/patents/certs/cases with outbound links to primary sources score higher than claims only in About prose or only on third-party sites.
+On-site pages for awards/patents/certs/cases with outbound links to primary sources score higher than claims only in About prose or only on third-party sites. Keyword density in About alone is not a publishing system.
 
-### C-QUERY (20)
+### C-QUERY (25)
 
 1. Build 6–12 procurement questions for the business.
 2. For each: score on-site support (0 none / 1 thin / 2 partial / 3 citable).
@@ -94,7 +109,7 @@ On-site pages for awards/patents/certs/cases with outbound links to primary sour
 
 Knowledge completeness folds into C-QUERY and C-AUTH: each core product/service should cover what it is, who it is for, key specs, standards, representative cases, inquiry path.
 
-## AI mention / citation checks (required in v1)
+## AI mention / citation checks (required)
 
 For each target question, attempt to observe whether mainstream AI / AI-search surfaces mention or cite the **official domain**.
 
@@ -125,12 +140,10 @@ Report section: **“Target questions × AI / search visibility”** as its own 
 
 Rubric informed by (non-exhaustive; cite URLs used in each run’s research notes):
 
-- Google Search Central — Creating helpful, people-first content; SEO Starter Guide (titles, snippets, organization, alt text, sitemaps as discovery aids)
+- Google Search Central — Creating helpful, people-first content; SEO Starter Guide
 - Search Engine Land — GEO / extractability / answer-first guidance (2025–2026)
 - HubSpot — AEO / answer-first and question-intent practices (2026)
 - OpenAI crawler docs — OAI-SearchBot (search) vs GPTBot (training) independence
-
-Technical crawlability remains in the technical report; Content GEO focuses on whether **content** is discoverable and citable once access exists.
 
 ## Outputs
 
@@ -142,4 +155,5 @@ Per content run directory:
 
 ## Version
 
-v1.0 · 2026-11 · Beansmile · GEO Checker
+v1.1 · 2026-11 · Beansmile · GEO Checker  
+*(v1.0 had C-SEO 25 inside Content GEO; moved to technical `seo_scoring.md` in v1.1.)*

@@ -100,3 +100,14 @@
 ## 9. 输出评分结构
 
 报告 JSON 中的 `category_scores`（9 维）+ `overall_score` + `grade`，以及 `score_adjustments`（base_score / penalty / bonus）。每条 finding 带 `scored`（`false` = 建议项）。完整数据结构见 `output_schema.md`。
+
+
+---
+
+## 附录 · SEO 内容可发现性（独立分块，不改九维公式）
+
+自 2026-11 起，技术报告额外输出 **SEO content discoverability**（满分 25，见 `seo_scoring.md` / `scripts/seo_analyze.py`）。
+
+- **不改变**上文九维权重、计分口径、加减分与 Trust Ceiling。
+- **不并入** `overall_score` / 100；报告中单独成章展示。
+- 覆盖：标题/H1/meta 意图匹配、薄内容或重复风险、通向重要 URL 的站内链接、sitemap/robots 作为内容发现辅助；与 ACC 抓取失败交叉引用、不重复扣罚。

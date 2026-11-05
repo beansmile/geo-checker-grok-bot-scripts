@@ -132,6 +132,7 @@ STRINGS = {
         "idx_dims": "分维度评估",
         "idx_dim": "维度",
         "idx_actions": "优先改进建议",
+        "idx_seo": "SEO 内容可发现性",
         "idx_scope": "检测范围",
         "idx_conclusion": "结论",
         "idx_glossary": "术语人话对照表",
@@ -213,6 +214,7 @@ STRINGS = {
         "idx_dims": "Dimension assessment",
         "idx_dim": "Dimension",
         "idx_actions": "Priority actions",
+        "idx_seo": "SEO content discoverability",
         "idx_scope": "Scope",
         "idx_conclusion": "Conclusion",
         "idx_glossary": "Glossary",
@@ -458,12 +460,14 @@ def flatten(report, brand, lang="zh", escape_html=False):
     # ---------- 页码布局 ----------
     N = len(findings)
     M = len(DIM_ORDER)
-    total_pages = 12 + N + M
+    # +1 page for SEO content discoverability (separate from nine-dim total)
+    total_pages = 13 + N + M
     p_dims_index = 8 + N
-    p_actions = 9 + N + M
-    p_scope = 10 + N + M
-    p_conclusion = 11 + N + M
-    p_glossary = 12 + N + M
+    p_seo = 9 + N + M
+    p_actions = 10 + N + M
+    p_scope = 11 + N + M
+    p_conclusion = 12 + N + M
+    p_glossary = 13 + N + M
 
     for i, f in enumerate(findings):
         page = 8 + i
@@ -555,6 +559,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
             f'{S["idx_dim"]} {d["n"]} · {html_mod.escape(d["name"])}</a>'
             for d in dim_pages
         )
+        + f'<a href="#p{p_seo}"><span class="mono">{p_seo:02d}</span>{S["idx_seo"]}</a>'
         + f'<a href="#p{p_actions}"><span class="mono">{p_actions:02d}</span>{S["idx_actions"]}</a>'
         f'<a href="#p{p_scope}"><span class="mono">{p_scope:02d}</span>{S["idx_scope"]}</a>'
         f'<a href="#p{p_conclusion}"><span class="mono">{p_conclusion:02d}</span>{S["idx_conclusion"]}</a>'
@@ -655,6 +660,44 @@ def flatten(report, brand, lang="zh", escape_html=False):
     _o_grade = report.get("grade", "D")
     _o_color, overall_c_class, overall_g_class, _o_bar = grade_meta(_o_grade)
 
+    # ---------- SEO content discoverability (separate from nine-dim) ----------
+    seo = report.get("seo_discoverability") or {}
+    seo_score = seo.get("score")
+    seo_max = seo.get("max", 25)
+    seo_grade = seo.get("grade") or "—"
+    seo_conf = seo.get("confidence") or "—"
+    if seo_score is None:
+        seo_score_disp = "—"
+        seo_pct = 0
+        seo_c_class, seo_g_class, seo_bar = "c-d", "g-d", "var(--danger)"
+    else:
+        seo_score_disp = f"{float(seo_score):g}"
+        seo_pct = round(float(seo_score) / max(1, float(seo_max)) * 100, 1)
+        _sg = seo_grade if seo_grade in ("A+", "A", "B", "C", "D", "F") else "D"
+        _, seo_c_class, seo_g_class, seo_bar = grade_meta(_sg)
+    seo_notes = seo.get("notes") or []
+    if lang == "en":
+        seo_notes_md = "\n".join(f"- {n}" for n in seo_notes) if seo_notes else "_No engine notes._"
+        seo_notes_html = "".join(f"<li>{E(n)}</li>" for n in seo_notes) if seo_notes else "<li>No engine notes.</li>"
+        seo_sep_note = "Separate from the nine-dimension on-site readiness total — not added into the 100."
+        seo_default_narr = (
+            "SEO content discoverability checks whether important pages can be found and indexed: "
+            "intent-matched titles/H1/meta, thin or duplicate risk, internal crawl paths, and sitemap/robots as discovery aids. "
+            "Access failures (blocked crawlers, HTTPS) remain under Access / ACC findings and are cross-referenced here without double-counting penalties."
+        )
+        seo_default_callout = "Publish unique titles and H1s per intent, strengthen internal links to product/case URLs, and keep a clean sitemap."
+    else:
+        seo_notes_md = "\n".join(f"- {n}" for n in seo_notes) if seo_notes else "_无引擎备注。_"
+        seo_notes_html = "".join(f"<li>{E(n)}</li>" for n in seo_notes) if seo_notes else "<li>无引擎备注。</li>"
+        seo_sep_note = "独立于九维站内就绪度总分，不并入 100 分。"
+        seo_default_narr = (
+            "SEO 内容可发现性检查重要页面是否可被发现与索引：意图匹配的标题/H1/meta、薄内容或重复风险、"
+            "站内抓取路径，以及 sitemap/robots 作为内容发现辅助。抓取失败（爬虫屏蔽、HTTPS）仍归 Access/ACC，此处交叉引用、不重复扣罚。"
+        )
+        seo_default_callout = "为每个意图写唯一标题与 H1，加强产品/案例 URL 的站内链接，并维护清晰的 sitemap。"
+    seo_narr = E(seo.get("narr") or seo_default_narr)
+    seo_callout = E(seo.get("callout") or seo_default_callout)
+
     # 九维显示值的精确合计（去尾零：62.34 / 62.0 -> 62）
     _ds = sum(float(d.get("score", 0) or 0) for d in report.get("dimensions", []))
     dim_sum = f"{_ds:.2f}".rstrip("0").rstrip(".")
@@ -695,15 +738,31 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "total_pages": total_pages,
         "total_pages_pad": f"{total_pages:02d}",
         "p_dims_index": p_dims_index,
+        "p_seo": p_seo,
         "p_actions": p_actions,
         "p_scope": p_scope,
         "p_conclusion": p_conclusion,
         "p_glossary": p_glossary,
         "p_dims_index_pad": f"{p_dims_index:02d}",
+        "p_seo_pad": f"{p_seo:02d}",
         "p_actions_pad": f"{p_actions:02d}",
         "p_scope_pad": f"{p_scope:02d}",
         "p_conclusion_pad": f"{p_conclusion:02d}",
         "p_glossary_pad": f"{p_glossary:02d}",
+        "seo_score": seo_score_disp,
+        "seo_max": seo_max,
+        "seo_grade": seo_grade,
+        "seo_confidence": seo_conf,
+        "seo_pct": seo_pct,
+        "seo_remaining": round(100 - seo_pct, 1),
+        "seo_c_class": seo_c_class,
+        "seo_g_class": seo_g_class,
+        "seo_bar": seo_bar,
+        "seo_narr": seo_narr,
+        "seo_callout": seo_callout,
+        "seo_notes_md": seo_notes_md,
+        "seo_notes_html": seo_notes_html,
+        "seo_sep_note": seo_sep_note,
         "findings": findings,
         "findings_count": N,
         "scored_findings_count": scored_total,

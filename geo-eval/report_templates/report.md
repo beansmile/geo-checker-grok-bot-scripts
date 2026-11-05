@@ -69,6 +69,21 @@
 ---
 {{/dim_pages}}
 
+
+---
+
+## 五 b. SEO 内容可发现性（独立计分）
+
+**{{seo_score}} / {{seo_max}}（{{seo_grade}}）** · 置信度：{{seo_confidence}}
+
+本分块评估重要内容 URL 是否可被搜索发现与索引（标题/H1/meta 意图匹配、薄内容或重复风险、站内抓取路径、sitemap/robots 作为内容发现辅助）。**独立计分，不并入九维 {{overall_score}} / 100 总分。**
+
+{{seo_narr}}
+
+{{seo_notes_md}}
+
+**改进建议**：{{seo_callout}}
+
 ## 六、优先改进建议
 
 {{#action_rows}}

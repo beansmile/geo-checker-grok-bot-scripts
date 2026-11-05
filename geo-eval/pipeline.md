@@ -80,10 +80,11 @@ runs/<site>/<date>_runNN/
 ```
 content_eval.py
   → content_extract.py   (page inventory / writing signals)
-  → content_analyze.py   (Content GEO 6-dim engine scores)
+  → content_analyze.py   (Content GEO 5-dim engine scores; SEO is technical)
   → Agent enrichment     (content_prompts.md → content_report.json)
   → build_content_report.py → report/content_report.md + .html
 ```
 
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
 Technical `scoring.md` / `analyze.py` 9-dim formula remains untouched.
+`analyze.py` also attaches `seo_discoverability` (/25) for the technical report SEO chapter; it does not change `overall_score`.

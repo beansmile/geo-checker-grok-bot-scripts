@@ -64,7 +64,7 @@ def skeleton_report(engine: dict) -> dict:
         "domain": engine.get("domain"),
         "site_url": engine.get("site_url"),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "rubric_version": "content_scoring.md v1.0",
+        "rubric_version": "content_scoring.md v1.1",
         "overall_score": engine.get("overall_score"),
         "grade": engine.get("grade"),
         "confidence": engine.get("confidence"),
@@ -86,9 +86,11 @@ def skeleton_report(engine: dict) -> dict:
         "pages_analyzed": engine.get("pages_analyzed"),
         "page_type_counts": engine.get("page_type_counts") or {},
         "scope_note": (
-            "This Content GEO report is separate from the technical 9-dimension GEO readiness score. "
+            "Content GEO evaluates whether site content can be understood, trusted, and cited "
+            "(architecture, page types/gaps, writing, authority evidence, buyer-question coverage). "
             "It does not measure rankings or traffic. AI mention checks are labeled by method "
-            "(live_ui / web_retrieval_proxy / agent_tool)."
+            "(live_ui / web_retrieval_proxy / agent_tool). SEO discoverability is covered in the "
+            "technical GEO readiness report."
         ),
         "enrichment_status": "pending_agent",
     }

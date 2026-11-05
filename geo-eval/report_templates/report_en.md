@@ -69,6 +69,21 @@ Grade scale: A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D < 60.
 ---
 {{/dim_pages}}
 
+
+---
+
+## 5b. SEO content discoverability (separate score)
+
+**{{seo_score}} / {{seo_max}} ({{seo_grade}})** · confidence: {{seo_confidence}}
+
+This block measures whether important content URLs are findable and indexable (titles/H1/meta intent match, thin or duplicate risk, internal crawl paths, sitemap/robots as discovery aids). **It is scored separately and is not added into the nine-dimension {{overall_score}} / 100 total.**
+
+{{seo_narr}}
+
+{{seo_notes_md}}
+
+**How to improve**: {{seo_callout}}
+
 ## 6. Priority actions
 
 {{#action_rows}}

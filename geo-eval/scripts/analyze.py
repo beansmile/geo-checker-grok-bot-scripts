@@ -8,8 +8,10 @@ Step 3~4：通用 GEO 深度检测 + 9 维评分 → report.json
 
 输入:  run_dir（run.py 产物：evidence/pages/*.html、pages.list、site.json、scope.json、robots.txt、llms.txt）
 输出:  <run_dir>/report.json（9 维得分、总分、等级、findings、penalty/bonus）
+       另附 seo_discoverability（/25，独立计分，不并入九维总分；见 seo_scoring.md）
 
-口径:  9 维 100 分制（schema 15 · entity 15 · ogp 5 · richness 15 · kg 10 · absorption 15 · trust 15 · on_page 5 · quality 5）
+口径:  9 维 100 分制（schema 15 · entity 15 · ogp 5 · richness 15 · kg 10 · absorption 15 · trust 15 · on_page 5 · quality 5）——公式不变
+       SEO content discoverability 为技术报告附加分块，不改变 overall_score
        Trust Ceiling：S1 实体冲突 → trust≤50%、entity≤30%、总分≤70；S1 lorem → 总分≤75
        纯规则 R（不含 LLM）；LLM 类判定（ENT-07、QLT 等）留待 merge_llm.py 扩展。
 """
@@ -1395,7 +1397,7 @@ def analyze(run_dir):
     else:
         summary = f"基础较弱，需先修复核心问题（{'、'.join(top) or '抓取/理解/信任'}）。"
 
-    return {
+    report_out = {
         "url": base_url,
         "domain": domain,
         "sitemap_count": site.get("sitemap", {}).get("url_count", len(pages)),
@@ -1409,7 +1411,7 @@ def analyze(run_dir):
         "ceiling": ceiling,
         "ceiling_note": ceiling_note,
         "versions": {"methodology_version": "v2026.10", "rules_version": "v1.1",
-                     "scoring_version": "v1.1"},
+                     "scoring_version": "v1.1", "seo_scoring_version": "v1.0"},
         "data_integrity_flags": integrity_flags(dims, acc, ent),
         "dimensions": dims_meta,
         "dimension_details": dimension_details,
@@ -1420,6 +1422,21 @@ def analyze(run_dir):
         "overall_summary": summary,
         "closing": "优先处理上述高优先级问题，再持续补充真实内容与实体声明。" if findings else "技术基础与内容结构良好，保持并持续补充真实内容即可。",
     }
+    # SEO content discoverability — separate scored block; does NOT alter overall_score
+    try:
+        import seo_analyze
+        report_out["seo_discoverability"] = seo_analyze.build_seo_block(run_dir)
+    except Exception as exc:  # noqa: BLE001
+        report_out["seo_discoverability"] = {
+            "score": None,
+            "max": 25,
+            "grade": "F",
+            "confidence": "none",
+            "notes": [f"SEO block unavailable: {exc}"],
+            "separate_from_nine_dim": True,
+            "rubric": "seo_scoring.md v1.0",
+        }
+    return report_out
 
 
 def main():

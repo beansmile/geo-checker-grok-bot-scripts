@@ -64,7 +64,8 @@
     {{toc_findings_html}}
     <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">分维度评估</a><span class="dots"></span><span class="c mono">04</span></li>
     {{toc_dims_html}}
-    <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">优先改进建议</a><span class="dots"></span><span class="c mono">05</span></li>
+        <li><span class="n mono">{{p_seo}}</span><a href="#p{{p_seo}}">SEO 内容可发现性</a><span class="dots"></span><span class="c mono">{{seo_score}}/{{seo_max}}</span></li>
+<li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">优先改进建议</a><span class="dots"></span><span class="c mono">05</span></li>
     <li><span class="n mono">{{p_scope}}</span><a href="#p{{p_scope}}">检测范围</a><span class="dots"></span><span class="c mono">06</span></li>
     <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">结论</a><span class="dots"></span><span class="c mono">07</span></li>
     <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">附录 · 术语表</a><span class="dots"></span><span class="c mono">附</span></li>
@@ -171,6 +172,22 @@
   <div class="callout"><b>提升建议</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
 
 <!-- 优先改进建议 -->
+
+<!-- SEO content discoverability -->
+<section class="page" id="p{{p_seo}}" data-page="{{p_seo}}" aria-label="第 {{p_seo}} / {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">SEO 可发现性</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">第 {{p_seo_pad}} / {{total_pages_pad}} 节</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">SEO 内容可发现性</div><h2>搜索能否找到重要页面？</h2></div>
+  <div class="pmeta"><span class="scorechip {{seo_c_class}}"><b>{{seo_score}}</b><span>/{{seo_max}}</span><em class="g {{seo_g_class}}">{{seo_grade}}</em></span></div></div>
+  <div class="mini"><i style="width:{{seo_pct}}%;background:{{seo_bar}}"></i></div>
+  <p class="note">{{seo_sep_note}} · 置信度：{{seo_confidence}}</p>
+  <div class="narr">{{seo_narr}}</div>
+  <div class="sublab">引擎备注</div>
+  <ul class="plain">{{seo_notes_html}}</ul>
+  <div class="callout"><b>改进建议</b><p>{{seo_callout}}</p></div>
+  <p class="note">覆盖标题/H1/meta 意图匹配、薄内容或重复风险、通向重要 URL 的站内链接，以及 sitemap/robots 作为内容发现辅助。完整 Access/爬虫罚分仍在九维加减项中（如适用）。</p>
+<footer class="pf"><span>GEO Checker · 就绪度报告</span><span class="mono">Beansmile</span></footer></section>
+
 <section class="page" id="p{{p_actions}}" data-page="{{p_actions}}" aria-label="第 {{p_actions}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">05 优先改进建议</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_actions_pad}} / {{total_pages_pad}}</span></span></header>

@@ -18,7 +18,8 @@ Customer-facing reports show **GEO Checker** and attribution **Beansmile · GEO 
 
 ## Content GEO (separate report)
 
-Content evaluation (SEO discoverability + GEO citability + AI/search question checks) is **standalone** from the technical 9-dimension score.
+Content evaluation (architecture, writing, authority evidence, buyer-question / AI visibility checks) is **standalone** from the technical 9-dimension score.
+SEO content discoverability is a **separate chapter** inside the technical report (`seo_scoring.md`), not part of the Content GEO 100.
 
 ```bash
 cd /workspace/skills/geo-eval
