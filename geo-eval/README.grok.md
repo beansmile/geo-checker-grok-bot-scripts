@@ -18,6 +18,8 @@ ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skill
 - Never show scoring / rules / rubric **version numbers** in HTML chrome or user-facing prompts (prior product rule).
 - Enrichment prose language = report language. For Chinese runs, write Chinese into **primary** fields (`overall_summary`, dim `narr`/`callout`, findings, …); `*_zh` fields remain optional fallbacks for the builders.
 
+**HARD RULE:** Never deliver Chinese HTML by only flipping `--lang zh` on English enrichment. Re-enrich every client-facing narrative field into Chinese first, then build. Chrome-only ZH is a bug.
+
 Build flags:
 
 | Report | English (default) | Chinese |

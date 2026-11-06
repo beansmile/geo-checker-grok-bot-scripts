@@ -1,5 +1,7 @@
 # Content GEO — Agent enrichment prompts
 
+**HARD RULE:** If report language is Chinese, rewrite primary JSON prose into Chinese before `build_* --lang zh`. Never chrome-only ZH from English enrichment.
+
 > Used after `scripts/content_eval.py` / `content_analyze.py` produce `content.engine.json`.
 > **Grok Bot path:** the Agent rewrites into client prose in the **report language** (English by default; Chinese when the user explicitly asked — 中文报告 / Chinese report / 出中文). Do not call external OpenAI APIs. Do not ask for language unless they asked for both or it is ambiguous.
 > Brand: GEO Checker (Beansmile). GEO = Generative Engine Optimization (websites), never geography.

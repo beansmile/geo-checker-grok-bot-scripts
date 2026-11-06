@@ -23,6 +23,16 @@ Scripts crawl and score; **you always do deep enrichment** in the **report langu
 - Never show scoring / rules / rubric version numbers in customer HTML or user chat.
 - For Chinese runs, write Chinese into **primary** narrative fields (not only parallel `*_zh` keys). Builders still accept `*_zh` as fallbacks.
 
+## HARD RULE — Chinese reports (never break)
+
+**Forbidden:** building `--lang zh` HTML from English enrichment / English narrative fields (chrome-only flip). That produces Chinese chrome with English body — treated as a product bug.
+
+**Required when report language is Chinese:**
+1. Rewrite **all** client-facing primary fields into Chinese **before** build: technical `report.json` (overall assessment, finding problem/impact/solution, dim `narr`/`callout`, SEO narr, next_steps) and `content_report.json` (`overall_summary`, `closing`, dim narr/callout, findings, `priority_actions` including `sample` / `detail` / `outcome`).
+2. Then `build_* --lang zh`. URL path tokens, brand codes (LONGT), and factual fetch-disclosure technical terms may stay as-is.
+3. If an English report already exists and the user later asks for Chinese: **re-enrich in Chinese**, then rebuild — do not rebuild ZH from the English JSON alone.
+
+
 Build commands:
 
 - EN tech: `python3 scripts/build_report.py <run> --lang en`

@@ -1,5 +1,7 @@
 # LLM stage prompts (GEO Checker)
 
+**HARD RULE:** If report language is Chinese, rewrite primary JSON prose into Chinese before `build_* --lang zh`. Never chrome-only ZH from English enrichment.
+
 > Used by the Agent in SKILL.md Step 3. The rules engine writes fallback copy; these prompts rewrite it into client-facing deep interpretation.
 >
 > **Grok Bot path:** the Agent runs these stages itself (no `GEO_EVAL_LLM_API_KEY`). **Client-facing prose language = report language**: English by default; Chinese when the user explicitly asked for a Chinese report (中文报告 / Chinese report / 出中文). Keep the same JSON output shapes. Do not ask for language unless the user asked for both or it is ambiguous. Never mention scoring/rules/rubric version numbers in client prose.

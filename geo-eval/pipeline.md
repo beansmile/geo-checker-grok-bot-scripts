@@ -95,3 +95,6 @@ Never re-fetch for content when a successful technical run exists. A separate co
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
 
 Technical scoring: 10-dim /100 (SEO discoverability = 15 pts inside that total). Content GEO: separate 5-dim /100. Keep version labels in engineer docs / JSON; do not parrot them to customers.
+
+## Language hard rule
+Never build Chinese HTML from English enrichment alone. Re-enrich primary fields in Chinese, then `--lang zh`.
