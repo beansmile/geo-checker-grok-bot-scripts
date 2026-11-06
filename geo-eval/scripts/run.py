@@ -109,6 +109,10 @@ AI_UA_PROBES = {
     "ClaudeBot":     "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
     "PerplexityBot": "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
 }
+# scoring v1.3: lightweight multi-UA smoke also records one mainstream searchbot
+SEARCH_UA_PROBES = {
+    "Googlebot": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+}
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
 # 挑战页特征：SiteGround 用 202 + sg-captcha + meta refresh 跳验证页
@@ -120,7 +124,8 @@ CHALLENGE_HEADERS = re.compile(r"^(sg-captcha|cf-mitigated|x-robot-challenge)", 
 
 
 def _probe(url, ua, timeout=20):
-    """用指定 UA 抓一次，返回状态/是否挑战页/响应头。"""
+    """用指定 UA 抓一次，返回状态/是否挑战页/响应头/耗时。"""
+    t0 = time.time()
     req = urllib.request.Request(url, headers={"User-Agent": ua, "Accept": "text/html,*/*"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -128,7 +133,8 @@ def _probe(url, ua, timeout=20):
     except urllib.error.HTTPError as e:
         status, body, hdrs = e.code, e.read(20000)[:20000], e.headers
     except Exception as e:  # noqa: BLE001
-        return {"status": 0, "challenge": False, "error": str(e)[:200], "size": 0}
+        return {"status": 0, "challenge": False, "error": str(e)[:200], "size": 0,
+                "latency_ms": int((time.time() - t0) * 1000)}
     text = body.decode("utf-8", "replace")
     chal = bool(CHALLENGE_MARKERS.search(text))
     for k, v in (hdrs or {}).items():
@@ -138,31 +144,45 @@ def _probe(url, ua, timeout=20):
     if status == 202 or status in (403, 429):
         chal = True
     return {"status": status, "challenge": chal, "size": len(body),
-            "content_length": (hdrs or {}).get("content-length"), "error": ""}
+            "content_length": (hdrs or {}).get("content-length"), "error": "",
+            "latency_ms": int((time.time() - t0) * 1000)}
 
 
 def test_crawler_access(base_url, out_path):
-    """实测 AI 爬虫可达性；结果落盘供 analyze.py 读取（离线也能复现）。"""
+    """实测 AI/搜索爬虫可达性；结果落盘供 analyze.py 读取（离线也能复现）。
+
+    scoring v1.3: browser + one searchbot + AI search bots as Access smoke evidence only
+    (status/latency). Do not invent differentiation scores from a single sample.
+    """
     results = []
-    for name, ua in AI_UA_PROBES.items():
+    for name, ua in {**SEARCH_UA_PROBES, **AI_UA_PROBES}.items():
         r = _probe(base_url, ua)
         r["ua"] = name
         results.append(r)
+        lat = r.get("latency_ms")
+        lat_s = f"{lat}ms" if lat is not None else "?"
         print(f"      [crawler] {name:14s} HTTP {r['status']:<3} "
-              f"{'CHALLENGE' if r['challenge'] else 'ok'}  {r['size']}B")
+              f"{'CHALLENGE' if r['challenge'] else 'ok'}  {r['size']}B  {lat_s}")
     baseline = _probe(base_url, BROWSER_UA)
     baseline["ua"] = "browser"
     results.append(baseline)
+    lat = baseline.get("latency_ms")
+    lat_s = f"{lat}ms" if lat is not None else "?"
     print(f"      [crawler] {'browser':14s} HTTP {baseline['status']:<3} "
-          f"{'CHALLENGE' if baseline['challenge'] else 'ok'}  {baseline['size']}B")
+          f"{'CHALLENGE' if baseline['challenge'] else 'ok'}  {baseline['size']}B  {lat_s}")
 
-    ai_blocked = [r for r in results if r["ua"] != "browser" and (r["challenge"] or r["status"] in (0, 403, 429))]
+    smoke_names = {"browser", "Googlebot", "OAI-SearchBot", "GPTBot"}
+    ai_blocked = [r for r in results if r["ua"] in AI_UA_PROBES and (r["challenge"] or r["status"] in (0, 403, 429))]
     payload = {
         "url": base_url,
         "ua_results": results,
         "ai_blocked": [r["ua"] for r in ai_blocked],
         "waf_challenge": bool(baseline["challenge"]),
-        "reachable": all(r["status"] == 200 and not r["challenge"] for r in results),
+        "reachable": all(r["status"] == 200 and not r["challenge"] for r in results if r["ua"] in AI_UA_PROBES or r["ua"] == "browser"),
+        "multi_ua_smoke": {
+            "ua": [r["ua"] for r in results if r["ua"] in smoke_names],
+            "note": "Access evidence only (scoring v1.3); not a scored dimension.",
+        },
     }
     save(out_path, json.dumps(payload, ensure_ascii=False, indent=2))
     return payload

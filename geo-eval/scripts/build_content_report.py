@@ -417,7 +417,11 @@ def render_html(data: dict, style_css: str) -> str:
             findings_html += f"<div class='frow'><h4>{i} · {esc(f)}</h4></div>"
             continue
         sev = esc(f.get("severity") or "medium")
-        ev = "".join(f"<li>{esc(e)}</li>" for e in (f.get("evidence") or []))
+        def _ev_line(e):
+            if isinstance(e, dict):
+                return esc((e.get("quote") or e.get("url") or str(e))[:240])
+            return esc(str(e))
+        ev = "".join(f"<li>{_ev_line(e)}</li>" for e in (f.get("evidence") or []))
         findings_html += f"""
 <div class="frow" id="f{i}">
   <div class="frow-h"><span class="sev sev-{sev}">{sev}</span><h4>{i} · {esc(f.get('title'))}</h4></div>

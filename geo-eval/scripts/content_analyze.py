@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Heuristic Content GEO scoring (v1.1, five dims) from content_extract.json (+ optional AI checks).
+"""Heuristic Content GEO scoring (v1.2 / product scoring v1.3, five dims).
 
+From content_extract.json (+ optional AI checks).
 SEO discoverability lives in the technical report (seo_scoring.md / seo_analyze.py).
 Writes content.engine.json. Agent enrichment fills narratives into content_report.json.
-Does NOT touch technical scoring.md nine-dim formula.
+Does NOT touch the technical 10-dimension /100 formula in scoring.md.
 """
 
 from __future__ import annotations
@@ -44,22 +45,37 @@ def clamp(n, lo, hi):
 
 
 
-def score_ia(types: dict) -> tuple[float, list]:
+def score_ia(types: dict, pages: list | None = None, corpus_text: str = "") -> tuple[float, list]:
     notes = []
-    needed = ["product", "case", "about", "solution", "rd", "news"]
-    present = [n for n in needed if types.get(n, 0) > 0]
-    # Scaled to /20 (v1.1): base + presence + knowledge extras
-    score = 3  # base for having any site
-    score += 2.5 * len(present)  # up to 15
+    pages = pages or []
+    try:
+        import geo_signals_v13 as v13
+        cov = v13.intent_coverage(types, pages, corpus_text)
+        present = cov["present"]
+        missing = cov["missing"]
+        notes.append(cov["note"])
+        if cov["multi_market_claim"] and not cov["market_pages_in_sample"]:
+            notes.append(
+                "Site claims multi-market coverage but sample lacks independent "
+                "market/region/project URLs (answerability gap — not city-keyword SEO)."
+            )
+    except Exception:
+        needed = ["product", "case", "about", "solution", "rd", "news"]
+        present = [n for n in needed if types.get(n, 0) > 0]
+        missing = [n for n in needed if not types.get(n)]
+    # Scaled to /20: base + presence + knowledge extras (weights unchanged)
+    score = 3
+    score += 2.5 * min(6, len([p for p in present if p != "market"]))
     if types.get("faq") or types.get("download"):
         score += 2
-    missing = [n for n in needed if not types.get(n)]
+    if "market" in present:
+        score += 1
     if missing:
-        notes.append("Missing or not sampled page types: " + ", ".join(missing))
+        notes.append("Missing or not sampled intent page types: " + ", ".join(missing))
     if types.get("product", 0) and types.get("case", 0) == 0:
         notes.append("Products exist without deep project-case pages in sample.")
     if types.get("about") and not types.get("rd"):
-        notes.append("R&D / patent / specs likely folded into About rather than dedicated URLs.")
+        notes.append("R&D / specs / docs likely folded into About rather than dedicated URLs.")
     return clamp(round(score, 1), 0, 20), notes
 
 
@@ -113,6 +129,13 @@ def score_writing(pages: list) -> tuple[float, list]:
         notes.append(f"{slogan_pages} page(s) lean on slogans without enough specs/standards.")
     if not any(p.get("spec_hits", 0) >= 3 for p in pages):
         notes.append("Few extractable specification blocks across the sample.")
+    locked_pages = [p for p in pages if p.get("image_locked")]
+    if locked_pages:
+        final = clamp(round(final - min(6.0, 1.5 * len(locked_pages)), 1), 0, 20)
+        notes.append(
+            f"{len(locked_pages)} page(s) appear image-locked / non-extractable — "
+            "move key facts into HTML text (product/case/article field checklists)."
+        )
     return final, notes
 
 
@@ -145,6 +168,27 @@ def score_authority(pages: list, offsite: list | None = None) -> tuple[float, li
         # Off-site assets help only a little until mirrored on-site
         score += min(2, 0.5 * len(offsite))
         notes.append(f"{len(offsite)} off-site evidence item(s) listed — should be mirrored onto official URLs with source links.")
+    # v1.3: unverified marketing claims (round numbers / superlatives without proof links)
+    claim_pages = 0
+    claim_examples = []
+    for p in pages:
+        claims = p.get("unverified_claims") or []
+        if not claims:
+            try:
+                import geo_signals_v13 as v13
+                claims = v13.detect_unverified_claims(p.get("text_excerpt") or "", [])
+            except Exception:
+                claims = []
+        if claims:
+            claim_pages += 1
+            claim_examples.extend(c.get("claim") for c in claims[:2])
+    if claim_pages:
+        score -= min(4.0, 1.5 * claim_pages)
+        notes.append(
+            f"{claim_pages} page(s) state large round numbers or superlatives without nearby "
+            f"evidence links (e.g. {', '.join(str(x) for x in claim_examples[:3])}). "
+            "Publish proof pages and link claims to them — entity trust for AI citation, not local SEO."
+        )
     return clamp(round(score, 1), 0, 20), notes
 
 
@@ -209,7 +253,8 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
         crawl_ok = any((p.get("status") == 200) for p in site.get("pages_sampled") or [])
 
     unevaluable = len(pages) == 0
-    ia_s, ia_n = score_ia(types)
+    corpus = " ".join((p.get("text_excerpt") or "") for p in pages)
+    ia_s, ia_n = score_ia(types, pages, corpus)
     tax_s, tax_n = score_taxonomy(types, pages)
     wr_s, wr_n = score_writing(pages)
     au_s, au_n = score_authority(pages, offsite)
@@ -270,9 +315,36 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
         "priority_actions": [],
         "overall_summary": "",
         "closing": "",
-        "rubric": "content_scoring.md v1.1",
+        "rubric": "content_scoring.md v1.2",
+        "scoring_version": "v1.3",
         "note": "Heuristic engine scores. Agent must enrich narratives and AI-check table per content_prompts.md.",
     }
+    # Attach v1.3 structured findings (agent may rewrite prose)
+    findings = []
+    locked = [p for p in pages if p.get("image_locked")]
+    if locked:
+        findings.append({
+            "severity": "高",
+            "id": "C-WRITE-IMG",
+            "title": "Main content appears image-locked or non-extractable",
+            "problem": f"{len(locked)} sampled page(s) lack enough extractable prose for AI citation.",
+            "impact": "Generative engines cannot reliably lift specs, outcomes, or definitions when facts live only in images or empty fields.",
+            "solution": "Use product / case / article field checklists; put citeable facts in HTML text.",
+            "evidence": [{"url": p.get("url") or "", "quote": "; ".join((p.get("image_locked_reasons") or [])[:2])} for p in locked[:4]],
+        })
+    if any(d["id"] == "C-AUTH" or d["key"] == "authority_evidence" for d in dimensions):
+        # surface claim note if present in authority notes
+        au_notes = next((d["notes"] for d in dimensions if d["key"] == "authority_evidence"), [])
+        if any("superlatives" in n or "round numbers" in n for n in au_notes):
+            findings.append({
+                "severity": "中",
+                "id": "C-AUTH-CLAIM",
+                "title": "Unverified marketing claims without on-site evidence links",
+                "problem": "Large round numbers or superlatives appear without nearby proof URLs.",
+                "impact": "AI systems may omit the brand or refuse to cite unverifiable claims.",
+                "solution": "Publish proof pages (certs, patents, cases) and link each claim to evidence.",
+            })
+    engine["findings"] = findings
     out = os.path.join(run_dir, "content.engine.json")
     with open(out, "w", encoding="utf-8") as f:
         json.dump(engine, f, ensure_ascii=False, indent=2)

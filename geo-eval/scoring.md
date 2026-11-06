@@ -1,7 +1,7 @@
 # 评分规则（scoring）
 
-> 10 维 100 分制，口径 v1.2（2026-11）。规则来源见 `rules.md`；方法论依据见 `methodology.md`；
-> SEO 维度细则见 `seo_scoring.md`。
+> 10 维 100 分制，口径 **v1.3**（2026-11）。规则来源见 `rules.md`；方法论依据见 `methodology.md`；
+> SEO 维度细则见 `seo_scoring.md`。相对 v1.2：**维度权重不变**，加强可抽取性、URL 卫生、主张证据、实体可核验性等子启发式与 findings。
 
 ## 1. 维度权重
 
@@ -12,7 +12,7 @@
 | 开放图谱与分享 | OGP-01/02 | 5 |
 | 内容覆盖与新鲜度 | RCH-01~04 | 12 |
 | 站内实体信号 | KG-01~06 | 10 |
-| 答案可吸收性 | ABS-01~06 | 12 |
+| 答案可吸收性 | ABS-01~06 + ABS-IMG | 12 |
 | 信任度 | TRU-01~07 | 12 |
 | 页面主题与元数据 | ONP-01~06 | 5 |
 | 内容质量 | QLT-01~03 | 5 |
@@ -21,9 +21,11 @@
 
 加减分（ACC、llms.txt +3、ItemList +3 等）**不**并入上表，见第 3 节；报告先展示基础分 /100，再单独展示 `score_adjustments`。
 
-## 2. 分维计分口径（v1.2）
+**GEO 口径：** Generative Engine Optimization（AI 理解 / 信任 / 引用就绪）。**不是**地理、本地地图包、NAP-as-GEO 或 LocalBusiness 核心产品叙事。
 
-相对 v1.1：原满分 15 的五维（schema / entity / richness / absorption / trust）按 **×12/15** 折算到满分 12；检查项与取样方式不变。SEO 为新增维度。
+## 2. 分维计分口径（v1.3）
+
+相对 v1.1：原满分 15 的五维（schema / entity / richness / absorption / trust）按 **×12/15** 折算到满分 12；检查项与取样方式不变。SEO 为 v1.2 起纳入的维度。v1.3 在 ABS / SEO / ENT·KG·Trust findings 上加厚子启发式，**满分表不变**。
 
 | 维度 | 计分方式 | 满分可达 |
 |---|---|---|
@@ -32,11 +34,22 @@
 | ogp | 只评**首页**：`og:title/description/image/url` 各 0.75 + `twitter:card` 2。内页缺标签只作建议项 | 5 |
 | richness | FAQ / 文章 / 正文体量三项内部满分 15，再 ×12/15；`llms.txt` 不计入本维 | 12 |
 | kg | sameAs 每条 1 分、上限 4；knowsAbout 3；foundingDate 1；address/location/areaServed 2 | 10 |
-| absorption | **Citability 五子项（20 分制，×0.6 折算）**：可引用块率 7 + 证据块覆盖 7 + 直接回答 3 + 结构化答案资产 2 + 对题度 1 | 12 |
+| absorption | **Citability 五子项（20 分制，×0.6 折算）**：可引用块率 7 + 证据块覆盖 7 + 直接回答 3 + 结构化答案资产 2 + 对题度 1；v1.3 对图片化/不可抽取样本软降 raw（最多 −2/20） | 12 |
 | trust | About / Contact / 合规 / 作者 / 正文体量内部满分 15，再 ×12/15 | 12 |
 | on_page | Title / Meta / H1 覆盖（不变） | 5 |
 | quality | 5 − 清洁度扣分（不变） | 5 |
-| **seo** | 启发式先打 `/25`（`seo_analyze.py`），再 `dim = round(raw×15/25, 1)` 封顶 15；子信号见 `seo_scoring.md` | 15 |
+| **seo** | 启发式先打 `/25`（`seo_analyze.py`），再 `dim = round(raw×15/25, 1)` 封顶 15；子信号见 `seo_scoring.md`（含 URL 卫生、图片化薄页） | 15 |
+
+### v1.3 新增 / 加厚（不改权重表）
+
+1. **主内容图片化 / 不可抽取** → ABS findings + absorption 软降；SEO 薄内容信号；Content C-WRITE。附通用产品 / 案例 / 文章字段清单。
+2. **入口与 URL 卫生**（SEO 维 + Access 说明；**不**把 ACC HTTPS 罚分再计入 SEO 数字）：软跳转 splash、canonical 缺失/不一致、多首页主机路径变体未见 301。
+3. **无证据营销主张** → Content C-AUTH（大额整数 / 最高级且附近无证据链）。
+4. **组织地址/联系完整度** → 实体 / 信任 / KG 可核验信号（正文或 schema address），**不是**本地地图包。
+5. **意图页类型覆盖** → Content C-IA / C-TAX；多市场表述时可建议独立 market/region/project URL（可答性，不是城市词 SEO）。
+6. **可选多 UA 冒烟**（浏览器 + 搜索爬虫 + AI 搜索爬虫）→ 仅 Access 证据（状态/时延），不编造差异分。
+7. **CWV / 大资源 / 老旧栈** → 仅建议项（`scored=false`）。
+8. **llms.txt** → 仍只在加减分 **+3**，不是核心维。
 
 > `llms.txt` 只在第 3 节加分项里 `+3`，不在 richness / seo 维度内重复计分。
 
@@ -97,6 +110,8 @@
 - 正文缺少权威外部引用（KG-04 / CIT-01）
 - 内页 Open Graph 标签不完整
 - 单一邮箱域 ≠ 站点域（ENT-02 W 警告项）
+- CWV / 大资源 / 老旧栈指纹（v1.3 advisory）
+- Multi-UA 冒烟记录（Access 证据）
 
 报告 HTML 显示 `Advisory` / `建议项` 徽标；`scope_warnings` 同样在「检测范围」页展示。
 
@@ -106,6 +121,7 @@
 2. **每条扣分可追溯**：规则 ID + 证据；无证据不扣分。
 3. **比率封顶 100%**，分母 = content 页（见 `rules.md` §0.3）。
 4. **置信度**：R 规则 = high；R+LLM = medium；LLM = medium/low（标 `review` 需人工确认）。
+5. **不编造**：抓取失败或 AI 检查未做时披露；需要时标 provisional。
 
 ## 9. 输出评分结构
 

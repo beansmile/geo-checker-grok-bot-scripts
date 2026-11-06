@@ -1,4 +1,4 @@
-# Content GEO Scoring Rubric (v1.1)
+# Content GEO Scoring Rubric (v1.2 · product scoring v1.3)
 
 > **GEO = Generative Engine Optimization** (websites / generative-engine readiness). Never geography.
 > Brand: **GEO Checker** by **Beansmile**.
@@ -6,7 +6,7 @@
 > This score is **standalone**. It evaluates whether site **content** can be understood, trusted, and cited — information architecture, page types and gaps, writing quality, authority evidence, and buyer-question coverage (including labeled AI/search visibility checks).
 >
 > **SEO content discoverability** is scored in the **technical** report (`seo_scoring.md`), not here.
-> Do **not** merge this score with the technical nine-dimension 100-point total in `scoring.md`.
+> Do **not** merge this score with the technical **10-dimension** 100-point total in `scoring.md`.
 
 ## Purpose
 
@@ -66,7 +66,7 @@ Grade map (same bands as technical, separate label **Content GEO**):
 4. **Provisional scores** are allowed when evidence comes from alternate public fetchers or search snippets while direct box crawl fails — label `confidence: provisional` and list blockers (e.g. HTTP 500 / SSL / WAF).
 5. **Company-specific prose.** Ban generic template advice that could fit any manufacturer.
 6. **English client reports** by default (Chinese copies only when requested for review).
-7. **Intro copy** explains what Content GEO evaluates. Do **not** open with a disclaimer comparing it to the nine-dimension technical score.
+7. **Intro copy** explains what Content GEO evaluates. Do **not** open with a disclaimer comparing it to the technical 10-dimension score.
 
 ## What is scored vs advisory
 
@@ -81,7 +81,9 @@ Grade map (same bands as technical, separate label **Content GEO**):
 
 ### C-IA (20)
 
-Score against a **site-type recommended tree**. Corporate B2B lighting example: Products (each line), Industry solutions, Project cases, R&D/specs, Company strength (certs/awards), Knowledge hub (selection/FAQ), Contact.
+Score against a **site-type recommended tree** (industry-agnostic intent types):
+Products, Solutions/use-cases, Cases/proof, Specs/docs, Company proof, Knowledge (FAQ/hub), Contact.
+When the site **claims multi-market coverage**, optional independent **market/region/project** URLs improve answerability for generative engines — **not** city-keyword SEO / local pack.
 
 | Band | Points | Signals |
 |---|---|---|
@@ -96,10 +98,12 @@ Inventory observed page types vs recommended. Deduct for missing product detail,
 ### C-WRITE (20)
 
 Prefer pages that open with a direct answer, then specs/modules/scenarios. Penalize slogan-only copy (“professional”, “excellent quality”) without parameters.
+**v1.3:** Penalize **image-locked / non-extractable** main content (key facts only in images/backgrounds, empty description fields, or extremely thin product/case/article bodies). Remediation uses generic product / case / article field checklists.
 
 ### C-AUTH (20)
 
 On-site pages for awards/patents/certs/cases with outbound links to primary sources score higher than claims only in About prose or only on third-party sites. Keyword density in About alone is not a publishing system.
+**v1.3:** Flag **unverified marketing claims** — large round numbers or superlatives without a nearby evidence link or supporting proof page in the sample (entity trust for AI citation, not local SEO).
 
 ### C-QUERY (25)
 
@@ -155,5 +159,5 @@ Per content run directory:
 
 ## Version
 
-v1.1 · 2026-11 · Beansmile · GEO Checker  
-*(v1.0 had C-SEO 25 inside Content GEO; moved to technical `seo_scoring.md` in v1.1.)*
+v1.2 · 2026-11 · Beansmile · GEO Checker · aligns with product **scoring v1.3**  
+*(v1.0 had C-SEO 25 inside Content GEO; moved to technical `seo_scoring.md` in v1.1. v1.2 adds extractability / claim-evidence / intent-coverage heuristics without changing the five-dim weights.)*

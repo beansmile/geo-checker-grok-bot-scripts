@@ -10,7 +10,7 @@ Step 3~4：通用 GEO 深度检测 + 9 维评分 → report.json
 输出:  <run_dir>/report.json（9 维得分、总分、等级、findings、penalty/bonus）
        seo 为技术百分制维度（启发式 /25 → 维度 /15；见 seo_scoring.md）；加减分仍在 score_adjustments
 
-口径:  10 维 100 分制 v1.2（schema 12 · entity 12 · ogp 5 · richness 12 · kg 10 · absorption 12 · trust 12 · on_page 5 · quality 5 · seo 15）
+口径:  10 维 100 分制 v1.3（权重同 v1.2：schema 12 · entity 12 · ogp 5 · richness 12 · kg 10 · absorption 12 · trust 12 · on_page 5 · quality 5 · seo 15；v1.3 加强可抽取性/URL 卫生/主张证据等子启发式）
        SEO content discoverability contributes to overall_score as the seo dimension
        Trust Ceiling：S1 实体冲突 → trust≤6/12、entity≤3.6/12、总分≤70；S1 lorem → 总分≤75
        纯规则 R（不含 LLM）；LLM 类判定（ENT-07、QLT 等）留待 merge_llm.py 扩展。
@@ -166,11 +166,21 @@ def load_pages(run_dir):
                 url_map[slug] = url
 
     for fname in sorted(os.listdir(pages_dir)):
-        if not fname.endswith(".html"):
+        # scoring v1.3: accept .md/.txt alternate-fetch snapshots as provisional pages
+        # when direct HTML crawl failed (disclose via role/content; no invented HTML chrome).
+        if not (fname.endswith(".html") or fname.endswith(".htm") or fname.endswith(".md") or fname.endswith(".txt")):
             continue
-        slug = fname[:-5]
+        if fname == "pages.list":
+            continue
+        slug = os.path.splitext(fname)[0]
         url = url_map.get(slug, slug)
-        html = open(os.path.join(pages_dir, fname), encoding="utf-8", errors="ignore").read()
+        raw = open(os.path.join(pages_dir, fname), encoding="utf-8", errors="ignore").read()
+        if fname.endswith((".md", ".txt")) and "<html" not in raw[:500].lower():
+            # Wrap snapshot text so downstream tag strippers still yield citeable body text.
+            esc = html_lib.escape(raw)
+            html = f"<html><head><title>{esc.splitlines()[0][:120] if esc.splitlines() else slug}</title></head><body><pre>{esc}</pre></body></html>"
+        else:
+            html = raw
 
         title = (re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I) or [None, ""])[1] if re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I) else ""
         title = html_lib.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", title))).strip()
@@ -245,11 +255,31 @@ def load_pages(run_dir):
                for h in re.findall(r"<h3[^>]*>(.*?)</h3>", html, re.S | re.I)]
         hierarchy_ok = not (h3s and not h2s)  # 有 H3 无 H2 = 跳级
 
+        role = ("home" if slug in ("home", "index") or fname.startswith("home.") else classify_role(url))
+        blob = f"{url} {title}"
+        if role == "home" or slug in ("home", "index"):
+            page_type = "home"
+        elif re.search(r"product|产品|/cp/", blob, re.I):
+            page_type = "product"
+        elif re.search(r"case|project|工程案例|cases", blob, re.I):
+            page_type = "case"
+        elif re.search(r"news|资讯|动态|media", blob, re.I):
+            page_type = "news"
+        elif re.search(r"about|company|概况|关于", blob, re.I):
+            page_type = "about"
+        elif re.search(r"contact|联系", blob, re.I):
+            page_type = "contact"
+        elif re.search(r"solution|方案|行业", blob, re.I):
+            page_type = "solution"
+        else:
+            page_type = role or "content"
+        wc = len(re.findall(r"[\w\u4e00-\u9fff]+", content or ""))
         pages.append({
-            "url": url, "slug": slug, "role": classify_role(url),
+            "url": url, "slug": slug, "role": role, "page_type": page_type,
             "title": title, "meta": meta, "h1": h1s, "h2": h2s, "h3": h3s,
             "hierarchy_ok": hierarchy_ok,
             "schemas": schemas, "ogp": ogp, "content": content, "html": html,
+            "word_count": wc, "images_total": len(re.findall(r"<img\b", html, re.I)),
             "links_internal": links_internal, "links_external": links_external,
             "author_names": author_names, "dates": dates, "canonical": canonical,
             "twitter_card": twitter_card,
@@ -551,7 +581,7 @@ def detect_acc(run_dir, base_url):
     }
 
 
-# ── 9 维评分 ──────────────────────────────────────────────
+# ── 10 维评分（SEO 在 analyze() 中并入）──────────────────
 def score_dimensions(pages, site, cln, ent, schema_info, acc):
     domain = site.get("registrable_domain") or registrable_domain(pages[0]["url"] if pages else "")
     content_pages = [p for p in pages if p["role"] == "content" or p["role"] == "home"]
@@ -678,8 +708,8 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
         q_deduction += 1
     quality = max(0, min(5, 5 - q_deduction))
 
-    # v1.2: dimensions formerly max 15 scale to max 12 (ogp/kg/on_page/quality unchanged).
-    # SEO is attached later in analyze() from seo_analyze.
+    # v1.2/v1.3: dimensions formerly max 15 scale to max 12 (ogp/kg/on_page/quality unchanged).
+    # SEO is attached later in analyze() from seo_analyze. Weights unchanged in v1.3.
     scale_15_to_12 = 12 / 15
     return {
         "schema": round(min(schema_score, 15) * scale_15_to_12, 1),
@@ -1089,6 +1119,98 @@ def build_findings(cln, ent, schema_info, acc, pages):
                          "impact": "AI 更倾向抽取结构化的定义/数据/对比/步骤。",
                          "solution": "用列表/表格呈现关键事实、参数、步骤。"})
 
+    # ── scoring v1.3 additions (generic websites) ──
+    try:
+        import geo_signals_v13 as v13
+        lock = v13.summarize_image_locked(content_pages or pages)
+        if lock.get("locked_pages"):
+            findings.append({
+                "severity": "高", "id": "ABS-IMG-01",
+                "title": "主内容疑似图片化/不可抽取",
+                "problem": (
+                    f"{lock['locked_pages']}/{lock['pages_checked']} 个抽样页可抽取正文不足；"
+                    "关键事实可能只存在于图片、背景图或空字段中。"
+                ),
+                "impact": "生成式引擎难以摘取可引用段落，品牌描述与参数无法被稳定引用。",
+                "solution": (
+                    lock.get("generic_remediation_en")
+                    or "把定义、规格、场景、成果写进可见 HTML 文本；图片只作说明。"
+                ),
+                "remediation_templates": {
+                    "product": v13.PRODUCT_FIELD_CHECKLIST,
+                    "case": v13.CASE_FIELD_CHECKLIST,
+                    "article": v13.ARTICLE_FIELD_CHECKLIST,
+                },
+                "evidence": [
+                    {"url": d.get("url") or "", "quote": "; ".join((d.get("reasons") or [])[:2])}
+                    for d in (lock.get("details") or [])[:4]
+                ],
+            })
+        # Entity address completeness → trust/KG framing (never local-pack)
+        corpus = " ".join((p.get("content") or "")[:2000] for p in pages[:8])
+        ev = v13.entity_verifiability(corpus, org)
+        if not ev.get("complete_enough"):
+            findings.append({
+                "severity": "中", "id": "ENT-ADDR-01",
+                "title": "组织可核验地址/联系信息不完整",
+                "problem": (
+                    "抽样正文与 Organization schema 中缺少足够的地址（postal/街道/地区文本或 schema address）"
+                    "与可核验联系方式。"
+                ),
+                "impact": "AI 引用时难以把站点落到可核验的 Organization 实体（实体/信任/知识图谱信号），不是本地地图包问题。",
+                "solution": "在 About/Contact 与 Organization JSON-LD 中提供一致的地址与 contactPoint。",
+                "evidence": [{
+                    "url": "",
+                    "quote": (
+                        f"schema_address={ev.get('schema_address_or_area')} "
+                        f"visible_address={ev.get('visible_address_text')} "
+                        f"contact={ev.get('schema_contact_point') or ev.get('visible_phone_text')}"
+                    ),
+                }],
+            })
+        # URL hygiene findings (also scored lightly inside SEO dim)
+        for f in v13.url_hygiene_findings(pages, [p.get("url") or "" for p in pages]):
+            # Avoid duplicating TEC-01 canonical-missing if SEO-URL-02 already covers
+            if f.get("id") == "SEO-URL-02" and any("canonical" in (x.get("title") or "") for x in findings):
+                continue
+            findings.append({
+                "severity": f.get("severity") or "中",
+                "id": f.get("id"),
+                "title": f.get("title_zh") or f.get("title"),
+                "problem": f.get("problem"),
+                "impact": f.get("impact"),
+                "solution": f.get("solution"),
+                "evidence": f.get("evidence") or [],
+                "note": f.get("note") or "",
+            })
+        # Advisory CWV / old stack (not scored)
+        blob = "\n".join((p.get("html") or "")[:3000] for p in pages[:3])
+        for adv in v13.advisory_performance_notes(blob):
+            findings.append(adv)
+        # Multi-UA smoke as Access evidence note
+        crawler = acc.get("crawler") or {}
+        if crawler.get("ua_results"):
+            smoke = v13.multi_ua_smoke_record(crawler.get("ua_results") or [])
+            findings.append({
+                "severity": "低", "scored": False, "id": "ACC-UA-SMOKE",
+                "title": "Multi-UA fetch smoke (Access evidence, advisory)",
+                "problem": smoke.get("note"),
+                "impact": "Records browser / searchbot / AI-bot status and latency when probed; not a scored dimension.",
+                "solution": "Keep AI and search crawlers able to fetch the same primary HTML as browsers.",
+                "evidence": [
+                    {"url": "", "quote": f"{r.get('ua')}: HTTP {r.get('status')} {r.get('latency_ms')}ms"}
+                    for r in (smoke.get("results") or [])[:6]
+                ],
+            })
+    except Exception as exc:  # noqa: BLE001
+        findings.append({
+            "severity": "低", "scored": False,
+            "title": "v1.3 signal pack partially skipped",
+            "problem": str(exc)[:200],
+            "impact": "",
+            "solution": "Re-run analyze.py after fixing geo_signals_v13 import path.",
+        })
+
     return findings
 
 
@@ -1341,7 +1463,7 @@ def analyze(run_dir):
             "score_raw_25": None, "max_raw_25": 25,
             "grade": "F", "confidence": "none",
             "notes": [f"SEO block unavailable: {exc}"],
-            "rubric": "seo_scoring.md v1.1", "part_of_technical_100": True,
+            "rubric": "seo_scoring.md v1.2", "part_of_technical_100": True,
         }
         dims["seo"] = 0.0
 
@@ -1440,7 +1562,7 @@ def analyze(run_dir):
         "ceiling": ceiling,
         "ceiling_note": ceiling_note,
         "versions": {"methodology_version": "v2026.10", "rules_version": "v1.1",
-                     "scoring_version": "v1.2", "seo_scoring_version": "v1.1"},
+                     "scoring_version": "v1.3", "seo_scoring_version": "v1.2"},
         "data_integrity_flags": integrity_flags(dims, acc, ent),
         "dimensions": dims_meta,
         "dimension_details": dimension_details,

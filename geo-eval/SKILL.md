@@ -33,9 +33,9 @@ git clone --depth 1 https://github.com/beansmile/geo-checker-grok-bot-scripts.gi
 ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skills/geo-eval
 ```
 
-To update later: `git -C /workspace/skills/geo-checker-grok-bot-scripts pull --ff-only` then keep the symlink.
+To update later **only when origin has the commits**: `git -C /workspace/skills/geo-checker-grok-bot-scripts pull --ff-only` then keep the symlink. Prefer the existing symlink when local is ahead.
 
-Refs in `/workspace/skills/geo-eval`: `rules.md`, `scoring.md` (v1.2, technical 10-dim /100 including SEO /15), `seo_scoring.md` (SEO dim rubric; raw heuristic /25 → dim /15), `prompts.md`, `methodology.md`, `content_scoring.md`, `content_prompts.md`, `docs/content_geo_design_spec.md`, `README.grok.md`.
+Refs in `/workspace/skills/geo-eval`: `rules.md`, `scoring.md` (v1.3, technical 10-dim /100 including SEO /15; weights same as v1.2), `seo_scoring.md` (SEO dim rubric; raw heuristic /25 → dim /15), `prompts.md`, `methodology.md`, `content_scoring.md`, `content_prompts.md`, `docs/content_geo_design_spec.md`, `README.grok.md`.
 
 ## Status wording
 
@@ -68,7 +68,7 @@ When the user asks for **content** GEO evaluation, information architecture advi
    ```
    Or reuse a crawl: `python3 scripts/content_eval.py --from-run runs/<domain>/<run>`.
 3. Build target procurement questions for the industry/company. Run AI/search visibility checks (`live_ui` when available; otherwise labeled `web_retrieval_proxy`). Save `evidence/ai_checks.json` and optional `evidence/offsite.json`, then re-run analyze with those files if needed.
-4. **Agent enrichment (required):** rewrite `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes). The intro explains what Content GEO evaluates — do **not** open with a “this is not the nine-dimension score” disclaimer.
+4. **Agent enrichment (required):** rewrite `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes). The intro explains what Content GEO evaluates — do **not** open with a “this is not the technical 10-dimension score” disclaimer.
 5. `python3 scripts/build_content_report.py runs/<domain>/<run>` → deliver `report/content_report.html` (HTML only).
 
 **Placement:** SEO content discoverability (titles/H1/meta, thin/duplicate risk, internal crawl paths, sitemap/robots as discovery aids) lives in the **technical** report as a **15-point dimension** of the 100 (`seo_scoring.md`). Content GEO (`content_scoring.md`) covers information architecture, taxonomy/gaps, writing, authority evidence, and target query coverage only — no SEO dim there.
@@ -89,7 +89,7 @@ python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
   --content-run runs/<domain>/<content_run> --lang zh
 ```
 
-Output: `report/combined_report.html` (or `combined_report.zh.html`). The combined report keeps **two** headline scores — technical /100 (incl. SEO dim) and Content GEO /100 — **separate**; never invent one merged total. Intro explains the package purpose; do **not** open with a “this is not the nine-dimension score” disclaimer. Ends with a phased remediation timeline (W0–W16).
+Output: `report/combined_report.html` (or `combined_report.zh.html`). The combined report keeps **two** headline scores — technical /100 (incl. SEO dim) and Content GEO /100 — **separate**; never invent one merged total. Intro explains the package purpose; do **not** open with a “this is not the technical 10-dimension score” disclaimer. Ends with a phased remediation timeline (W0–W16).
 
 ## Boundaries
 

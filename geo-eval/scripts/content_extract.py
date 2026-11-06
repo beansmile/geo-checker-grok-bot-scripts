@@ -4,6 +4,7 @@
 
 Input: run_dir with evidence/pages/*.{html,md,txt} and optional pages.list / site.json
 Output: content_extract.json (page inventory + text stats + taxonomy hints)
+scoring v1.3 also attaches image_locked / unverified_claims / entity address flags.
 """
 
 from __future__ import annotations
@@ -91,6 +92,7 @@ PAGE_TYPE_RULES = [
     ("rd", re.compile(r"patent|研发|技术|rd|research|spec", re.I)),
     ("faq", re.compile(r"faq|问答", re.I)),
     ("download", re.compile(r"download|资料|pdf", re.I)),
+    ("market", re.compile(r"market|region|cities|locations|coverage|服务区域|/city/|区域业务", re.I)),
 ]
 
 
@@ -194,6 +196,26 @@ def extract_file(path: str, url: str = "") -> dict:
     out["evidence_hits"] = len(EVIDENCE_RE.findall(body_text))
     out["text_excerpt"] = body_text[:1200]
     out["page_type"] = classify_page_type(url or path, out["title"], body_text)
+    # scoring v1.3 extractability / claim signals
+    try:
+        import geo_signals_v13 as v13
+        lock = v13.detect_image_locked({**out, "content": body_text, "html": text_in if ext in (".html", ".htm") or ("<html" in text_in[:500].lower()) else ""})
+        out["image_locked"] = bool(lock.get("locked"))
+        out["image_locked_severity"] = lock.get("severity", 0)
+        out["image_locked_reasons"] = lock.get("reasons") or []
+        out["unverified_claims"] = v13.detect_unverified_claims(body_text, [])
+        out["entity_address_visible"] = bool(v13.ADDRESS_TEXT_RE.search(body_text)) if hasattr(v13, "ADDRESS_TEXT_RE") else False
+        # ADDRESS_TEXT_RE exported via entity helper:
+        ev = v13.entity_verifiability(body_text, None)
+        out["entity_address_visible"] = bool(ev.get("visible_address_text"))
+        out["entity_phone_visible"] = bool(ev.get("visible_phone_text"))
+    except Exception:
+        out["image_locked"] = False
+        out["image_locked_severity"] = 0
+        out["image_locked_reasons"] = []
+        out["unverified_claims"] = []
+        out["entity_address_visible"] = False
+        out["entity_phone_visible"] = False
     return out
 
 

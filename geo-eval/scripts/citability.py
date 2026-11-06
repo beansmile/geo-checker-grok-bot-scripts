@@ -566,6 +566,13 @@ def analyze(pages):
         sum(1 for b in passages if b["citable"]) / len(passages) * 100, 1) if passages else 0
 
     dom_only = [d for _, d in doms]
+    image_locked = {}
+    try:
+        import geo_signals_v13 as v13
+        image_locked = v13.summarize_image_locked(pages)
+    except Exception:
+        image_locked = {}
+
     return {
         "content_blocks": {
             "total": total_blocks,
@@ -588,6 +595,7 @@ def analyze(pages):
              "issues": b["issues"], "text": b["text"][:160]}
             for b in scored if not b["citable"]
         ][:5],
+        "image_locked": image_locked,
     }
 
 
@@ -643,5 +651,12 @@ def raw_score(detail):
 
 
 def absorption_score(detail):
-    """20 分制 × 0.6 → 维度 12 分（scoring v1.2）。"""
-    return round(raw_score(detail) * 0.6, 1)
+    """20 分制 × 0.6 → 维度 12 分（scoring v1.2/v1.3 weights unchanged）。"""
+    raw = raw_score(detail)
+    # v1.3: image-locked / non-extractable sample softens absorption (cap -2.0 on 20-pt raw)
+    lock = (detail.get("image_locked") or {})
+    if lock.get("locked_rate_pct", 0) >= 40:
+        raw = max(0.0, raw - min(2.0, lock["locked_rate_pct"] / 50.0))
+    elif lock.get("locked_pages", 0) >= 2:
+        raw = max(0.0, raw - 1.0)
+    return round(raw * 0.6, 1)

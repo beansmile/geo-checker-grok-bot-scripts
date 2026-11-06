@@ -16,7 +16,7 @@ Using ONLY the evidence in content.engine.json + page texts + AI-check records:
 2. Write closing (one sentence, retellable).
 3. Do not invent HTML you did not see. Disclose fetch_mode and sample scope.
 4. Explain what Content GEO evaluates (understand / trust / cite). Do NOT open with a
-   comparison disclaimer about the nine-dimension technical score.
+   comparison disclaimer about the technical 10-dimension score.
 Output JSON fields: overall_summary, closing, confidence, fetch_disclosure
 ```
 

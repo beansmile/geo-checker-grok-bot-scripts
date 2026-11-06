@@ -27,7 +27,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 # report.json 没有版本字段时的兜底（旧 run 目录）
-VERSION_FALLBACK = "v1.2"
+VERSION_FALLBACK = "v1.3"
 
 
 # ---------------------------------------------------------------------------

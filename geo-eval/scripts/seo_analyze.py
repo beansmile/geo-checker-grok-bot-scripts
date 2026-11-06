@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""SEO content discoverability scoring (technical dimension, scoring v1.2).
+"""SEO content discoverability scoring (technical dimension, scoring v1.3).
 
 Heuristic raw score is /25; scaled into the technical 100 as a 15-point dim:
   dim_score = min(15, round(raw_25 * 15 / 25, 1))
-Shared by analyze.py (technical) and optionally content pipelines for reuse.
+Weights unchanged from v1.2; v1.3 adds richer sub-heuristics (image-locked thin,
+URL hygiene notes/findings). Shared by analyze.py and content pipelines.
 Rubric: seo_scoring.md
 """
 
@@ -45,6 +46,7 @@ class _LiteParser(HTMLParser):
         self.links = []
         self.images_total = 0
         self.images_with_alt = 0
+        self.canonical = ""
         self._skip = 0
         self._text = []
 
@@ -63,6 +65,10 @@ class _LiteParser(HTMLParser):
             self._h1_buf = []
         elif tag == "a" and "href" in ad:
             self.links.append(ad.get("href") or "")
+        elif tag == "link":
+            rel = (ad.get("rel") or "").lower()
+            if "canonical" in rel and not self.canonical:
+                self.canonical = (ad.get("href") or "").strip()
         elif tag == "img":
             self.images_total += 1
             if (ad.get("alt") or "").strip():
@@ -107,7 +113,7 @@ def page_from_html(url: str, html: str, role: str = "content") -> dict:
         "about" if re.search(r"about", url, re.I) else
         role or "content"
     )
-    return {
+    page = {
         "url": url,
         "title": (p.title or "").strip(),
         "meta_description": p.meta_desc,
@@ -116,9 +122,20 @@ def page_from_html(url: str, html: str, role: str = "content") -> dict:
         "internal_link_count": len([l for l in p.links if l.startswith("/") or "://" not in l]),
         "images_total": p.images_total,
         "images_with_alt": p.images_with_alt,
+        "canonical": p.canonical,
+        "html": html or "",
         "page_type": page_type,
         "role": role,
     }
+    try:
+        import geo_signals_v13 as v13
+        lock = v13.detect_image_locked(page)
+        page["image_locked"] = bool(lock.get("locked"))
+        page["image_locked_reasons"] = lock.get("reasons") or []
+    except Exception:
+        page["image_locked"] = False
+        page["image_locked_reasons"] = []
+    return page
 
 
 def pages_from_content_extract(extract: dict) -> list[dict]:
@@ -209,11 +226,12 @@ def score_seo(
     crawl_ok: bool,
     robots_ok: bool,
     sitemap_ok: bool,
-) -> tuple[float, list[str]]:
-    """Return (raw_score /25, notes). Same heuristic as former content C-SEO."""
+) -> tuple[float, list[str], list[dict]]:
+    """Return (raw_score /25, notes, findings). Weights same as v1.2; v1.3 richer signals."""
     notes: list[str] = []
+    findings: list[dict] = []
     if not pages:
-        return 0.0, ["No page bodies available for SEO content checks."]
+        return 0.0, ["No page bodies available for SEO content checks."], []
 
     score = 0.0
     titles = [p.get("title") or "" for p in pages]
@@ -238,11 +256,19 @@ def score_seo(
         1
         for p in pages
         if p.get("word_count", 0) < 80
-        and p.get("page_type") in ("product", "case", "solution", "home")
+        and p.get("page_type") in ("product", "case", "solution", "home", "news", "article")
     )
-    if thin:
-        score -= min(5, thin * 1.5)
-        notes.append(f"{thin} product/case/home-like pages look thin (<80 tokens).")
+    locked = sum(1 for p in pages if p.get("image_locked"))
+    if thin or locked:
+        penalty = min(5, thin * 1.5 + locked * 0.5)
+        score -= penalty
+        if locked:
+            notes.append(
+                f"{locked} page(s) look image-locked / non-extractable (facts may live only in media). "
+                "Put specs and proof into HTML text — see product/case/article field checklists."
+            )
+        if thin:
+            notes.append(f"{thin} product/case/home/news-like pages look thin (<80 tokens).")
 
     avg_links = sum(p.get("internal_link_count", 0) for p in pages) / max(1, len(pages))
     score += clamp(avg_links / 10.0, 0, 3)
@@ -274,7 +300,27 @@ def score_seo(
         if alt_rate < 0.5:
             notes.append("Many images lack alt text in HTML sample.")
 
-    return clamp(round(score, 1), 0, 25), notes
+    # v1.3 URL hygiene — small raw deductions; never replay ACC HTTPS penalty here
+    try:
+        import geo_signals_v13 as v13
+        hy = v13.url_hygiene_findings(pages, [p.get("url") or "" for p in pages])
+        findings.extend(hy)
+        if any(f.get("id") == "SEO-URL-01" for f in hy):
+            score -= 1.5
+            notes.append("Homepage soft/JS splash redirect detected (discoverability hygiene).")
+        if any(f.get("id") == "SEO-URL-02" for f in hy):
+            score -= 1.0
+            notes.append("Canonical tags missing on most sampled pages.")
+        if any(f.get("id") == "SEO-URL-03" for f in hy):
+            score -= 1.0
+            notes.append("Canonical mismatches page URL on one or more samples.")
+        if any(f.get("id") == "SEO-URL-04" for f in hy):
+            score -= 1.0
+            notes.append("Multiple home host/path variants without 301 evidence in sample.")
+    except Exception as exc:  # noqa: BLE001
+        notes.append(f"URL hygiene checks skipped: {exc}")
+
+    return clamp(round(score, 1), 0, 25), notes, findings
 
 
 def build_seo_block(
@@ -293,7 +339,8 @@ def build_seo_block(
         else:
             pages = pages_from_technical_run(run_dir)
 
-    raw_25, notes = score_seo(pages or [], crawl_ok, robots_ok, sitemap_ok)
+    raw_25, notes, hy_findings = score_seo(pages or [], crawl_ok, robots_ok, sitemap_ok)
+    merged_findings = list(findings or []) + list(hy_findings or [])
     dim_score = round(float(raw_25) * 15 / 25, 1)
     dim_score = min(15.0, max(0.0, dim_score))
     confidence = "high" if crawl_ok and pages else ("provisional" if pages else "none")
@@ -313,8 +360,9 @@ def build_seo_block(
         "notes": notes,
         "narr": narr,
         "callout": callout,
-        "findings": findings or [],
-        "rubric": "seo_scoring.md v1.1",
+        "findings": merged_findings,
+        "rubric": "seo_scoring.md v1.2",
+        "scoring_version": "v1.3",
         "part_of_technical_100": True,
         "crawl_probe_present": bool(crawl_probe),
     }
