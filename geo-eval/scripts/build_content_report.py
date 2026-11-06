@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build standalone Content GEO report (Markdown + HTML) from content_report.json.
+"""Build standalone Content GEO report (HTML) from content_report.json.
 
 HTML reuses report_templates/style.css so the deliverable matches the technical
 GEO readiness report visually. SEO discoverability is NOT part of this report
 (see technical report / seo_scoring.md).
+
+Client deliverable is HTML only. Pass --also-md to also write Markdown (internal).
 """
 
 from __future__ import annotations
@@ -606,7 +608,7 @@ def render_html(data: dict, style_css: str) -> str:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: build_content_report.py <run_dir> [--lang en|zh]")
+        print("Usage: build_content_report.py <run_dir> [--lang en|zh] [--also-md]")
         sys.exit(2)
     run_dir = sys.argv[1]
     lang = "en"
@@ -633,14 +635,16 @@ def main():
             if data.get(zk):
                 data[k] = data[zk]
 
-    md = render_md(data)
     suffix = ".zh" if lang == "zh" else ""
-    md_path = os.path.join(out_dir, f"content_report{suffix}.md")
     html_path = os.path.join(out_dir, f"content_report{suffix}.html")
-    open(md_path, "w", encoding="utf-8").write(md)
     open(html_path, "w", encoding="utf-8").write(render_html(data, style))
-    print(f"Wrote {md_path}")
     print(f"Wrote {html_path}")
+
+    if "--also-md" in sys.argv:
+        md = render_md(data)
+        md_path = os.path.join(out_dir, f"content_report{suffix}.md")
+        open(md_path, "w", encoding="utf-8").write(md)
+        print(f"Wrote {md_path} (--also-md)")
 
 
 if __name__ == "__main__":

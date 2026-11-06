@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Step 5：report.json → report/*.md + report/*.html
+Step 5：report.json → report/*.html (client deliverable is HTML only)
 
 用法:
-    python3 build_report.py <run_dir> [--brand 品牌名] [--lang zh|en] [--suffix .zh] [--source report.json]
+    python3 build_report.py <run_dir> [--brand 品牌名] [--lang zh|en] [--suffix .zh] [--source report.json] [--also-md]
 
 输入:  <run_dir>/report.json（analyze.py 或 enrich.py 产物）+ ../report_templates/ 模板
-输出:  <run_dir>/report/report{suffix}.md + report{suffix}.html
+输出:  <run_dir>/report/report{suffix}.html
+       Optional: report{suffix}.md only when --also-md is passed (internal/debug).
 
---lang en 使用 report_en.md / report_en.html 模板与英文标签；默认 en（Grok Bot / GEO Checker）。
+--lang en 使用 report_en.html 模板与英文标签；默认 en（Grok Bot / GEO Checker）。
 --suffix 用于同时产出多语言版本（如中文用 --lang zh --suffix .zh，英文不加后缀）。
 
 安全说明：报告正文（标题/问题/影响/解决/维度解读）可能含 <h1>、<title>、<script>
@@ -813,14 +814,7 @@ def main():
 
     out_dir = os.path.join(run_dir, "report")
     os.makedirs(out_dir, exist_ok=True)
-
-    # Markdown：正文保持原文（不转义），否则代码与 <h1> 字样会变成实体
-    data_md = flatten(report, brand, lang=lang, escape_html=False)
-    tpl_md = open(os.path.join(tpl_dir, S["template_md"]), encoding="utf-8").read()
-    md = render(tpl_md, data_md)
-    md_path = os.path.join(out_dir, f"report{suffix}.md")
-    open(md_path, "w", encoding="utf-8").write(md)
-    print(f"wrote {md_path} ({len(md)} chars)")
+    also_md = "--also-md" in args
 
     # HTML：正文按语言单独转义一次（防止 <title> 等 raw-text 元素吞掉后续文档）
     data_html = flatten(report, brand, lang=lang, escape_html=True)
@@ -833,6 +827,15 @@ def main():
     html_path = os.path.join(out_dir, f"report{suffix}.html")
     open(html_path, "w", encoding="utf-8").write(html)
     print(f"wrote {html_path} ({len(html)} chars)")
+
+    # Optional Markdown (internal/debug only — client deliverables are HTML)
+    if also_md:
+        data_md = flatten(report, brand, lang=lang, escape_html=False)
+        tpl_md = open(os.path.join(tpl_dir, S["template_md"]), encoding="utf-8").read()
+        md = render(tpl_md, data_md)
+        md_path = os.path.join(out_dir, f"report{suffix}.md")
+        open(md_path, "w", encoding="utf-8").write(md)
+        print(f"wrote {md_path} ({len(md)} chars)")
 
 
 if __name__ == "__main__":

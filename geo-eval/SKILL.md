@@ -1,87 +1,100 @@
 ---
 name: geo-eval
-description: Evaluate a website’s GEO (Generative Engine Optimization) readiness — crawl, 9-dimension rules scoring, Agent deep interpretation, output English md+html client report. Use when the user asks to evaluate/diagnose a site’s GEO, AI visibility, or whether content can be understood and cited by AI.
+description: >-
+  Use for website Generative Engine Optimization (GEO) readiness—not geography.
+  Crawl, score, enrich, and deliver English GEO Checker reports: the technical
+  9-dimension on-site readiness report (including a separate SEO content
+  discoverability chapter) and/or a standalone Content GEO report (architecture,
+  taxonomy, writing, authority evidence, and buyer-question coverage), and an
+  optional combined HTML package with a remediation timeline, when the
+  user asks about GEO, content, AI visibility, or whether a site can be
+  understood and cited.
 ---
+# Website Generative Engine Optimization (GEO) — GEO Checker
 
-# Website GEO deep evaluation (GEO Checker)
+**GEO = Generative Engine Optimization.** Scope is **websites** only (not geography/maps).
 
-Scripts do execution; the Agent does interpretation and drafting. Both are fixed pipeline steps: scripts produce rule hits and 9-dimension scores (`report.engine.json`); Agent enrichment produces client-readable finding rewrites + fix code + dimension/overall narratives (overwrite `report.json`); then md+html. **Agent enrichment is required every run — not optional.**
+Scripts crawl and score; **you always do deep enrichment** in English. Brand: **GEO Checker** by **Beansmile**.
 
-Runtime root on the Grok Bot box: `/workspace/skills/geo-eval`. See `README.grok.md`.
+## Runtime install (required)
 
-**Defaults for GEO Checker:** English reports; brand **GEO Checker**; attribution **Beansmile · GEO Checker**. Do not rely on an external OpenAI API key.
+Canonical scripts repo (MIT):
+`https://github.com/beansmile/geo-checker-grok-bot-scripts`
 
-## Pipeline (fixed 4 steps — do not skip step 3)
+Expected path: `/workspace/skills/geo-eval`
 
-1. Crawl + rules engine:
-   ```bash
-   cd /workspace/skills/geo-eval
-   python3 scripts/run.py <URL> --site-type corporate --max-pages 16
-   ```
-   - `--site-type`: corporate / personal / blog / ecommerce / saas (omit if unsure).
-   - Writes `runs/<domain>/<date>_runNN/report.engine.json` (hits + evidence + scores, no narrative) and a fallback `report.json`.
-   - After quota sampling, FAQ/About/Contact/Privacy are force-added; missing pages go into `scope.scope_warnings`.
-   - Same-day re-runs increment (`_run01` → `_run02` …) and do not overwrite prior evidence.
+If that directory is missing or incomplete, install once:
 
-2. (Optional, diagnostics only) Read `report.engine.json`: `overall_score`, `grade`, `dimensions`, `findings[]`, `dimension_details[]`, `scope`, `strengths[]`.
+```bash
+mkdir -p /workspace/skills
+cd /workspace/skills
+rm -rf geo-checker-grok-bot-scripts geo-eval
+git clone --depth 1 https://github.com/beansmile/geo-checker-grok-bot-scripts.git geo-checker-grok-bot-scripts
+ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skills/geo-eval
+```
 
-3. **Agent deep interpretation (required)**:
-   ```bash
-   python3 scripts/enrich.py runs/<domain>/<run>
-   ```
-   - **Grok Bot path (default):** do **not** set `GEO_EVAL_LLM_API_KEY`. enrich.py copies engine → `report.json` (`llm_enabled=false`). **You (the Agent)** then rewrite `report.json` using the English prompts in `prompts.md`: plain-English findings with real brand/domain/email/URL, paste-ready fix code and evidence quotes, plus `dimension_details`, `overall_summary`, and `closing`. **Do not ship the engine’s raw fallback copy as the client report.**
-   - Optional legacy only: if `GEO_EVAL_LLM_API_KEY` is set, enrich.py may call an OpenAI-compatible API. GEO Checker does not use this.
+To update later: `git -C /workspace/skills/geo-checker-grok-bot-scripts pull --ff-only` then keep the symlink.
 
-4. Build report (English by default):
-   ```bash
-   python3 scripts/build_report.py runs/<domain>/<run>
-   ```
-   - Writes `runs/<domain>/<run>/report/report.md` + `report.html` (30+ page deck). Use `--lang zh` only if the user explicitly asks for Chinese.
+Refs in `/workspace/skills/geo-eval`: `rules.md`, `scoring.md` (v1.1, technical 9-dim — do not change that formula), `seo_scoring.md` (SEO discoverability, separate /25), `prompts.md`, `methodology.md`, `content_scoring.md`, `content_prompts.md`, `docs/content_geo_design_spec.md`, `README.grok.md`.
 
-## Scoring snapshot
+## Status wording
 
-9 dimensions / 100 points: schema 15 · entity 15 · ogp 5 · richness 15 · kg 10 · absorption 15 · trust 15 · on_page 5 · quality 5.
+Prefer “Website GEO (Generative Engine Optimization) readiness…”. Chinese:「网站生成式引擎优化评测」. Never「地理检查」.
 
-**v1.1 highlights** (see `scoring.md`):
-- OGP scored on homepage only; inner-page tags are advisory.
-- richness 5/5/5 (FAQ / articles / body); `llms.txt` is a +3 adjustment only.
-- kg totals 10; absorption = Citability × 0.75 (`scripts/citability.py`).
-- trust needs real About/Contact content; template legal pages do not score.
-- `scored: false` findings show as Advisory and do not affect the severity strip.
+## LLM / tools (Grok Bot native)
 
-Trust Ceiling: S1 consistency conflicts → trust≤50%, entity≤30%, total≤70; lorem → total≤75. A single email domain ≠ site domain is a warning, not scored.
+- Crawl + scoring: local Python under `scripts/` (stdlib).
+- Enrichment: **you**, via `prompts.md` (technical, including `seo_discoverability` narrative) and `content_prompts.md` (content). Do **not** set `GEO_EVAL_LLM_API_KEY` or call external OpenAI APIs.
+- Technical reports: `python3 scripts/build_report.py <run> --lang en` → HTML only.
+- Content reports: `python3 scripts/build_content_report.py <run>` → HTML only.
+- Combined package: `python3 scripts/build_combined_report.py <tech_run> --content-run <content_run> [--lang zh]`.
 
-Grades: 90–100 A+｜80–89 A｜70–79 B｜60–69 C｜0–59 D.
+## Fixed 4 steps (technical on-site readiness)
 
-## Reference files
-
-- Rules → `rules.md`
-- Agent prompts (English) → `prompts.md`
-- Methodology → `methodology.md`
-- Scoring detail → `scoring.md`
-- Output schema → `output_schema.md`
-- Grok Bot notes → `README.grok.md`
-
-## Boundaries
-
-- Score = readiness to be understood / trusted / cited by AI — not ranking or traffic promises.
-- Every conclusion needs evidence; drop false positives.
-- If a crawl returns 0 sitemap URLs, re-run once.
-- Deliverable is Agent+script output branded GEO Checker (Beansmile). No client sign-off / file-number / “pending review” UI.
-
-## SEO content discoverability (technical add-on)
-
-After a normal technical run, `report.json` includes `seo_discoverability` (score /25). Rubric: `seo_scoring.md`. It is rendered as its own chapter in the technical report and **must not** be merged into the nine-dimension `overall_score`. Enrich `seo_discoverability.narr` / `callout` when present.
+1. Ensure runtime installed (above).
+2. `cd /workspace/skills/geo-eval && python3 scripts/run.py <URL> --site-type corporate --max-pages 16`
+3. Enrich `report.json` in English per `prompts.md`. Also enrich `seo_discoverability.narr` / `callout` when present (rubric: `seo_scoring.md`). The SEO block is **separate** from the nine-dimension 100 — never merge into `overall_score`.
+4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` → deliver `report.html` (includes the SEO content discoverability chapter). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
 
 ## Content GEO evaluation (standalone report)
 
-When the user asks for content architecture, writing, authority evidence, buyer-question coverage, or a content report separate from the technical score:
+When the user asks for **content** GEO evaluation, information architecture advice, writing or authority-content recommendations, buyer-question coverage, or a content report separate from the technical score:
 
-1. `python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16` (or `--from-run …`).
-2. Attach `evidence/ai_checks.json` (+ optional `evidence/offsite.json`); re-run `content_analyze.py` with those files.
-3. Enrich `content_report.json` in English per `content_prompts.md`. Explain what Content GEO evaluates; do **not** open with a “not the nine-dimension score” disclaimer.
-4. `python3 scripts/build_content_report.py runs/<domain>/<run>` → `report/content_report.md` + `.html`.
+1. Ensure runtime installed (above).
+2. Run:
+   ```bash
+   cd /workspace/skills/geo-eval
+   python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16
+   ```
+   Or reuse a crawl: `python3 scripts/content_eval.py --from-run runs/<domain>/<run>`.
+3. Build target procurement questions for the industry/company. Run AI/search visibility checks (`live_ui` when available; otherwise labeled `web_retrieval_proxy`). Save `evidence/ai_checks.json` and optional `evidence/offsite.json`, then re-run analyze with those files if needed.
+4. **Agent enrichment (required):** rewrite `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes). The intro explains what Content GEO evaluates — do **not** open with a “this is not the nine-dimension score” disclaimer.
+5. `python3 scripts/build_content_report.py runs/<domain>/<run>` → deliver `report/content_report.html` (HTML only).
 
-Content GEO rubric (`content_scoring.md` v1.1): IA 20 · taxonomy 15 · writing 20 · authority 20 · query coverage 25. SEO discoverability is **not** part of this score (see technical SEO chapter). Never blend Content GEO and technical 100 into one total.
+**Placement:** SEO content discoverability (titles/H1/meta, thin/duplicate risk, internal crawl paths, sitemap/robots as discovery aids) lives in the **technical** report (`seo_scoring.md`, score /25, not added to the 100). Content GEO (`content_scoring.md`) covers information architecture, taxonomy/gaps, writing, authority evidence, and target query coverage only.
 
-Refs: `content_scoring.md`, `content_prompts.md`, `seo_scoring.md`, `docs/content_geo_design_spec.md`, `docs/SKILL_content_geo_delta.md`.
+Rules: the Content GEO score is **separate** from the technical 100; never merge them into one total. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional — do not fake precision.
+
+
+## Combined package (technical + content + timeline)
+
+When the user wants one executive HTML that surfaces both tracks and a remediation schedule:
+
+```bash
+cd /workspace/skills/geo-eval
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<content_run>
+# Chinese:
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<content_run> --lang zh
+```
+
+Output: `report/combined_report.html` (or `combined_report.zh.html`). The combined report keeps technical /100, SEO /25, and Content GEO /100 **separate** — never invent one merged total. Intro explains the package purpose; do **not** open with a “this is not the nine-dimension score” disclaimer. Ends with a phased remediation timeline (W0–W16).
+
+## Boundaries
+
+- Technical 9-dim score = readiness of on-site signals to be understood / trusted / cited by AI—not rankings or traffic.
+- Technical SEO chapter = content discoverability (titles, intent pages, thin/duplicate content, internal paths, sitemap/robots as discovery aids). Separate /25; not a full rank-tracking SEO audit.
+- Content score = architecture, writing, evidence system, and query coverage / AI visibility.
+- Evidence required; drop false positives.
+- Chrome: GEO Checker · Beansmile; no Report ID; no sign-off blocks.

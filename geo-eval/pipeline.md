@@ -82,7 +82,8 @@ content_eval.py
   → content_extract.py   (page inventory / writing signals)
   → content_analyze.py   (Content GEO 5-dim engine scores; SEO is technical)
   → Agent enrichment     (content_prompts.md → content_report.json)
-  → build_content_report.py → report/content_report.md + .html
+  → build_content_report.py → report/content_report.html (HTML only)
+  → build_combined_report.py (tech_run + content_run) → report/combined_report.html
 ```
 
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.

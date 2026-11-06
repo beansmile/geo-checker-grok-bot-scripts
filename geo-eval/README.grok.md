@@ -29,3 +29,19 @@ python3 scripts/build_content_report.py runs/<domain>/<run>
 ```
 
 Rubric: `content_scoring.md`. Design: `docs/content_geo_design_spec.md`.
+
+## Client deliverables = HTML only
+
+`build_report.py` and `build_content_report.py` write **HTML** by default. Pass `--also-md` only for internal drafts. Do not hand customers `.md` report files.
+
+## Combined package
+
+```bash
+cd /workspace/skills/geo-eval
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<content_run>
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<content_run> --lang zh
+```
+
+Emits `report/combined_report.html` (+ `.zh.html`). Keeps technical, SEO (/25), and Content GEO scores separate; includes a W0–W16 remediation timeline.
