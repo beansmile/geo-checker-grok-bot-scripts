@@ -396,9 +396,9 @@ def main():
         subprocess.run([sys.executable, os.path.join(script_dir, "analyze.py"), run_dir], check=False)
         print("[6/7] LLM 深度解读（复核 findings + 重写分维度/总评）  →  report.json")
         subprocess.run([sys.executable, os.path.join(script_dir, "enrich.py"), run_dir], check=False)
-        print("[7/7] 生成报告  →  report/report.html")
+        print("[7/7] 生成报告  →  report/Technical_Report.html")
         subprocess.run([sys.executable, os.path.join(script_dir, "build_report.py"), run_dir], check=False)
-        print(f"\n完成。报告在 {run_dir}/report/ 下，可直接打开 report.html 查看（客户交付仅 HTML）。")
+        print(f"\n完成。报告在 {run_dir}/report/ 下，可直接打开 Technical_Report.html（中文：技术报告.html）查看（客户交付仅 HTML）。")
     else:
         print("      已用 --fetch-only，跳过检测与报告；后续手动跑 analyze.py / enrich.py / build_report.py（见 ../pipeline.md）")
 

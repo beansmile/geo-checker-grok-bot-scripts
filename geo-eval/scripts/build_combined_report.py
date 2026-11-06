@@ -8,7 +8,7 @@ Usage:
 
 Defaults:
   - Content JSON is read from the same run dir if present, else --content-run is required.
-  - Writes report/combined_report.html (or combined_report.zh.html when --lang zh).
+  - Writes report/Combined_Report.html (or 综合报告.html when --lang zh).
   - Client deliverable is HTML only (no .md).
 
 Scores stay separate: technical /100 (includes SEO discoverability as a 15-pt dim),
@@ -25,6 +25,13 @@ import re
 import sys
 from datetime import datetime
 from urllib.parse import urlparse
+
+try:
+    from timeline_ui import render_timeline_block
+except ImportError:
+    import sys as _sys
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from timeline_ui import render_timeline_block
 
 
 def esc(s: str) -> str:
@@ -123,7 +130,7 @@ STRINGS = {
         "intro_body": (
             "Use this report as an executive package: see the technical crawl/readiness picture, "
             "the SEO content discoverability picture, and the content architecture / buyer-question "
-            "picture side by side, then follow one phased remediation timeline. "
+            "picture side by side, then follow one effort-based remediation timeline. "
             "<strong>GEO = Generative Engine Optimization</strong> (websites), not geography. "
             "Detailed evidence lives in the standalone technical and Content GEO HTML reports."
         ),
@@ -152,13 +159,14 @@ STRINGS = {
         "shared_kicker": "05 Shared findings",
         "shared_h2": "Issues that span both tracks",
         "timeline_kicker": "06 Remediation timeline",
-        "timeline_h2": "Suggested phased plan (W0–W16)",
+        "timeline_h2": "Effort-based follow-up plan",
         "timeline_intro": (
-            "Suggested calendar assuming a focused remediation team. Adjust owners and "
-            "durations to your capacity; re-test after W16 against the same question set."
+            "Durations come from this run’s findings and priority actions — not a fixed "
+            "multi-week calendar. HTTPS/crawl restores are same-day work; content builds take longer. "
+            "Adjust owners and overlap to your capacity; finish with a same-rubric re-test."
         ),
         "phase": "Phase",
-        "weeks": "Weeks",
+        "weeks": "When",
         "focus": "Focus",
         "work": "Work items",
         "owner": "Owner",
@@ -262,7 +270,7 @@ STRINGS = {
         "intro_h2": "这份综合报告用来做什么",
         "intro_body": (
             "把它当作管理层可读的总包：并排查看技术抓取/就绪情况、SEO 内容可发现性、"
-            "以及内容架构/采购问题覆盖，再按同一套分阶段整改时间表推进。"
+            "以及内容架构/采购问题覆盖，再按同一套按工作量估算的整改时间表推进。"
             "<strong>GEO = 生成式引擎优化</strong>（网站），不是地理。"
             "完整证据仍以独立的技术报告与内容 GEO 报告为准。"
         ),
@@ -290,10 +298,10 @@ STRINGS = {
         "shared_kicker": "05 共通发现",
         "shared_h2": "跨轨道共性问题",
         "timeline_kicker": "06 建议整改时间表",
-        "timeline_h2": "分阶段计划（W0–W16）",
+        "timeline_h2": "按工作量估算的跟进计划",
         "timeline_intro": (
-            "以下为聚焦整改团队的建议日历。可按实际产能调整负责人与周期；"
-            "W16 后用同一套问题集复测。"
+            "工期来自本轮发现与优先行动，不是拉长的多周日历。"
+            "HTTPS/抓取恢复按天计；内容建设更长。可按产能调整负责人与并行；收尾用同一口径复测。"
         ),
         "phase": "阶段",
         "weeks": "周次",
@@ -684,20 +692,27 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
                 }
             )
 
-    phase_items = map_actions_to_phases(actions, content_findings + tech_findings, lang)
-    timeline_rows = ""
-    for p in S["phases"]:
-        items = phase_items.get(p["id"], p["default_items"])
-        # Cap length for readability
-        items = items[:6]
-        ul = "<ul class='plain'>" + "".join(f"<li>{esc(i)}</li>" for i in items) + "</ul>"
-        timeline_rows += (
-            f"<tr><td class='mono'><b>{esc(p['weeks'])}</b></td>"
-            f"<td><b>{esc(p['focus'])}</b></td>"
-            f"<td>{ul}</td>"
-            f"<td>{esc(p['owner'])}</td>"
-            f"<td>{esc(p['outcome'])}</td></tr>"
-        )
+    # Effort-based timeline from actual findings + actions (no fixed W0–W16 pad)
+    _tl_sources = list(actions)
+    for f in (content_findings + tech_findings):
+        if isinstance(f, dict):
+            _tl_sources.append({
+                "title": f.get("title") or f.get("problem") or "",
+                "detail": f.get("solution") or "",
+                "sev": f.get("severity") or "",
+                "owner": f.get("owner") or "",
+            })
+        elif isinstance(f, str):
+            _tl_sources.append({"title": f})
+    page_count = content.get("pages_analyzed") or (tech.get("scope") or {}).get("sampled_count")
+    timeline_block = render_timeline_block(
+        _tl_sources,
+        lang=lang,
+        page_count=page_count,
+        include_retest=True,
+        show_samples=False,
+        limit=12,
+    )
 
     actions_html = ""
     for a in actions[:12]:
@@ -871,9 +886,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
   <div class="ptitle"><div><div class="pkicker">{esc(S['timeline_kicker'])}</div>
     <h2>{esc(S['timeline_h2'])}</h2></div></div>
   <p class="narr">{esc(S['timeline_intro'])}</p>
-  <table class="mtable"><thead>
-    <tr><th>{esc(S['weeks'])}</th><th>{esc(S['focus'])}</th><th>{esc(S['work'])}</th><th>{esc(S['owner'])}</th><th>{esc(S['outcome'])}</th></tr>
-  </thead><tbody>{timeline_rows}</tbody></table>
+  {timeline_block}
   <footer class="pf"><span>{esc(S['footer'])}</span><span class="mono">Beansmile</span></footer>
 </section>
 
@@ -943,8 +956,8 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
 
     html = render_html(tech, content, style, lang=lang, brand=args.brand)
-    suffix = ".zh" if lang == "zh" else ""
-    html_path = os.path.join(out_dir, f"combined_report{suffix}.html")
+    stem = "综合报告" if lang == "zh" else "Combined_Report"
+    html_path = os.path.join(out_dir, f"{stem}.html")
     open(html_path, "w", encoding="utf-8").write(html)
     print(f"Wrote {html_path} ({len(html)} chars)")
 

@@ -59,8 +59,9 @@
   <ol class="toc">
     <li><span class="n mono">04</span><a href="#p4">Overall assessment</a><span class="dots"></span><span class="c mono">01</span></li>
     <li><span class="n mono">05</span><a href="#p5">What's already working</a><span class="dots"></span><span class="c mono">02</span></li>
-    <li><span class="n mono">06</span><a href="#p6">Scoring method (reproducible)</a><span class="dots"></span><span class="c mono">01</span></li>
-    <li><span class="n mono">07</span><a href="#p7">Key findings</a><span class="dots"></span><span class="c mono">03</span></li>
+    <li><span class="n mono">06</span><a href="#p6">Score snapshot</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">07</span><a href="#p7">Scoring method (reproducible)</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">08</span><a href="#p8">Key findings</a><span class="dots"></span><span class="c mono">03</span></li>
     {{toc_findings_html}}
     <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">Dimension assessment</a><span class="dots"></span><span class="c mono">04</span></li>
     {{toc_dims_html}}
@@ -94,10 +95,27 @@
   <ul class="plain">{{#strengths}}<li>{{.}}</li>{{/strengths}}</ul>
   <p class="note">These are the existing foundations confirmed as sound during the assessment. Keep them intact through any changes.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
 
-<!-- 6 method -->
+
+<!-- 6 dimension score preview (immediately before scoring method) -->
 <section class="page" id="p6" data-page="6" aria-label="Section 6 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
-  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 Overall assessment · Scoring method</span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 Overall · score snapshot</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 06 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 Overall · score snapshot</div><h2>Ten-dimension scores at a glance</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100 · {{grade}}</span></span></div></div>
+  <p class="narr">Scan every dimension score here, then read the next section for how the total is calculated. Full narratives live in the Dimension assessment chapter.</p>
+  <div class="score-preview">
+    <div class="sp-grid">{{#dim_pages}}<a class="sp-card" href="#{{anchor}}"><span class="sp-name">{{name}}</span>
+      <span class="sp-score {{c_class}}">{{score}}<small>/{{max}}</small> <em class="g {{g_class}}">{{grade}}</em></span>
+      <span class="sp-bar"><i style="width:{{pct}}%;background:{{bar}}"></i></span></a>{{/dim_pages}}
+    </div>
+  </div>
+  <p class="note">Dimension total <b class="mono">{{dim_sum}}</b> / 100. The next section covers adjustments and the final score.</p>
+  <footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 7 method -->
+<section class="page" id="p7" data-page="7" aria-label="Section 7 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 Overall assessment · Scoring method</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 07 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">01 Overall assessment · Scoring method</div><h2>How the {{overall_score}} / 100 readiness score is calculated</h2>
     <div class="pmeta-line"><span>All figures come from this assessment's scoring record and can be checked line by line</span></div></div>
     <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
@@ -126,10 +144,10 @@
     <li>Checked against official guidance: Google states meta descriptions have no fixed length limit (longer ones are simply truncated in display); structured data is not a general ranking factor; FAQ rich results stopped showing on 7 May 2026 (the Search Console report retired in June 2026 and API support in August 2026), and HowTo rich results were retired in 2023; an organisation's official accounts (sameAs) and contact points (contactPoint) are recommended where applicable, not required.</li>
   </ul><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
 
-<!-- 7 findings overview -->
-<section class="page" id="p7" data-page="7" aria-label="Section 7 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+<!-- 8 findings overview -->
+<section class="page" id="p8" data-page="8" aria-label="Section 8 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 Key findings</span>
-  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 07 / {{total_pages}}</span></span></header>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 08 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">03 Key findings</div><h2>The {{findings_count}} issues to prioritise</h2></div>
   <div class="pmeta mono dim">Ordered by impact</div></div>
   <ol class="toc">{{toc_findings_html}}</ol>
@@ -200,6 +218,7 @@
   <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
   <div class="narr lead">{{closing}}</div>
   <div class="nextgrid">{{#next_steps}}<div><span class="dimcell-n mono">{{label}}</span><b>{{title}}</b><p>{{body}}</p></div>{{/next_steps}}</div>
+  {{timeline_html}}
   <p class="note">GEO Checker · Beansmile</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- appendix glossary -->

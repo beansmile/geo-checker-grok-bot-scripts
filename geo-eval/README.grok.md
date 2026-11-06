@@ -22,11 +22,11 @@ Build flags:
 
 | Report | English (default) | Chinese |
 |---|---|---|
-| Technical | `build_report.py <run> --lang en` | `build_report.py <run> --lang zh --suffix .zh` |
+| Technical | `build_report.py <run> --lang en` | `build_report.py <run> --lang zh` |
 | Content | `build_content_report.py <run>` | `build_content_report.py <run> --lang zh` |
 | Combined | `build_combined_report.py …` | `build_combined_report.py … --lang zh` |
 
-Outputs: `report.html` / `report.zh.html`, `content_report.html` / `content_report.zh.html`, `combined_report.html` / `combined_report.zh.html`.
+Outputs: `Technical_Report.html` / `技术报告.html`, `Content_Report.html` / `内容报告.html`, `Combined_Report.html` / `综合报告.html`.
 
 If the user asks for Chinese **after** an English technical report was already delivered: on the content ask / follow-up, produce Chinese content + Chinese combined. Prefer rewriting enrichment to Chinese then rebuilding technical HTML from the same `report.json`; chrome-only language flip leaves English narrative — re-enrich in Chinese when delivering a Chinese tech report.
 
@@ -80,7 +80,7 @@ python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
   --content-run runs/<domain>/<content_or_same_run>
 ```
 
-Emits `report/combined_report.html` (+ `.zh.html`). Keeps technical /100 (incl. SEO dim) and Content GEO /100 separate; includes a W0–W16 remediation timeline.
+Emits `report/Combined_Report.html` (ZH: `综合报告.html`). Keeps technical /100 (incl. SEO dim) and Content GEO /100 separate; includes an **effort-based** remediation timeline (checklist + schedule; HTTPS/crawl ≤1 day — not a padded W0–W16 calendar).
 
 ## Scoring (internal; do not quote versions to customers)
 

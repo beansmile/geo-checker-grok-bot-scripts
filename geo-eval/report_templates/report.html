@@ -59,8 +59,9 @@
   <ol class="toc">
     <li><span class="n mono">04</span><a href="#p4">总体评价</a><span class="dots"></span><span class="c mono">01</span></li>
     <li><span class="n mono">05</span><a href="#p5">表现良好的部分</a><span class="dots"></span><span class="c mono">02</span></li>
-    <li><span class="n mono">06</span><a href="#p6">评分方法（可复现）</a><span class="dots"></span><span class="c mono">01</span></li>
-    <li><span class="n mono">07</span><a href="#p7">关键发现</a><span class="dots"></span><span class="c mono">03</span></li>
+    <li><span class="n mono">06</span><a href="#p6">维度得分速览</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">07</span><a href="#p7">评分方法（可复现）</a><span class="dots"></span><span class="c mono">01</span></li>
+    <li><span class="n mono">08</span><a href="#p8">关键发现</a><span class="dots"></span><span class="c mono">03</span></li>
     {{toc_findings_html}}
     <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">分维度评估</a><span class="dots"></span><span class="c mono">04</span></li>
     {{toc_dims_html}}
@@ -94,10 +95,27 @@
   <ul class="plain">{{#strengths}}<li>{{.}}</li>{{/strengths}}</ul>
   <p class="note">以上为检测中确认可用的既有基础，建议在后续改动中保持。</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
 
-<!-- 6 评分方法 -->
+
+<!-- 6 维度得分速览（紧挨评分方法前） -->
 <section class="page" id="p6" data-page="6" aria-label="第 6 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
-  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 总体评价 · 评分方法</span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 总体评价 · 维度速览</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 06 / {{total_pages}}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">01 总体评价 · 维度速览</div><h2>十维得分一览</h2></div>
+  <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100 · {{grade}}</span></span></div></div>
+  <p class="narr">先看各维度得分，再翻下一节了解计分方法。详细解读在「分维度评估」章节。</p>
+  <div class="score-preview">
+    <div class="sp-grid">{{#dim_pages}}<a class="sp-card" href="#{{anchor}}"><span class="sp-name">{{name}}</span>
+      <span class="sp-score {{c_class}}">{{score}}<small>/{{max}}</small> <em class="g {{g_class}}">{{grade}}</em></span>
+      <span class="sp-bar"><i style="width:{{pct}}%;background:{{bar}}"></i></span></a>{{/dim_pages}}
+    </div>
+  </div>
+  <p class="note">十维基础合计 <b class="mono">{{dim_sum}}</b> / 100。下一节说明加减分与最终总分怎么来。</p>
+  <footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
+
+<!-- 7 评分方法 -->
+<section class="page" id="p7" data-page="7" aria-label="第 7 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">01 总体评价 · 评分方法</span>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 07 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">01 总体评价 · 评分方法</div><h2>站内准备度 {{overall_score}} 分是怎么算出来的</h2>
     <div class="pmeta-line"><span>全部数值取自本次评分记录，可逐项核对</span></div></div>
     <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
@@ -126,10 +144,10 @@
     <li>官方口径核对：Google 说明元描述无固定长度限制（超出仅在展示时截断）；结构化数据不是通用排名因子；FAQ 富媒体结果已于 2026-05-07 停止展示（Search Console 报告 2026-06 退役、API 2026-08 移除），HowTo 富媒体结果已于 2023 年退役；组织信息的官方账号（sameAs）/ 联系方式（contactPoint）属“适用时推荐”而非必填。</li>
   </ul><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
 
-<!-- 7 关键发现总览 -->
-<section class="page" id="p7" data-page="7" aria-label="第 7 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
+<!-- 8 关键发现总览 -->
+<section class="page" id="p8" data-page="8" aria-label="第 8 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">03 关键发现</span>
-  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 07 / {{total_pages}}</span></span></header>
+  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 08 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">03 关键发现</div><h2>本次最需要优先处理的 {{findings_count}} 项问题</h2></div>
   <div class="pmeta mono dim">按影响程度排序</div></div>
   <ol class="toc">{{toc_findings_html}}</ol>
@@ -201,6 +219,7 @@
   <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
   <div class="narr lead">{{closing}}</div>
   <div class="nextgrid">{{#next_steps}}<div><span class="dimcell-n mono">{{label}}</span><b>{{title}}</b><p>{{body}}</p></div>{{/next_steps}}</div>
+  {{timeline_html}}
   <p class="note">GEO Checker · Beansmile</p><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 附录 术语表 -->

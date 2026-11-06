@@ -26,7 +26,7 @@ Scripts crawl and score; **you always do deep enrichment** in the **report langu
 Build commands:
 
 - EN tech: `python3 scripts/build_report.py <run> --lang en`
-- ZH tech: `python3 scripts/build_report.py <run> --lang zh --suffix .zh`
+- ZH tech: `python3 scripts/build_report.py <run> --lang zh`
 - Content: `python3 scripts/build_content_report.py <run> [--lang zh]`
 - Combined: `python3 scripts/build_combined_report.py … [--lang zh]`
 
@@ -61,16 +61,16 @@ Prefer “Website GEO (Generative Engine Optimization) readiness…”. Chinese:
 
 - Crawl + scoring: local Python under `scripts/` (stdlib).
 - Enrichment: **you**, via `prompts.md` (technical, including `seo_discoverability` narrative) and `content_prompts.md` (content). Do **not** set `GEO_EVAL_LLM_API_KEY` or call external OpenAI APIs. Enrich in the report language.
-- Technical reports: `python3 scripts/build_report.py <run> --lang en` (or `--lang zh --suffix .zh`) → HTML only.
-- Content reports: `python3 scripts/build_content_report.py <run> [--lang zh]` → HTML only.
-- Combined package: `python3 scripts/build_combined_report.py <tech_run> --content-run <content_run> [--lang zh]`.
+- Technical reports: `python3 scripts/build_report.py <run> --lang en` (or `--lang zh`) → HTML only (`Technical_Report.html` / `技术报告.html`).
+- Content reports: `python3 scripts/build_content_report.py <run> [--lang zh]` → HTML only (`Content_Report.html` / `内容报告.html`).
+- Combined package: `python3 scripts/build_combined_report.py <tech_run> --content-run <content_run> [--lang zh]` → `Combined_Report.html` / `综合报告.html`.
 
 ## Fixed 4 steps (technical on-site readiness)
 
 1. Ensure runtime installed (above). Detect report language from the user message (EN default).
 2. `cd /workspace/skills/geo-eval && python3 scripts/run.py <URL> --site-type corporate --max-pages 16`
 3. Enrich `report.json` in the report language per `prompts.md`. Also enrich `seo_discoverability.narr` / `callout` when present (rubric: `seo_scoring.md`). SEO is a **15-point technical dimension** inside `overall_score` /100 (bonuses stay in `score_adjustments`).
-4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` (or `--lang zh --suffix .zh`) → deliver `report.html` / `report.zh.html` (SEO appears among the ten dimensions). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
+4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` (or `--lang zh`) → deliver `Technical_Report.html` / `技术报告.html` (SEO appears among the ten dimensions). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
 
 Then ask once whether to also produce Content GEO + combined (see below). One crawl powers all three reports when the user says yes. Build content/combined in the **same** report language.
 
@@ -103,7 +103,7 @@ Standalone content-only (no prior tech run): `python3 scripts/content_eval.py <U
 
 **Placement:** SEO discoverability lives in the **technical** report as a **15-point dimension** of the 100 (`seo_scoring.md`). Content GEO (`content_scoring.md`) covers IA, taxonomy, writing, authority evidence, and query coverage only — no SEO dim there.
 
-Rules: Content GEO score is **separate** from the technical 100; never merge into one total. Combined HTML keeps **two** headline scores + W0–W16 remediation timeline. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
+Rules: Content GEO score is **separate** from the technical 100; never merge into one total. Combined HTML keeps **two** headline scores + an effort-based remediation timeline (checklist + day-scale schedule). GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
 
 ## Boundaries
 

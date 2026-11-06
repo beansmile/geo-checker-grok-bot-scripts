@@ -4,14 +4,14 @@
 Step 5：report.json → report/*.html (client deliverable is HTML only)
 
 用法:
-    python3 build_report.py <run_dir> [--brand 品牌名] [--lang zh|en] [--suffix .zh] [--source report.json] [--also-md]
+    python3 build_report.py <run_dir> [--brand 品牌名] [--lang zh|en] [--suffix ...] [--source report.json] [--also-md]
 
 输入:  <run_dir>/report.json（analyze.py 或 enrich.py 产物）+ ../report_templates/ 模板
-输出:  <run_dir>/report/report{suffix}.html
-       Optional: report{suffix}.md only when --also-md is passed (internal/debug).
+输出:  <run_dir>/report/Technical_Report.html (en) or 技术报告.html (zh)
+       Optional Markdown only when --also-md is passed (internal/debug).
 
 --lang en 使用 report_en.html 模板与英文标签；默认 en（Grok Bot / GEO Checker）。
---suffix 用于同时产出多语言版本（如中文用 --lang zh --suffix .zh，英文不加后缀）。
+--suffix optional stem override (legacy); language-based filenames are preferred.
 
 安全说明：报告正文（标题/问题/影响/解决/维度解读）可能含 <h1>、<title>、<script>
 等技术字样。HTML 渲染时按语言单独做一次转义，否则 <title> 这类 raw-text 元素会把
@@ -25,6 +25,12 @@ import re
 import sys
 from datetime import datetime
 from urllib.parse import urlparse
+
+try:
+    from timeline_ui import render_timeline_block
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from timeline_ui import render_timeline_block
 
 # Internal JSON fallback only (not printed in client HTML chrome)
 VERSION_FALLBACK = "v1.3"
@@ -130,6 +136,7 @@ STRINGS = {
         "copy_label": "复制代码",
         "idx_overall": "总体评价",
         "idx_strengths": "表现良好的部分",
+        "idx_score_preview": "维度得分速览",
         "idx_method": "评分方法（可复现）",
         "idx_findings": "关键发现",
         "idx_dims": "分维度评估",
@@ -214,6 +221,7 @@ STRINGS = {
         "copy_label": "Copy code",
         "idx_overall": "Overall assessment",
         "idx_strengths": "What's already working",
+        "idx_score_preview": "Score snapshot",
         "idx_method": "Scoring method (reproducible)",
         "idx_findings": "Key findings",
         "idx_dims": "Dimension assessment",
@@ -463,19 +471,21 @@ def flatten(report, brand, lang="zh", escape_html=False):
         )
 
     # ---------- 页码布局 ----------
+    # Fixed front matter: cover(1) howto(2) toc(3) overall(4) strengths(5)
+    # score preview(6) method(7) findings overview(8) + N finding pages + dims...
     N = len(findings)
     M = len(DIM_ORDER)
     # SEO is one of the M dimensions (no separate /25 add-on page)
-    total_pages = 12 + N + M
-    p_dims_index = 8 + N
-    p_seo = 9 + N + M - 1  # anchor of seo dim page (last dim); kept for template compat
-    p_actions = 9 + N + M
-    p_scope = 10 + N + M
-    p_conclusion = 11 + N + M
-    p_glossary = 12 + N + M
+    total_pages = 13 + N + M
+    p_dims_index = 9 + N
+    p_seo = 10 + N + M - 1  # anchor of seo dim page (last dim); kept for template compat
+    p_actions = 10 + N + M
+    p_scope = 11 + N + M
+    p_conclusion = 12 + N + M
+    p_glossary = 13 + N + M
 
     for i, f in enumerate(findings):
-        page = 8 + i
+        page = 9 + i
         f["page"] = page
         f["page_pad"] = f"{page:02d}"
         f["anchor"] = f"p{page}"
@@ -490,7 +500,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         grade = d.get("grade", "D") or "D"
         pct = round(score / maxv * 100, 1) if maxv else 0
         color, c_class, g_class, bar_var = grade_meta(grade)
-        page = 9 + N + j
+        page = 10 + N + j
         anchor = f"p{page}"
         # 本维度分组 findings
         gfindings = [f for f in findings if f["dim_key"] == key]
@@ -579,8 +589,9 @@ def flatten(report, brand, lang="zh", escape_html=False):
     index_html = (
         f'<a href="#p4"><span class="mono">04</span>{S["idx_overall"]}</a>'
         f'<a href="#p5"><span class="mono">05</span>{S["idx_strengths"]}</a>'
-        f'<a href="#p6"><span class="mono">06</span>{S["idx_method"]}</a>'
-        f'<a href="#p7"><span class="mono">07</span>{S["idx_findings"]}</a>'
+        f'<a href="#p6"><span class="mono">06</span>{S["idx_score_preview"]}</a>'
+        f'<a href="#p7"><span class="mono">07</span>{S["idx_method"]}</a>'
+        f'<a href="#p8"><span class="mono">08</span>{S["idx_findings"]}</a>'
         + "".join(
             f'<a href="#{f["anchor"]}"><span class="mono">{f["page"]:02d}</span>'
             f'{S["idx_findings"]} {f["n"]} · {f["title"]}</a>'
@@ -687,6 +698,26 @@ def flatten(report, brand, lang="zh", escape_html=False):
         }
         for i, st in enumerate(_raw_steps)
     ]
+
+    # Conclusion follow-up timeline (effort-based; shared UI)
+    _tl_sources = []
+    for f in findings:
+        _tl_sources.append({
+            "title": f.get("_raw_title") or f.get("title") or "",
+            "detail": f.get("solution") or "",
+            "owner": f.get("owner") or "",
+            "sev": f.get("severity_display") or f.get("severity_key") or "",
+        })
+    for a in (report.get("priority_actions") or report.get("actions") or []):
+        _tl_sources.append(a)
+    timeline_html = render_timeline_block(
+        _tl_sources,
+        lang=lang,
+        page_count=int((report.get("scope") or {}).get("sampled_count") or report.get("sampled_count") or 0) or None,
+        include_retest=True,
+        show_samples=False,
+        limit=10,
+    )
 
     # 总评分数色阶（与分维一致：按等级取色，避免 A 级仍显示红色）
     _o_grade = report.get("grade", "D")
@@ -816,6 +847,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "adj_note": (S["adj_note_none"] if not adj_rows else ""),
         "action_rows": action_rows,
         "next_steps": next_steps,
+        "timeline_html": timeline_html,
         "adj_rows": adj_rows,
         "strengths": [E(s) for s in report.get("strengths", [])],
         "scope_text": scope_text,
@@ -862,7 +894,17 @@ def main():
     data_html["script"] = deck_js
     tpl_html = open(os.path.join(tpl_dir, S["template_html"]), encoding="utf-8").read()
     html = render(tpl_html, data_html)
-    html_path = os.path.join(out_dir, f"report{suffix}.html")
+    # Language-based client filenames (EN/ZH). --suffix overrides the stem when set.
+    if suffix:
+        stem = f"Technical_Report{suffix}" if lang == "en" else f"技术报告{suffix}"
+        # legacy: --suffix .zh with --lang zh → keep readable Chinese name without double suffix
+        if lang == "zh" and suffix in (".zh", "_zh"):
+            stem = "技术报告"
+        elif lang == "en" and suffix in (".zh", "_zh"):
+            stem = f"Technical_Report{suffix}"
+    else:
+        stem = "Technical_Report" if lang == "en" else "技术报告"
+    html_path = os.path.join(out_dir, f"{stem}.html")
     open(html_path, "w", encoding="utf-8").write(html)
     print(f"wrote {html_path} ({len(html)} chars)")
 
@@ -871,7 +913,7 @@ def main():
         data_md = flatten(report, brand, lang=lang, escape_html=False)
         tpl_md = open(os.path.join(tpl_dir, S["template_md"]), encoding="utf-8").read()
         md = render(tpl_md, data_md)
-        md_path = os.path.join(out_dir, f"report{suffix}.md")
+        md_path = os.path.join(out_dir, f"{stem}.md")
         open(md_path, "w", encoding="utf-8").write(md)
         print(f"wrote {md_path} ({len(md)} chars)")
 

@@ -9,8 +9,8 @@ GEO readiness report visually. SEO discoverability is NOT part of this report
 Client deliverable is HTML only. Pass --also-md to also write Markdown (internal).
 
 Language (product rule):
-  Default English (--lang en → content_report.html).
-  Chinese only when the agent passes --lang zh → content_report.zh.html
+  Default English (--lang en → Content_Report.html).
+  Chinese only when the agent passes --lang zh → 内容报告.html
   (user message explicitly asked for Chinese, e.g. 中文报告 / Chinese report / 出中文).
 
 For Chinese runs, enrich *primary* narrative fields in Chinese (overall_summary,
@@ -26,6 +26,13 @@ import os
 import re
 import sys
 from datetime import datetime
+
+try:
+    from timeline_ui import render_timeline_block
+except ImportError:
+    import os as _os, sys as _sys
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from timeline_ui import render_timeline_block
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
@@ -176,6 +183,11 @@ STRINGS = {
         "pages_analyzed_inline": "Pages analyzed",
         "sample_urls": "Sample URLs",
         "conclusion": "Conclusion",
+        "sample_label": "Sample",
+        "outcome_label": "Expected outcome",
+        "sec_timeline": "12 Follow-up plan",
+        "kicker_timeline": "12 Follow-up plan",
+        "h2_timeline": "Ordered next steps & schedule",
         "none": "—",
         # Markdown
         "md_title": "{brand} — Content GEO Evaluation Report",
@@ -345,6 +357,11 @@ STRINGS = {
         "pages_analyzed_inline": "分析页数",
         "sample_urls": "抽样 URL",
         "conclusion": "结论",
+        "sample_label": "样例",
+        "outcome_label": "预期结果",
+        "sec_timeline": "12 后续跟进",
+        "kicker_timeline": "12 后续跟进",
+        "h2_timeline": "有序下一步与时间表",
         "none": "—",
         "md_title": "{brand} — 内容 GEO 评测报告",
         "md_intro": (
@@ -737,6 +754,70 @@ def render_md(data: dict, lang: str = "en") -> str:
     return "\n".join(lines)
 
 
+def _synth_sample(action: dict, lang: str) -> str:
+    """When enrichment omits sample, provide a structural example (not invented crawl quotes)."""
+    if action.get("sample") or action.get("example"):
+        return action.get("sample") or action.get("example") or ""
+    title = (action.get("action") or action.get("title") or "").lower()
+    blob = f"{title} {action.get('detail') or ''}".lower()
+    if lang == "zh":
+        if any(k in blob for k in ("https", "tls", "500", "抓取", "爬虫")):
+            return "验收：curl -I https://example.com 返回 200；GSC「网址检查」可抓取；访问日志可见 Googlebot / OAI-SearchBot。"
+        if any(k in blob for k in ("evergreen", "常青", "答案页", "采购")):
+            return (
+                "H1：如何选择适合园区的智慧灯杆？\n"
+                "首段（先答）：优先核对供电方式、杆体承重、通信模块与本地标准，再比厂商交付周期。\n"
+                "必备小节：选型清单表 · 模块/接口 · 案例数据 · FAQ · 询价 CTA"
+            )
+        if any(k in blob for k in ("case", "案例")):
+            return (
+                "标题：某某新区智慧灯杆项目\n"
+                "结构：背景 → 方案模块 → 可量化结果（如故障率/节能%）→ 照片 → 可核验来源链接"
+            )
+        if any(k in blob for k in ("template", "产品", "specs", "规格")):
+            return (
+                "产品页骨架：\n"
+                "H1（唯一）→ 一句话定位 → 规格表 → 模块/标准 → 下载资料 → 相关案例 → FAQ"
+            )
+        if any(k in blob for k in ("proof", "专利", "资质", "奖项")):
+            return (
+                "/proof/ 证明中心：奖项 | 专利 | 资质\n"
+                "每条：名称 · 颁发方 · 日期 · 证书图/编号 · 来源 URL"
+            )
+        return (
+            "改动要点：写清「改什么页面 / 改成什么样」。\n"
+            "样例结构：原状 → 目标标题/H1 → 必备小节 → 验收标准"
+        )
+    if any(k in blob for k in ("https", "tls", "500", "crawl", "bot")):
+        return "Acceptance: curl -I https://example.com returns 200; GSC URL Inspection succeeds; access logs show Googlebot / OAI-SearchBot."
+    if any(k in blob for k in ("evergreen", "answer page", "buyer", "procurement", "losing")):
+        return (
+            "H1: How to choose a smart pole for campus roads?\n"
+            "Lead (answer first): Check power, load rating, radio modules, and local standards before comparing lead times.\n"
+            "Must-have: selection checklist table · modules/interfaces · case metrics · FAQ · inquiry CTA"
+        )
+    if any(k in blob for k in ("case", "project")):
+        return (
+            "Title: [District] smart-pole deployment\n"
+            "Structure: context → solution modules → measurable outcomes → photos → source links"
+        )
+    if any(k in blob for k in ("template", "product", "specs", "modules")):
+        return (
+            "Product page skeleton:\n"
+            "Unique H1 → one-line positioning → specs table → modules/standards → downloads → related cases → FAQ"
+        )
+    if any(k in blob for k in ("proof", "patent", "award", "qualification")):
+        return (
+            "/proof/ hub: Awards | Patents | Qualifications\n"
+            "Each entry: name · issuer · date · certificate id/image · source URL"
+        )
+    return (
+        "Change brief: which URL changes, and what good looks like.\n"
+        "Sample shape: current state → target title/H1 → required sections → acceptance check"
+    )
+
+
+
 def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     S = STRINGS[lang]
     brand = data.get("site_brand") or data.get("company_name") or data.get("domain") or "Website"
@@ -857,12 +938,50 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     for a in data.get("priority_actions") or []:
         if isinstance(a, str):
             actions_html += f"<div class='arow'><div><h4>{esc(a)}</h4></div></div>"
+            continue
+        sample = _synth_sample(a, lang)
+        outcome = a.get("outcome") or a.get("expected_outcome") or ""
+        effort = a.get("effort_days")
+        effort_html = (
+            f"<span class='tl-dur-badge mono'>{esc(str(effort))}{(' 天' if lang=='zh' else 'd')}</span>"
+            if effort not in (None, "") else ""
+        )
+        sample_html = (
+            f"<div class='sample-block'><span class='sample-label mono'>{esc(S['sample_label'])}</span>"
+            f"<pre>{esc(sample)}</pre></div>"
+            if sample else ""
+        )
+        outcome_html = (
+            f"<p><b>{esc(S['outcome_label'])}</b>: {esc(outcome)}</p>" if outcome else ""
+        )
+        actions_html += (
+            f"<div class='arow'><div><h4>[{esc(a.get('sev','P1'))}] {esc(a.get('action') or a.get('title') or '')}</h4>"
+            f"<p>{esc(a.get('detail',''))}</p>{outcome_html}{sample_html}</div>"
+            f"<span class='owner owner-info'>{esc(a.get('owner','content'))}</span>{effort_html}</div>"
+        )
+
+    _tl_actions = []
+    for a in data.get("priority_actions") or []:
+        if isinstance(a, str):
+            _tl_actions.append({"title": a, "sample": ""})
         else:
-            actions_html += (
-                f"<div class='arow'><div><h4>[{esc(a.get('sev','P1'))}] {esc(a.get('action'))}</h4>"
-                f"<p>{esc(a.get('detail',''))}</p></div>"
-                f"<span class='owner owner-info'>{esc(a.get('owner','content'))}</span></div>"
-            )
+            _tl_actions.append({
+                "title": a.get("action") or a.get("title") or "",
+                "detail": a.get("detail") or "",
+                "owner": a.get("owner") or "",
+                "sev": a.get("sev") or "",
+                "sample": _synth_sample(a, lang),
+                "effort_days": a.get("effort_days"),
+                "outcome": a.get("outcome") or a.get("expected_outcome") or "",
+            })
+    timeline_html = render_timeline_block(
+        _tl_actions,
+        lang=lang,
+        page_count=data.get("pages_analyzed"),
+        include_retest=True,
+        show_samples=True,
+        limit=10,
+    )
 
     sample = "".join(f"<li class='mono'>{esc(u)}</li>" for u in (data.get("sample_urls") or [])[:24])
     none_li = f"<li>{esc(S['none'])}</li>"
@@ -1014,6 +1133,15 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
   <footer class="pf"><span>{esc(S['footer'])}</span><span class="mono">Beansmile</span></footer>
 </section>
 
+<section class="page" id="followup">
+  <header class="ph"><span class="brand"><b>GEO Checker</b></span>
+    <span class="ph-url mono">{esc(domain)}</span><span class="ph-sec">{esc(S['sec_timeline'])}</span>
+    <span class="ph-right"><span class="mono">{esc(date)}</span></span></header>
+  <div class="ptitle"><div><div class="pkicker">{esc(S['kicker_timeline'])}</div><h2>{esc(S['h2_timeline'])}</h2></div></div>
+  {timeline_html}
+  <footer class="pf"><span>{esc(S['footer'])}</span><span class="mono">Beansmile</span></footer>
+</section>
+
 <section class="page" id="scope">
   <header class="ph"><span class="brand"><b>GEO Checker</b></span>
     <span class="ph-url mono">{esc(domain)}</span><span class="ph-sec">{esc(S['sec_scope'])}</span>
@@ -1060,14 +1188,14 @@ def main():
     if lang == "zh":
         data = prefer_zh_narrative(data)
 
-    suffix = ".zh" if lang == "zh" else ""
-    html_path = os.path.join(out_dir, f"content_report{suffix}.html")
+    stem = "内容报告" if lang == "zh" else "Content_Report"
+    html_path = os.path.join(out_dir, f"{stem}.html")
     open(html_path, "w", encoding="utf-8").write(render_html(data, style, lang=lang))
     print(f"Wrote {html_path}")
 
     if "--also-md" in sys.argv:
         md = render_md(data, lang=lang)
-        md_path = os.path.join(out_dir, f"content_report{suffix}.md")
+        md_path = os.path.join(out_dir, f"{stem}.md")
         open(md_path, "w", encoding="utf-8").write(md)
         print(f"Wrote {md_path} (--also-md)")
 

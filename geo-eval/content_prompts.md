@@ -51,12 +51,27 @@ Produce recommended_ia_tree and page_briefs[] in {REPORT_LANGUAGE}: URL pattern,
 and which target questions each page should win.
 ```
 
-## 5. Priority actions
+## 5. Priority actions (concrete + sample)
 
 ```
 List 5–8 priority actions ordered P0–P2 for Content GEO (citable content + evidence
-publishing + query coverage). Owner hints: content / eng / PR. Write actions in {REPORT_LANGUAGE}.
+publishing + query coverage). Write in {REPORT_LANGUAGE}.
 Do not duplicate the technical report’s SEO discoverability actions unless content-owned.
+
+Each action MUST be an object with:
+- sev: P0|P1|P2
+- action: short title (what changes)
+- detail: what to change on which URLs / templates, and acceptance criteria
+- sample: concrete example the client can copy — sample H1/title, answer-first lead,
+  outline, JSON-LD sketch, or paragraph pattern (brand-specific; not generic filler)
+- owner: content | eng | eng/ops | PR | content/eng | …
+- effort_days: number (calendar days; HTTPS/crawl ≤1; evergreen page ~2–4 each;
+  proof hub / EN export ~5–10; re-test 1)
+- outcome: expected result after the change
+
+Builders render sample in a distinct callout and build an effort-based follow-up
+timeline (checklist + schedule) from these fields. Prefer structured objects over
+plain strings.
 ```
 
 `{REPORT_LANGUAGE}` = `English` (default) or `Chinese` when the user asked for a Chinese report.
