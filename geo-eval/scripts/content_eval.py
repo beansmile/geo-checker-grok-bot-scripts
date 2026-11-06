@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Content GEO evaluation entrypoint (standalone from technical 9-dim pipeline).
+"""Content GEO evaluation entrypoint (standalone from technical 10-dim pipeline; prefer --from-run to reuse the tech crawl).
 
 Usage:
   python3 scripts/content_eval.py <URL> [--max-pages 16] [--site-type corporate]

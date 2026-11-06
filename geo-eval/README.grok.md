@@ -13,22 +13,43 @@ ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skill
 
 Reports are **English by default** (`build_report.py --lang en`). Enrichment is done by the Bot (no `GEO_EVAL_LLM_API_KEY` on the Grok Bot path).
 
-Customer-facing reports show **GEO Checker** and attribution **Beansmile · GEO Checker**. Do not show Report ID / file numbers, sign-off blocks, or “pending review” copy.
+Customer-facing reports show **GEO Checker** and attribution **Beansmile · GEO Checker**. Do not show Report ID / file numbers, sign-off blocks, “pending review” copy, or **scoring / rules / rubric version numbers** in HTML chrome or in user-facing prompts.
 
+## Product UX (required)
 
-## Content GEO (separate report)
+1. Run the **technical** crawl + enrich + `build_report.py` → deliver **technical HTML** first.
+2. Then **ask once** whether the user also wants Content GEO + the combined package.
+3. Do **not** auto-run content without that ask.
 
-Content evaluation (architecture, writing, authority evidence, buyer-question / AI visibility checks) is **standalone** from the technical 10-dimension score.
-SEO content discoverability is a **15-point dimension** inside the technical report /100 (`seo_scoring.md` / scoring v1.3), not part of the Content GEO 100.
+## Same-crawl Content GEO + combined (on yes)
+
+When the user says yes, **reuse the technical run’s crawl** — never re-fetch the site for content when a successful technical run exists:
 
 ```bash
 cd /workspace/skills/geo-eval
+# Reuse pages/evidence from the technical run (no second site crawl)
+python3 scripts/content_eval.py --from-run runs/<domain>/<tech_run>
+
+# Agent enriches content_report.json using content_prompts.md
+python3 scripts/build_content_report.py runs/<domain>/<tech_run>
+
+# Same turn: combined HTML from the same tech run + that content output
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<tech_run>
+python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+  --content-run runs/<domain>/<tech_run> --lang zh
+```
+
+If content artifacts land in a separate content run directory **while still reusing the tech crawl**, pass that path as `--content-run`. One crawl powers technical + content + combined.
+
+Standalone content-only (no prior tech run) remains available:
+
+```bash
 python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16
-# Agent enriches runs/.../content_report.json using content_prompts.md
 python3 scripts/build_content_report.py runs/<domain>/<run>
 ```
 
-Rubric: `content_scoring.md`. Design: `docs/content_geo_design_spec.md`.
+Rubric docs (internal): `content_scoring.md`, `docs/content_geo_design_spec.md`. SEO content discoverability is a **15-point dimension** inside the technical report /100 (`seo_scoring.md`), not part of the Content GEO 100.
 
 ## Client deliverables = HTML only
 
@@ -39,17 +60,14 @@ Rubric: `content_scoring.md`. Design: `docs/content_geo_design_spec.md`.
 ```bash
 cd /workspace/skills/geo-eval
 python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
-  --content-run runs/<domain>/<content_run>
-python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
-  --content-run runs/<domain>/<content_run> --lang zh
+  --content-run runs/<domain>/<content_or_same_run>
 ```
 
 Emits `report/combined_report.html` (+ `.zh.html`). Keeps technical /100 (incl. SEO dim) and Content GEO /100 separate; includes a W0–W16 remediation timeline.
 
+## Scoring (internal; do not quote versions to customers)
 
-## Scoring versions
-
-- Technical: **scoring v1.3** — 10 dims /100 (SEO discoverability = 15). Weights unchanged from v1.2; richer extractability / URL hygiene / claim-evidence heuristics.
-- Content GEO: separate /100 (IA20 TAX15 WRITE20 AUTH20 QUERY25).
+- Technical: **10 dimensions /100** (SEO discoverability = 15).
+- Content GEO: separate /100 (IA20 · TAX15 · WRITE20 · AUTH20 · QUERY25).
 - GEO = Generative Engine Optimization only — never geography / local-pack framing.
-- Client deliverables: **HTML only**.
+- Client deliverables: **HTML only**. Keep version ids in JSON / `scoring.md` for engineers; never in customer HTML or chat copy.

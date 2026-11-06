@@ -181,7 +181,7 @@ def test_crawler_access(base_url, out_path):
         "reachable": all(r["status"] == 200 and not r["challenge"] for r in results if r["ua"] in AI_UA_PROBES or r["ua"] == "browser"),
         "multi_ua_smoke": {
             "ua": [r["ua"] for r in results if r["ua"] in smoke_names],
-            "note": "Access evidence only (scoring v1.3); not a scored dimension.",
+            "note": "Access evidence only; not a scored dimension.",
         },
     }
     save(out_path, json.dumps(payload, ensure_ascii=False, indent=2))

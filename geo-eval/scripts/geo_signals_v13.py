@@ -195,7 +195,7 @@ def summarize_image_locked(pages: list[dict]) -> dict[str, Any]:
             "Put every fact you want AI systems to cite into visible HTML text: "
             "definitions, specs, scenarios, outcomes, and evidence links. "
             "Treat images as illustration, not as the only carrier of facts. "
-            "Use the product / case / article field checklists in scoring v1.3."
+            "Use the product / case / article field checklists in the GEO Checker scoring guide."
         ),
     }
 

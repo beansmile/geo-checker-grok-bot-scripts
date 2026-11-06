@@ -35,7 +35,7 @@ ln -sfn /workspace/skills/geo-checker-grok-bot-scripts/geo-eval /workspace/skill
 
 To update later **only when origin has the commits**: `git -C /workspace/skills/geo-checker-grok-bot-scripts pull --ff-only` then keep the symlink. Prefer the existing symlink when local is ahead.
 
-Refs in `/workspace/skills/geo-eval`: `rules.md`, `scoring.md` (v1.3, technical 10-dim /100 including SEO /15; weights same as v1.2), `seo_scoring.md` (SEO dim rubric; raw heuristic /25 → dim /15), `prompts.md`, `methodology.md`, `content_scoring.md`, `content_prompts.md`, `docs/content_geo_design_spec.md`, `README.grok.md`.
+Refs in `/workspace/skills/geo-eval`: `rules.md`, `scoring.md` (technical 10-dim /100 including SEO /15), `seo_scoring.md`, `prompts.md`, `methodology.md`, `content_scoring.md`, `content_prompts.md`, `docs/content_geo_design_spec.md`, `README.grok.md`, `pipeline.md`. Do **not** quote scoring/rules/rubric version numbers in customer HTML or user chat.
 
 ## Status wording
 
@@ -56,40 +56,39 @@ Prefer “Website GEO (Generative Engine Optimization) readiness…”. Chinese:
 3. Enrich `report.json` in English per `prompts.md`. Also enrich `seo_discoverability.narr` / `callout` when present (rubric: `seo_scoring.md`). SEO is a **15-point technical dimension** inside `overall_score` /100 (bonuses stay in `score_adjustments`).
 4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` → deliver `report.html` (SEO appears among the ten dimensions). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
 
-## Content GEO evaluation (standalone report)
+Then ask once whether to also produce Content GEO + combined (see below). One crawl powers all three reports when the user says yes.
 
-When the user asks for **content** GEO evaluation, information architecture advice, writing or authority-content recommendations, buyer-question coverage, or a content report separate from the technical score:
+## After technical HTML: ask once
 
-1. Ensure runtime installed (above).
-2. Run:
+Default UX: deliver **technical HTML first**, then ask whether to also produce **Content GEO + combined package**. Do **not** auto-run content without that ask. Never show scoring/rules/rubric version numbers in user-facing copy or HTML chrome.
+
+## Content GEO + combined (same crawl, on yes)
+
+When the user agrees (or explicitly asks for content / combined after a successful technical run):
+
+1. **Reuse the tech crawl** — never re-fetch:
    ```bash
    cd /workspace/skills/geo-eval
-   python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16
+   python3 scripts/content_eval.py --from-run runs/<domain>/<tech_run>
    ```
-   Or reuse a crawl: `python3 scripts/content_eval.py --from-run runs/<domain>/<run>`.
-3. Build target procurement questions for the industry/company. Run AI/search visibility checks (`live_ui` when available; otherwise labeled `web_retrieval_proxy`). Save `evidence/ai_checks.json` and optional `evidence/offsite.json`, then re-run analyze with those files if needed.
-4. **Agent enrichment (required):** rewrite `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes). The intro explains what Content GEO evaluates — do **not** open with a “this is not the technical 10-dimension score” disclaimer.
-5. `python3 scripts/build_content_report.py runs/<domain>/<run>` → deliver `report/content_report.html` (HTML only).
+2. Build target procurement questions; run AI/search visibility checks (`live_ui` or labeled `web_retrieval_proxy`). Save `evidence/ai_checks.json` / optional `evidence/offsite.json` under that run if needed.
+3. Enrich `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes).
+4. Same turn:
+   ```bash
+   python3 scripts/build_content_report.py runs/<domain>/<tech_run>
+   python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+     --content-run runs/<domain>/<tech_run>
+   # Chinese combined:
+   python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
+     --content-run runs/<domain>/<tech_run> --lang zh
+   ```
+   If content artifacts are in a separate content run dir that still reused the tech crawl, pass that path as `--content-run`.
 
-**Placement:** SEO content discoverability (titles/H1/meta, thin/duplicate risk, internal crawl paths, sitemap/robots as discovery aids) lives in the **technical** report as a **15-point dimension** of the 100 (`seo_scoring.md`). Content GEO (`content_scoring.md`) covers information architecture, taxonomy/gaps, writing, authority evidence, and target query coverage only — no SEO dim there.
+Standalone content-only (no prior tech run): `python3 scripts/content_eval.py <URL> --site-type corporate --max-pages 16` then `build_content_report.py`.
 
-Rules: the Content GEO score is **separate** from the technical 100; never merge them into one total. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional — do not fake precision.
+**Placement:** SEO discoverability lives in the **technical** report as a **15-point dimension** of the 100 (`seo_scoring.md`). Content GEO (`content_scoring.md`) covers IA, taxonomy, writing, authority evidence, and query coverage only — no SEO dim there.
 
-
-## Combined package (technical + content + timeline)
-
-When the user wants one executive HTML that surfaces both tracks and a remediation schedule:
-
-```bash
-cd /workspace/skills/geo-eval
-python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
-  --content-run runs/<domain>/<content_run>
-# Chinese:
-python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
-  --content-run runs/<domain>/<content_run> --lang zh
-```
-
-Output: `report/combined_report.html` (or `combined_report.zh.html`). The combined report keeps **two** headline scores — technical /100 (incl. SEO dim) and Content GEO /100 — **separate**; never invent one merged total. Intro explains the package purpose; do **not** open with a “this is not the technical 10-dimension score” disclaimer. Ends with a phased remediation timeline (W0–W16).
+Rules: Content GEO score is **separate** from the technical 100; never merge into one total. Combined HTML keeps **two** headline scores + W0–W16 remediation timeline. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
 
 ## Boundaries
 
@@ -97,4 +96,4 @@ Output: `report/combined_report.html` (or `combined_report.zh.html`). The combin
 - Technical SEO dimension = content discoverability (titles, intent pages, thin/duplicate content, internal paths, sitemap/robots as discovery aids). Not a full rank-tracking SEO audit.
 - Content score = architecture, writing, evidence system, and query coverage / AI visibility.
 - Evidence required; drop false positives.
-- Chrome: GEO Checker · Beansmile; no Report ID; no sign-off blocks.
+- Chrome: GEO Checker · Beansmile; no Report ID; no sign-off blocks; no scoring/rules/rubric version strings in customer HTML or user chat.

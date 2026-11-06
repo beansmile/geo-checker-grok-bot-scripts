@@ -202,7 +202,7 @@ def r_cover(pno, total):
         <div class="wide"><dt>站点</dt><dd class="mono">{E(site["url"])}</dd></div>
         <div><dt>报告日期</dt><dd class="mono">{date}</dd></div>
         <div><dt>检测范围</dt><dd>发现 {scope["pages_total"]} 个页面，抽查了 {len(scope["sampled_pages"])} 个重点页</dd></div>
-        <div><dt>报告版本</dt><dd class="mono">{E(run["versions"]["methodology_version"])} · 规则 {E(run["versions"]["rules_version"])}</dd></div>
+        <div><dt>出品</dt><dd class="mono">GEO Checker · Beansmile</dd></div>
       </dl>
       <div class="cover-sev">{sev_strip()}</div>
       <div class="cover-sign"><span>编制：GEO 评测组</span><span>审核：待签署</span><span>签发：待签署</span><span class="mono">共 {total} 页</span></div><p class="cover-read">只有 5 分钟？看「三分钟看懂」「优先改进建议」「结论与签核」三页即可。</p>'''
@@ -322,7 +322,7 @@ def r_method(pno, total):
         adj_rows += f'<tr><td>{E(label)}</td><td class="num mono">{num(p)}</td><td class="num mono">{num(r)}</td><td>{E(note)}</td></tr>'
     return f'''{page_header(pno, total, "01 总体评价 · 评分方法")}
       <div class="ptitle"><div><div class="pkicker">01 总体评价 · 评分方法</div><h2>站内准备度 {ov} 分是怎么算出来的</h2>
-        <div class="pmeta-line"><span>口径 {E(sm.get("calibration_version", "v2026.09"))}</span><span>全部数值取自本次评分记录，可逐项核对</span></div></div>
+        <div class="pmeta-line"><span>GEO Checker · Beansmile</span><span>全部数值取自本次评分记录，可逐项核对</span></div></div>
         <div class="pmeta"><span class="scorechip c-danger"><b>{ov}</b><span>/100</span></span></div></div>
       <div class="method">
         <div>
@@ -333,7 +333,7 @@ def r_method(pno, total):
         </div>
         <div>
           <div class="stepbox"><span class="statn">第 2 步 · 上限与下限约束</span>
-            <p>触发条件（{E(sm.get("calibration_version", "v2026.09"))} 口径）：<b>未声明实体映射</b> —— 品牌写法与邮箱域名不一致，且组织信息（Organization）缺少官方账号（sameAs）/ 别名（alternateName）等实体关联声明（<span class="mono">{E(trig)}</span>）。</p>
+            <p>触发条件：<b>未声明实体映射</b> —— 品牌写法与邮箱域名不一致，且组织信息（Organization）缺少官方账号（sameAs）/ 别名（alternateName）等实体关联声明（<span class="mono">{E(trig)}</span>）。</p>
             <p>约束：信任度 ≤ {num(mx["trust"]*caps["trust_max_pct"]//100)} 分、品牌与实体 ≤ {num(mx["entity"]*caps["entity_max_pct"]//100)} 分、总分 ≤ {caps["overall_max"]} 分；从宽下限：品牌与实体 ≥ 4、内容质量 ≥ 1、页面主题 ≥ 2。</p>
             <table class="mtable"><thead><tr><th>维度</th><th>约束前</th><th>约束后</th><th>说明</th></tr></thead><tbody>{adj_rows}</tbody></table>
             <p>完成实体映射声明（名称 / 别名 / 官方账号 / 母公司）后，信任上限解除，信任度可回补至约束前的 {num(pre.get("trust", raw["trust"]))} 分。</p></div>
@@ -348,7 +348,7 @@ def r_method(pno, total):
         <li>本分数是<b>站内 GEO 准备度（技术与内容准备度）</b>：衡量站点被生成式搜索正确理解、信任与引用的准备情况，</li>
         <li>标题/元描述长度、每页标题数量等为<b>卫生项</b>，用作统一检查口径，不是搜索引擎硬性要求；内容是否“能整块被引用、且带可核验事实”才是关键。</li>
         <li>官方口径核对：Google 说明元描述无固定长度限制（超出仅在展示时截断）；结构化数据不是通用排名因子；FAQ 富媒体结果已于 2026-05-07 停止展示（HowTo 于 2023 年退役）；FAQPage 标记仍然有效，但主要供大模型读取而非争取富结果；组织信息（Organization）的官方账号（sameAs）/ 联系方式（contactPoint）属“适用时推荐”而非必填。</li>
-        <li>本报告口径为 <b>v1.1</b>：可吸收性按 <b>Citability 五子项</b>衡量（可引用块率 + 证据块覆盖 + 直接回答 + 结构化答案资产 + 对题度，20 分制 ×0.75 折算到 15 分）——既要段落自包含、可整段摘走，也要有定义 / 数据 / 对比 / 步骤这类可核验的事实；<b>模板占位 / 索引膨胀等治理问题已并入对应维度扣分，同一根因只计一次</b>；FAQ 结构化数据列为推荐项、不计分。因口径调整，分数与历史版本不可直接比较。</li>
+        <li>可吸收性按 <b>Citability 五子项</b>衡量（可引用块率 + 证据块覆盖 + 直接回答 + 结构化答案资产 + 对题度，20 分制 ×0.75 折算到 15 分）——既要段落自包含、可整段摘走，也要有定义 / 数据 / 对比 / 步骤这类可核验的事实；<b>模板占位 / 索引膨胀等治理问题已并入对应维度扣分，同一根因只计一次</b>；FAQ 结构化数据列为推荐项、不计分。因口径调整，分数与历史版本不可直接比较。</li>
       </ul>'''
 add(("01", "评分方法（可复现）"), "01 总体评价 · 评分方法", r_method)
 
@@ -467,7 +467,7 @@ def r_signoff(pno, total):
         <div class="signrow"><span class="signlab">审核</span><span class="signline"></span><span class="signmeta mono">日期：____ / ____ / ____</span></div>
         <div class="signrow"><span class="signlab">客户确认</span><span class="signline"></span><span class="signmeta mono">日期：____ / ____ / ____</span></div>
       </div>
-      <p class="note">文件编号 {E(DOC_NO)}　·　报告版本 {E(run["versions"]["methodology_version"])}　·　规则 {E(run["versions"]["rules_version"])}</p>'''
+      <p class="note">GEO Checker · Beansmile</p>'''
 add(("08", "结论与签核"), "08 结论与签核", r_signoff)
 add(("附录", "术语人话对照表"), "附录 · 术语表", r_glossary)
 add(("附录", "改完长什么样"), "附录 · 改完长什么样", r_beforeafter)

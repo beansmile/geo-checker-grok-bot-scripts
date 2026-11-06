@@ -36,7 +36,7 @@ You are a GEO advisor for GEO Checker (Beansmile). In English, write two parts:
 1. Overall assessment: one paragraph on gaps and strengths (name specific dimensions and findings).
 2. One-line conclusion: actionable and easy to retell.
 
-9-dimension scores: {dimensions}
+10-dimension scores: {dimensions}
 Key findings: {findings}
 Total: {overall_score} / {grade}
 ```

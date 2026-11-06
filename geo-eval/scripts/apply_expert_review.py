@@ -64,7 +64,7 @@ DIMNAME={"schema":"结构化数据","entity":"实体一致性","ogp":"开放图�
 md=[]
 md.append("# 索菲亚官网 GEO 深度评测报告（草案 v0.1）\n")
 md.append(f"- 站点：{run['site']['url']}　|　run_id：`{run['run_id']}`　|　报告日期：{datetime.date.today().isoformat()}")
-md.append(f"- 方法版本：{run['versions']['methodology_version']} / rules {run['versions']['rules_version']} / scoring {run['versions']['scoring_version']}")
+md.append("- 出品：GEO Checker · Beansmile")
 md.append(f"- 抽样范围：站点地图 {run['scope']['pages_total']} 个页面，抽查 {len(run['scope']['sampled_pages'])} 页（正文/信任/合规/系统/演示）")
 md.append(f"- 专家核验：Accepted {counts.get('accept',0)} / Edited {counts.get('edit',0)} / Rejected {counts.get('reject',0)}")
 md.append(f"- 评分状态：**已按建议值校准**（`{sc.get('scoring_status')}`，待签核）；总分 **{sc['overall_score']}/{sc['grade']}**（基础分 {sc['score_adjustments']['base_score']}，治理扣分 {sc['score_adjustments']['penalty']}）；另有警告/建议项 {sc.get('advisory_count',0)} 条（不计分）")
@@ -119,7 +119,7 @@ md.append("| 基础（1–2 月） | 统一品牌与公司名（Sofeyia 或 Suof
 md.append("| 长期（2–3 月+） | 重做内容架构：证据块（定义/数据/对比/步骤）、可引用段落、数据来源标注、真实作者与资质页；明确上市主体与官网关系 | ABS-01/02/03/06、QLT-01/02/03、CIT-02/03、TRU-02/04 |")
 md.append("\n## 7. 证据、方法与边界\n")
 md.append("- 证据包：`storage/evaluations/sofeyiahome/2026-09-10_run01/`（24 页 HTML、SiteProfile、PageEvidence、rule_results、llm_checks）")
-md.append("- 规则：`docs/geo_detection_rules.md`（82 条）；方法：`docs/geo_evaluation_methodology_latest.md`；数据结构：eval-1.1")
+md.append("- 方法与规则见本次评测包内部文档；署名 GEO Checker · Beansmile")
 md.append("- 评分口径为草案，需按 `report/scoring_calibration.md` 校准后定稿；截图证据待补；报告需专家签核后交付。")
 md.append("- 本报告不承诺排名、引用或流量结果。")
 md.append(f"\n*草案生成时间：{datetime.datetime.now().astimezone().isoformat()}；待专家签核。*")

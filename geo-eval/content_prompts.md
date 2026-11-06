@@ -1,10 +1,12 @@
-# Content GEO — Agent enrichment prompts (v1.1)
+# Content GEO — Agent enrichment prompts
 
 > Used after `scripts/content_eval.py` / `content_analyze.py` produce `content.engine.json`.
 > **Grok Bot path:** the Agent rewrites into English client prose. Do not call external OpenAI APIs.
 > Brand: GEO Checker (Beansmile). GEO = Generative Engine Optimization (websites), never geography.
 >
 > SEO content discoverability is enriched in the **technical** report (`seo_scoring.md`), not here.
+>
+> After technical HTML is delivered, ask once whether to also produce Content GEO + combined. On yes, always use `content_eval.py --from-run <tech_run>` (same crawl; no second fetch).
 
 ## 1. Overall Content GEO narrative
 

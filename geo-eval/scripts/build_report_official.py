@@ -236,7 +236,7 @@ HTML=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
     <div><dt>站点</dt><dd class="mono">{E(site["url"])}</dd></div>
     <div><dt>报告日期</dt><dd class="mono">{date}</dd></div>
     <div><dt>检测范围</dt><dd>{scope["pages_total"]} 个 URL · 深度检测 {len(scope["sampled_pages"])} 页</dd></div>
-    <div><dt>方法版本</dt><dd class="mono">{E(run["versions"]["methodology_version"])} · rules {E(run["versions"]["rules_version"])}</dd></div>
+    <div><dt>出品</dt><dd class="mono">GEO Checker · Beansmile</dd></div>
   </dl>
   <div class="scorepanel">
     <div><div class="bigscore">{sc["overall_score"]}<small>/100</small><em>站内准备度 {E(sc["grade"])}</em></div></div>

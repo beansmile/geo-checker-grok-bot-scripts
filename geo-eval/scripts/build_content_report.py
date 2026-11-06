@@ -509,7 +509,7 @@ def render_html(data: dict, style_css: str) -> str:
   <p class="narr">Five dimensions sum to 100. Titles, crawl paths, and sitemap/robots as discovery aids are covered in the technical report’s SEO chapter.</p>
   <table class="mtable"><thead><tr><th>Dimension</th><th>Score</th><th>Max</th><th class="r">Grade</th></tr></thead>
   <tbody>{dim_rows}</tbody></table>
-  <p class="note">Grade scale: A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D &lt; 60 · F = unevaluable. Rubric: {esc(data.get('rubric_version') or 'content_scoring.md v1.1')}.</p>
+  <p class="note">Grade scale: A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D &lt; 60 · F = unevaluable. Content GEO rubric.</p>
   <footer class="pf"><span>GEO Checker · Content GEO</span><span class="mono">Beansmile</span></footer>
 </section>
 

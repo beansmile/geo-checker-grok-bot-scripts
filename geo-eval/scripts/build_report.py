@@ -26,7 +26,7 @@ import sys
 from datetime import datetime
 from urllib.parse import urlparse
 
-# report.json 没有版本字段时的兜底（旧 run 目录）
+# Internal JSON fallback only (not printed in client HTML chrome)
 VERSION_FALLBACK = "v1.3"
 
 
@@ -748,7 +748,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "url": report.get("url", ""),
         "date": datetime.now().strftime("%Y-%m-%d"),
         "report_id": f"GEO-{datetime.now().strftime('%Y%m%d')}",
-        # 口径版本从 report.json 读，不再在模板里硬编码「规则 1.0」
+        # Kept for template/compat; client HTML must not display these version strings
         "rules_version": (report.get("versions") or {}).get("rules_version", VERSION_FALLBACK),
         "scoring_version": (report.get("versions") or {}).get("scoring_version", VERSION_FALLBACK),
         "overall_score": report.get("overall_score", 0),

@@ -1,7 +1,8 @@
 # 端到端流程（pipeline）
 
-> 当前 skill 的实际执行链（见 `SKILL.md`）：
-> `run.py`（抓站）→ `analyze.py`（规则引擎，出 `report.engine.json`）→ `enrich.py`（LLM 深度解读，出 `report.json`）→ `build_report.py`（出 md+html）。
+> 当前 skill 的实际执行链（见 `SKILL.md` / `README.grok.md`）：
+> **技术**：`run.py`（抓站）→ `analyze.py` → Agent enrich（`prompts.md`）→ `build_report.py`（HTML）→ **询问是否要 Content GEO**。
+> **若用户同意**：`content_eval.py --from-run <tech_run>`（复用同一次抓取）→ enrich（`content_prompts.md`）→ `build_content_report.py` → `build_combined_report.py`（同 turn 出综合包）。
 >
 > 下文为参考版「分步流水线」（源自索菲亚金样例的 17 个脚本），用于说明各检测阶段的产物与职责，不替代上面这条执行链。
 
@@ -56,7 +57,7 @@
 | `build_report_deck.py` | `report/*.html`（主报告·卡片式 deck） |
 | `build_report_official.py` | `report/*_long.html`（长文版） |
 
-报告版式模板见 `report_templates/`。
+报告版式模板见 `report_templates/`。客户 HTML **不要**展示 scoring / rules / rubric 版本号；署名用 GEO Checker · Beansmile。
 
 ## run 目录约定
 
@@ -74,18 +75,19 @@ runs/<site>/<date>_runNN/
 └── report/          # Step 5 报告
 ```
 
-
-## Content GEO track (parallel, does not alter technical scoring)
+## Product UX + same-crawl Content GEO
 
 ```
-content_eval.py
-  → content_extract.py   (page inventory / writing signals)
-  → content_analyze.py   (Content GEO 5-dim engine scores; SEO is technical)
-  → Agent enrichment     (content_prompts.md → content_report.json)
-  → build_content_report.py → report/content_report.html (HTML only)
-  → build_combined_report.py (tech_run + content_run) → report/combined_report.html
+tech: run.py → analyze → enrich → build_report.py  → 交付技术 HTML
+ask:  是否一并出 Content GEO + 综合包？
+yes:  content_eval.py --from-run <tech_run>   # 复用同一次抓取，禁止二次拉站
+      → enrich content_report.json
+      → build_content_report.py <tech_or_content_run>
+      → build_combined_report.py <tech_run> --content-run <same>
 ```
+
+Never re-fetch for content when a successful technical run exists. A separate content run dir is fine **only if** it reused the tech crawl (`--from-run`).
 
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
-Technical `scoring.md` / `analyze.py` use the v1.3 10-dim /100 formula (SEO = 15 pts).
-`analyze.py` attaches `seo_discoverability` and folds its dim score (/15, scaled from heuristic /25) into the technical `overall_score` (scoring v1.3).
+
+Technical scoring: 10-dim /100 (SEO discoverability = 15 pts inside that total). Content GEO: separate 5-dim /100. Keep version labels in engineer docs / JSON; do not parrot them to customers.

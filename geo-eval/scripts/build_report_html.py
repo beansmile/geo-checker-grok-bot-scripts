@@ -99,7 +99,7 @@ footer{{margin-top:34px;color:var(--ink3);font-size:12px;text-align:center}}
     <div class="kick">GEO 深度评测报告 · 专家版</div><h1>{E(site["url"])}</h1>
     <div class="meta">
       <div>run_id：{E(run["run_id"])}</div><div>报告日期：{date}</div>
-      <div>方法：{E(run["versions"]["methodology_version"])} / rules {E(run["versions"]["rules_version"])}</div>
+      <div>GEO Checker · Beansmile</div>
       <div>范围：sitemap {scope["pages_total"]} URL · 深检 {len(scope["sampled_pages"])} 页</div>
       <div>专家核验：Accepted {len(issues)} · Edited 0 · Rejected {len(run.get("expert_rejected",[]))}</div>
     </div>
@@ -131,7 +131,7 @@ footer{{margin-top:34px;color:var(--ink3);font-size:12px;text-align:center}}
 
 <section><h2>7. 证据、方法与边界</h2><div class="card">
 <p>证据包：<span class="mono">storage/evaluations/sofeyiahome/2026-09-10_run01/</span>（24 页原始 HTML、SiteProfile、PageEvidence、77 条规则结果、LLM 检查、评分映射）。</p>
-<p>规则：<span class="mono">docs/geo_detection_rules.md</span>（82 条 / 14 域，新增 W 警告级）；方法：<span class="mono">docs/geo_evaluation_methodology_latest.md</span>；数据结构：eval-1.1。</p>
+<p>证据与方法说明见本次评测包；署名 GEO Checker · Beansmile。本报告不承诺排名、引用或流量结果。</p>
 <p>边界：评分口径为校准草案，需专家签核；截图证据待补；本报告不承诺排名、引用或流量结果。</p>
 <div class="sign"><div>专家签核：__________________ 日期：__________</div><div>客户确认：__________________ 日期：__________</div></div>
 </div></section>
