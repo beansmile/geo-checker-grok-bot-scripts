@@ -18,8 +18,8 @@ Customer-facing reports show **GEO Checker** and attribution **Beansmile · GEO 
 
 ## Content GEO (separate report)
 
-Content evaluation (architecture, writing, authority evidence, buyer-question / AI visibility checks) is **standalone** from the technical 9-dimension score.
-SEO content discoverability is a **separate chapter** inside the technical report (`seo_scoring.md`), not part of the Content GEO 100.
+Content evaluation (architecture, writing, authority evidence, buyer-question / AI visibility checks) is **standalone** from the technical 10-dimension score.
+SEO content discoverability is a **15-point dimension** inside the technical report /100 (`seo_scoring.md` / scoring v1.2), not part of the Content GEO 100.
 
 ```bash
 cd /workspace/skills/geo-eval
@@ -44,4 +44,4 @@ python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
   --content-run runs/<domain>/<content_run> --lang zh
 ```
 
-Emits `report/combined_report.html` (+ `.zh.html`). Keeps technical, SEO (/25), and Content GEO scores separate; includes a W0–W16 remediation timeline.
+Emits `report/combined_report.html` (+ `.zh.html`). Keeps technical /100 (incl. SEO dim) and Content GEO /100 separate; includes a W0–W16 remediation timeline.

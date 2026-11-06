@@ -64,8 +64,7 @@
     {{toc_findings_html}}
     <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">Dimension assessment</a><span class="dots"></span><span class="c mono">04</span></li>
     {{toc_dims_html}}
-    <li><span class="n mono">{{p_seo}}</span><a href="#p{{p_seo}}">SEO content discoverability</a><span class="dots"></span><span class="c mono">{{seo_score}}/{{seo_max}}</span></li>
-    <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">Priority actions</a><span class="dots"></span><span class="c mono">05</span></li>
+        <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">Priority actions</a><span class="dots"></span><span class="c mono">05</span></li>
     <li><span class="n mono">{{p_scope}}</span><a href="#p{{p_scope}}">Scope</a><span class="dots"></span><span class="c mono">06</span></li>
     <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">Conclusion</a><span class="dots"></span><span class="c mono">07</span></li>
     <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">Appendix · Glossary</a><span class="dots"></span><span class="c mono">A</span></li>
@@ -104,7 +103,7 @@
     <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
   <div class="method">
     <div>
-      <span class="statn">Step 1 · Nine dimension scores (capped at each maximum)</span>
+      <span class="statn">Step 1 · Ten dimension scores (capped at each maximum)</span>
       <table class="mtable"><thead><tr><th>Dimension</th><th>Score</th><th>Max</th><th class="r">Grade</th></tr></thead>
       <tbody>{{#dim_pages}}<tr><td>{{name}}</td><td class="num mono">{{score}}</td><td class="dim mono">/{{max}}</td><td class="dim mono r">{{grade}}</td></tr>{{/dim_pages}}<tr class="total"><td>Dimension total</td><td class="num mono">{{dim_sum}}</td><td class="dim mono">/100</td><td class="r"></td></tr></tbody></table>
     </div>
@@ -116,7 +115,7 @@
       <div class="stepbox"><span class="statn">Step 3 · Calculation</span>
         <p class="calc mono">Final score = <b>{{overall_score}}</b> / 100 ({{grade}})</p>
         <p>{{calc_rule}}</p>
-        <p>Governance penalties are already folded into the dimension scores (the same root cause is counted once), so the nine-dimension sum already reflects them.</p></div>
+        <p>Governance penalties are already folded into the dimension scores (the same root cause is counted once), so the ten-dimension base sum already reflects them. Bonuses/penalties are listed in step 2 and are not folded into dimension weights.</p></div>
     </div>
   </div>
   <p class="note">Grade scale: A+ 90 and above · A 80–89 · B 70–79 · C 60–69 · D below 60. The score is meant to locate weaknesses and order fixes, not to compare you against other sites.</p>
@@ -153,11 +152,11 @@
 <section class="page" id="p{{p_dims_index}}" data-page="{{p_dims_index}}" aria-label="Section {{p_dims_index}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 Dimension assessment</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_dims_index_pad}} / {{total_pages_pad}}</span></span></header>
-  <div class="ptitle"><div><div class="pkicker">04 Dimension assessment</div><h2>Nine dimensions: scores and headroom</h2></div>
+  <div class="ptitle"><div><div class="pkicker">04 Dimension assessment</div><h2>Ten dimensions: scores and headroom</h2></div>
   <div class="pmeta mono dim">Out of 100</div></div>
-  <figure class="chart" role="img" aria-label="Scores and headroom across the nine dimensions"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
+  <figure class="chart" role="img" aria-label="Scores and headroom across the ten dimensions"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
     <div class="lc-track"><span class="lc-fill" style="width:{{pct}}%;background:{{bar}}"></span><span class="lc-space" style="width:{{remaining}}%"></span></div>
-    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>The dark bar is the current score; the light bar is the remaining headroom. Each bar is scaled to that dimension's own maximum (15 / 10 / 5).</figcaption></figure>
+    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>The dark bar is the current score; the light bar is the remaining headroom. Each bar is scaled to that dimension's own maximum (12 / 15 / 10 / 5).</figcaption></figure>
   <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- dimensions (one page each) -->
@@ -172,22 +171,8 @@
   <div class="callout"><b>How to improve</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
 
 
-<!-- SEO content discoverability (separate from nine-dim total) -->
-<section class="page" id="p{{p_seo}}" data-page="{{p_seo}}" aria-label="Section {{p_seo}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
-  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">SEO discoverability</span>
-  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_seo_pad}} / {{total_pages_pad}}</span></span></header>
-  <div class="ptitle"><div><div class="pkicker">SEO content discoverability</div><h2>Can search find the important pages?</h2></div>
-  <div class="pmeta"><span class="scorechip {{seo_c_class}}"><b>{{seo_score}}</b><span>/{{seo_max}}</span><em class="g {{seo_g_class}}">{{seo_grade}}</em></span></div></div>
-  <div class="mini"><i style="width:{{seo_pct}}%;background:{{seo_bar}}"></i></div>
-  <p class="note">{{seo_sep_note}} · Confidence: {{seo_confidence}}</p>
-  <div class="narr">{{seo_narr}}</div>
-  <div class="sublab">Engine notes</div>
-  <ul class="plain">{{seo_notes_html}}</ul>
-  <div class="callout"><b>How to improve</b><p>{{seo_callout}}</p></div>
-  <p class="note">Covers titles/H1/meta intent match, thin or duplicate content risk, internal linking to important URLs, and sitemap/robots as content-discovery aids. Full Access / crawler penalties stay in the nine-dimension adjustments when applicable.</p>
-<footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+<!-- SEO dimension is rendered via dim_pages (scoring v1.2) -->
 
-<!-- priority actions -->
 <section class="page" id="p{{p_actions}}" data-page="{{p_actions}}" aria-label="Section {{p_actions}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">05 Priority actions</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section {{p_actions_pad}} / {{total_pages_pad}}</span></span></header>

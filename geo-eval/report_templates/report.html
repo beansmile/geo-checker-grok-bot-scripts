@@ -64,8 +64,7 @@
     {{toc_findings_html}}
     <li><span class="n mono">{{p_dims_index}}</span><a href="#p{{p_dims_index}}">分维度评估</a><span class="dots"></span><span class="c mono">04</span></li>
     {{toc_dims_html}}
-        <li><span class="n mono">{{p_seo}}</span><a href="#p{{p_seo}}">SEO 内容可发现性</a><span class="dots"></span><span class="c mono">{{seo_score}}/{{seo_max}}</span></li>
-<li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">优先改进建议</a><span class="dots"></span><span class="c mono">05</span></li>
+        <li><span class="n mono">{{p_actions}}</span><a href="#p{{p_actions}}">优先改进建议</a><span class="dots"></span><span class="c mono">05</span></li>
     <li><span class="n mono">{{p_scope}}</span><a href="#p{{p_scope}}">检测范围</a><span class="dots"></span><span class="c mono">06</span></li>
     <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">结论</a><span class="dots"></span><span class="c mono">07</span></li>
     <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">附录 · 术语表</a><span class="dots"></span><span class="c mono">附</span></li>
@@ -104,9 +103,9 @@
     <div class="pmeta"><span class="scorechip {{overall_c_class}}"><b>{{overall_score}}</b><span>/100</span></span></div></div>
   <div class="method">
     <div>
-      <span class="statn">第 1 步 · 九个维度得分（上限内计分）</span>
+      <span class="statn">第 1 步 · 十个维度得分（上限内计分）</span>
       <table class="mtable"><thead><tr><th>维度</th><th>得分</th><th>满分</th><th class="r">等级</th></tr></thead>
-      <tbody>{{#dim_pages}}<tr><td>{{name}}</td><td class="num mono">{{score}}</td><td class="dim mono">/{{max}}</td><td class="dim mono r">{{grade}}</td></tr>{{/dim_pages}}<tr class="total"><td>九维合计</td><td class="num mono">{{dim_sum}}</td><td class="dim mono">/100</td><td class="r"></td></tr></tbody></table>
+      <tbody>{{#dim_pages}}<tr><td>{{name}}</td><td class="num mono">{{score}}</td><td class="dim mono">/{{max}}</td><td class="dim mono r">{{grade}}</td></tr>{{/dim_pages}}<tr class="total"><td>十维基础合计</td><td class="num mono">{{dim_sum}}</td><td class="dim mono">/100</td><td class="r"></td></tr></tbody></table>
     </div>
     <div>
       <div class="stepbox"><span class="statn">第 2 步 · 上限约束与加减分</span>
@@ -116,7 +115,7 @@
       <div class="stepbox"><span class="statn">第 3 步 · 计算</span>
         <p class="calc mono">最终总分 = <b>{{overall_score}}</b> / 100（{{grade}}）</p>
         <p>{{calc_rule}}</p>
-        <p>治理扣分已并入各维度得分（同一根因只计一次），因此九维合计本身已包含这些扣分。</p></div>
+        <p>治理扣分已并入各维度得分（同一根因只计一次），因此十维基础合计本身已包含这些扣分。加减分见第 2 步，不并入维度权重表。</p></div>
     </div>
   </div>
   <p class="note">等级映射：A+ 90 分以上 · A 80–89 · B 70–79 · C 60–69 · D 60 分以下。分数用于定位短板与排序修复优先级，不用于横向比较其它站点。</p>
@@ -153,11 +152,11 @@
 <section class="page" id="p{{p_dims_index}}" data-page="{{p_dims_index}}" aria-label="第 {{p_dims_index}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">04 分维度评估</span>
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">节 {{p_dims_index_pad}} / {{total_pages_pad}}</span></span></header>
-  <div class="ptitle"><div><div class="pkicker">04 分维度评估</div><h2>9 个维度得分与提升空间</h2></div>
+  <div class="ptitle"><div><div class="pkicker">04 分维度评估</div><h2>10 个维度得分与提升空间</h2></div>
   <div class="pmeta mono dim">满分 100 分</div></div>
-  <figure class="chart" role="img" aria-label="九个维度的得分与提升空间"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
+  <figure class="chart" role="img" aria-label="十个维度的得分与提升空间"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
     <div class="lc-track"><span class="lc-fill" style="width:{{pct}}%;background:{{bar}}"></span><span class="lc-space" style="width:{{remaining}}%"></span></div>
-    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>深色为当前得分，浅色为该维度剩余提升空间；每条为各维度自身满分（15 / 10 / 5）。</figcaption></figure>
+    <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>深色为当前得分，浅色为该维度剩余提升空间；每条为各维度自身满分（12 / 15 / 10 / 5）。</figcaption></figure>
   <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 分维度评估（每维一页） -->
@@ -173,20 +172,7 @@
 
 <!-- 优先改进建议 -->
 
-<!-- SEO content discoverability -->
-<section class="page" id="p{{p_seo}}" data-page="{{p_seo}}" aria-label="第 {{p_seo}} / {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
-  <span class="ph-url mono">{{domain}}</span><span class="ph-sec">SEO 可发现性</span>
-  <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">第 {{p_seo_pad}} / {{total_pages_pad}} 节</span></span></header>
-  <div class="ptitle"><div><div class="pkicker">SEO 内容可发现性</div><h2>搜索能否找到重要页面？</h2></div>
-  <div class="pmeta"><span class="scorechip {{seo_c_class}}"><b>{{seo_score}}</b><span>/{{seo_max}}</span><em class="g {{seo_g_class}}">{{seo_grade}}</em></span></div></div>
-  <div class="mini"><i style="width:{{seo_pct}}%;background:{{seo_bar}}"></i></div>
-  <p class="note">{{seo_sep_note}} · 置信度：{{seo_confidence}}</p>
-  <div class="narr">{{seo_narr}}</div>
-  <div class="sublab">引擎备注</div>
-  <ul class="plain">{{seo_notes_html}}</ul>
-  <div class="callout"><b>改进建议</b><p>{{seo_callout}}</p></div>
-  <p class="note">覆盖标题/H1/meta 意图匹配、薄内容或重复风险、通向重要 URL 的站内链接，以及 sitemap/robots 作为内容发现辅助。完整 Access/爬虫罚分仍在九维加减项中（如适用）。</p>
-<footer class="pf"><span>GEO Checker · 就绪度报告</span><span class="mono">Beansmile</span></footer></section>
+<!-- SEO dimension is rendered via dim_pages (scoring v1.2) -->
 
 <section class="page" id="p{{p_actions}}" data-page="{{p_actions}}" aria-label="第 {{p_actions}} 节，共 {{total_pages}} 节"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
   <span class="ph-url mono">{{domain}}</span><span class="ph-sec">05 优先改进建议</span>

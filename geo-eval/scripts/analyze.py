@@ -8,11 +8,11 @@ Step 3~4：通用 GEO 深度检测 + 9 维评分 → report.json
 
 输入:  run_dir（run.py 产物：evidence/pages/*.html、pages.list、site.json、scope.json、robots.txt、llms.txt）
 输出:  <run_dir>/report.json（9 维得分、总分、等级、findings、penalty/bonus）
-       另附 seo_discoverability（/25，独立计分，不并入九维总分；见 seo_scoring.md）
+       seo 为技术百分制维度（启发式 /25 → 维度 /15；见 seo_scoring.md）；加减分仍在 score_adjustments
 
-口径:  9 维 100 分制（schema 15 · entity 15 · ogp 5 · richness 15 · kg 10 · absorption 15 · trust 15 · on_page 5 · quality 5）——公式不变
-       SEO content discoverability 为技术报告附加分块，不改变 overall_score
-       Trust Ceiling：S1 实体冲突 → trust≤50%、entity≤30%、总分≤70；S1 lorem → 总分≤75
+口径:  10 维 100 分制 v1.2（schema 12 · entity 12 · ogp 5 · richness 12 · kg 10 · absorption 12 · trust 12 · on_page 5 · quality 5 · seo 15）
+       SEO content discoverability contributes to overall_score as the seo dimension
+       Trust Ceiling：S1 实体冲突 → trust≤6/12、entity≤3.6/12、总分≤70；S1 lorem → 总分≤75
        纯规则 R（不含 LLM）；LLM 类判定（ENT-07、QLT 等）留待 merge_llm.py 扩展。
 """
 
@@ -678,10 +678,19 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
         q_deduction += 1
     quality = max(0, min(5, 5 - q_deduction))
 
+    # v1.2: dimensions formerly max 15 scale to max 12 (ogp/kg/on_page/quality unchanged).
+    # SEO is attached later in analyze() from seo_analyze.
+    scale_15_to_12 = 12 / 15
     return {
-        "schema": schema_score, "entity": entity_score, "ogp": ogp_score,
-        "richness": richness, "kg": kg_score, "absorption": absorption,
-        "trust": trust, "on_page": on_page, "quality": quality,
+        "schema": round(min(schema_score, 15) * scale_15_to_12, 1),
+        "entity": round(min(entity_score, 15) * scale_15_to_12, 1),
+        "ogp": ogp_score,
+        "richness": round(min(richness, 15) * scale_15_to_12, 1),
+        "kg": kg_score,
+        "absorption": round(min(absorption, 12), 1),  # already ×0.6 in citability
+        "trust": round(min(trust, 15) * scale_15_to_12, 1),
+        "on_page": on_page,
+        "quality": quality,
     }
 
 
@@ -1122,8 +1131,8 @@ def _absorption_detail(acc):
 
 
 ABSORPTION_TOLERANCE = 0.6
-DIMENSION_MAX = {"schema": 15, "entity": 15, "ogp": 5, "richness": 15, "kg": 10,
-                 "absorption": 15, "trust": 15, "on_page": 5, "quality": 5}
+DIMENSION_MAX = {"schema": 12, "entity": 12, "ogp": 5, "richness": 12, "kg": 10,
+                 "absorption": 12, "trust": 12, "on_page": 5, "quality": 5, "seo": 15}
 
 
 def integrity_flags(dims, acc, ent):
@@ -1151,9 +1160,9 @@ def integrity_flags(dims, acc, ent):
                           "detail": f"{dims.get(key)} 超过维度满分 {max_score}"})
 
     if ent.get("trust_ceiling"):
-        if dims.get("trust", 0) > 7.5 + 0.001 or dims.get("entity", 0) > 4.5 + 0.001:
+        if dims.get("trust", 0) > 6.0 + 0.001 or dims.get("entity", 0) > 3.6 + 0.001:
             flags.append({"dimension": "trust", "kind": "ceiling_not_applied",
-                          "detail": "命中 Trust Ceiling，但 trust/entity 仍高于 7.5 / 4.5 的封顶值"})
+                          "detail": "命中 Trust Ceiling，但 trust/entity 仍高于 6 / 3.6 的封顶值"})
     return flags
 
 
@@ -1198,6 +1207,7 @@ def build_dimension_details(dims, pages, cln, ent, schema_info, acc):
         "quality": ("占位文案 " + (f"{len(cln['lorem'])} 处" if cln['lorem'] else "无") +
                     "、0 值计数器 " + (f"{len(cln['zero'])} 处" if cln['zero'] else "无") +
                     "、默认合规模板 " + (f"{len(cln['legal'])} 处" if cln['legal'] else "无") + "。"),
+        "seo": "见 seo_discoverability 分章（标题/H1/meta、薄内容、站内链接、sitemap/robots）。",
     }
     out = []
     for d in dims:
@@ -1318,14 +1328,31 @@ def analyze(run_dir):
 
     dims = score_dimensions(pages, site, cln, ent, schema_info, acc)
 
+    # SEO dimension (/15) — heuristic raw /25 scaled in seo_analyze
+    seo_block = None
+    try:
+        import seo_analyze
+        seo_block = seo_analyze.build_seo_block(run_dir)
+        dims["seo"] = float(seo_block.get("dim_score") if seo_block.get("dim_score") is not None
+                            else seo_block.get("score") or 0)
+    except Exception as exc:  # noqa: BLE001
+        seo_block = {
+            "score": 0.0, "max": 15, "dim_score": 0.0,
+            "score_raw_25": None, "max_raw_25": 25,
+            "grade": "F", "confidence": "none",
+            "notes": [f"SEO block unavailable: {exc}"],
+            "rubric": "seo_scoring.md v1.1", "part_of_technical_100": True,
+        }
+        dims["seo"] = 0.0
+
     # Trust Ceiling
     ceiling = None
     ceiling_note = ""
     if ent["trust_ceiling"]:
         ceiling = 70
-        ceiling_note = "品牌写法/邮箱域名冲突 → 信任度≤7.5、品牌与实体≤4.5、总分≤70"
-        dims["trust"] = min(dims["trust"], 7.5)
-        dims["entity"] = min(dims["entity"], 4.5)
+        ceiling_note = "品牌写法/邮箱域名冲突 → 信任度≤6/12、品牌与实体≤3.6/12、总分≤70"
+        dims["trust"] = min(dims["trust"], 6.0)
+        dims["entity"] = min(dims["entity"], 3.6)
     if cln["lorem"]:
         ceiling = 75 if ceiling is None else min(ceiling, 75)
         ceiling_note = (ceiling_note + "；" if ceiling_note else "") + "残留 lorem 占位 → 总分≤75"
@@ -1357,19 +1384,21 @@ def analyze(run_dir):
         bonus += 3
         adjustments.append({"type": "bonus", "points": 3, "reason": "有 llms.txt"})
 
+    bonus = min(bonus, 10)
     overall = int(max(0, min(100, base - penalty + bonus)))
     grade = grade_for(overall)
 
     dims_meta = [
-        {"name": "结构化数据", "key": "schema", "max": 15},
-        {"name": "品牌与实体一致性", "key": "entity", "max": 15},
+        {"name": "结构化数据", "key": "schema", "max": 12},
+        {"name": "品牌与实体一致性", "key": "entity", "max": 12},
         {"name": "开放图谱与分享", "key": "ogp", "max": 5},
-        {"name": "内容覆盖与新鲜度", "key": "richness", "max": 15},
+        {"name": "内容覆盖与新鲜度", "key": "richness", "max": 12},
         {"name": "站内实体信号", "key": "kg", "max": 10},
-        {"name": "答案可吸收性", "key": "absorption", "max": 15},
-        {"name": "信任度", "key": "trust", "max": 15},
+        {"name": "答案可吸收性", "key": "absorption", "max": 12},
+        {"name": "信任度", "key": "trust", "max": 12},
         {"name": "页面主题与元数据", "key": "on_page", "max": 5},
         {"name": "内容质量", "key": "quality", "max": 5},
+        {"name": "SEO 内容可发现性", "key": "seo", "max": 15},
     ]
     for d in dims_meta:
         d["score"] = dims[d["key"]]
@@ -1411,7 +1440,7 @@ def analyze(run_dir):
         "ceiling": ceiling,
         "ceiling_note": ceiling_note,
         "versions": {"methodology_version": "v2026.10", "rules_version": "v1.1",
-                     "scoring_version": "v1.1", "seo_scoring_version": "v1.0"},
+                     "scoring_version": "v1.2", "seo_scoring_version": "v1.1"},
         "data_integrity_flags": integrity_flags(dims, acc, ent),
         "dimensions": dims_meta,
         "dimension_details": dimension_details,
@@ -1422,20 +1451,18 @@ def analyze(run_dir):
         "overall_summary": summary,
         "closing": "优先处理上述高优先级问题，再持续补充真实内容与实体声明。" if findings else "技术基础与内容结构良好，保持并持续补充真实内容即可。",
     }
-    # SEO content discoverability — separate scored block; does NOT alter overall_score
-    try:
-        import seo_analyze
-        report_out["seo_discoverability"] = seo_analyze.build_seo_block(run_dir)
-    except Exception as exc:  # noqa: BLE001
-        report_out["seo_discoverability"] = {
-            "score": None,
-            "max": 25,
-            "grade": "F",
-            "confidence": "none",
-            "notes": [f"SEO block unavailable: {exc}"],
-            "separate_from_nine_dim": True,
-            "rubric": "seo_scoring.md v1.0",
-        }
+    # SEO narrative block (score already folded into dims / overall_score)
+    report_out["seo_discoverability"] = seo_block
+    report_out["category_scores"] = {
+        d["key"]: {"score": d["score"], "max": d["max"], "percentage": d["pct"], "grade": d["grade"]}
+        for d in dims_meta
+    }
+    report_out["score_adjustments"] = {
+        "base_score": base,
+        "penalty": penalty,
+        "bonus": min(bonus, 10),
+        "adjustments": adjustments,
+    }
     return report_out
 
 

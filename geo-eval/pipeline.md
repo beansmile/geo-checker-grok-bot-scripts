@@ -87,5 +87,5 @@ content_eval.py
 ```
 
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
-Technical `scoring.md` / `analyze.py` 9-dim formula remains untouched.
-`analyze.py` also attaches `seo_discoverability` (/25) for the technical report SEO chapter; it does not change `overall_score`.
+Technical `scoring.md` / `analyze.py` use the v1.2 10-dim /100 formula (SEO = 15 pts).
+`analyze.py` attaches `seo_discoverability` and folds its dim score (/15, scaled from heuristic /25) into the technical `overall_score` (scoring v1.2).

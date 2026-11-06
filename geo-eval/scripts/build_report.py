@@ -27,7 +27,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 # report.json 没有版本字段时的兜底（旧 run 目录）
-VERSION_FALLBACK = "v1.1"
+VERSION_FALLBACK = "v1.2"
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +93,7 @@ STRINGS = {
             ("trust", "信任度"),
             ("on_page", "页面主题与元数据"),
             ("quality", "内容质量"),
+            ("seo", "SEO 内容可发现性"),
         ],
         "dim_advice": {
             "schema": "结构化数据是「人话的机器副本」，补全组织信息属性（sameAs/简介/联系方式）与列表结构化数据即可，优先度低于实体口径与内容本身。",
@@ -104,6 +105,7 @@ STRINGS = {
             "trust": "建立真实作者与资质页、补全团队信息，为数据与资质标注来源；优先解决品牌一致性问题。",
             "on_page": "为页面补齐标题与元描述、修正 H1 与层级；优先清理演示/系统页，而不是在将被移除的页面上改 H1。",
             "quality": "清理模板与占位内容，删除或标注绝对化表述的出处，建立发布前质量检查流程。",
+            "seo": "为每个意图写唯一标题与 H1，补 meta，加强产品/案例站内链接，并维护可访问的 sitemap/robots。",
         },
         "grade_label": {"A+": "优秀", "A": "良好", "B": "良好", "C": "一般", "D": "不足", "F": "失败"},
         "sev_labels": {"critical": "严重", "high": "高", "medium": "中", "low": "低"},
@@ -116,7 +118,7 @@ STRINGS = {
         "role_name": {"home": "首页", "content": "正文页", "trust": "信任页", "legal": "合规页", "meta": "索引页"},
         "default_solution": "见上方修复建议。",
         "no_dim_findings": "本维度未单独检出问题；详见「关键发现」章节。",
-        "adj_note_none": "<p>本页无加分/扣分条目，总分＝九维合计。</p>",
+        "adj_note_none": "<p>本页无加分/扣分条目，总分＝十维基础合计。</p>",
         "advisory_label": "建议项",
         "advisory_hint": "只提示，不计分",
         "scope_warning_fmt": "必检页面未找到：{items}。相关维度可能因缺页被低估，改进建议中已相应标注。",
@@ -158,7 +160,7 @@ STRINGS = {
         "scope_llms_yes": "有",
         "scope_llms_no": "无",
         "calc_rule": (
-            "九维显示值合计 <b>{dim_sum}</b> → 基础分（保留一位小数）<b>{base}</b> → "
+            "十维显示值合计 <b>{dim_sum}</b> → 基础分（保留一位小数）<b>{base}</b> → "
             "本页无加减分，基础分向下取整得最终总分 <b>{overall}</b> / 100（{grade}）。"
         ),
     },
@@ -175,6 +177,7 @@ STRINGS = {
             ("trust", "Trust"),
             ("on_page", "Page topic & metadata"),
             ("quality", "Content quality"),
+            ("seo", "SEO content discoverability"),
         ],
         "dim_advice": {
             "schema": "Structured data is the machine-readable copy of what the page already says in prose. Completing the organisation attributes (sameAs, description, contact details) and list markup is worthwhile, but ranks below entity consistency and the content itself.",
@@ -186,6 +189,7 @@ STRINGS = {
             "trust": "Publish real author and credential pages, complete the team information, and cite sources for data and qualifications. Fix brand consistency issues first.",
             "on_page": "Give every page a title and meta description, and fix H1 and heading hierarchy. Clear demo and system pages first rather than fixing H1 on pages that will be removed.",
             "quality": "Clean up template and placeholder content, source or remove absolute claims, and add a pre-publish quality check.",
+            "seo": "Publish unique titles and H1s per intent, strengthen internal links to product/case URLs, and keep a clean sitemap/robots.",
         },
         "grade_label": {"A+": "Excellent", "A": "Good", "B": "Good", "C": "Fair", "D": "Poor", "F": "Failed"},
         "sev_labels": {"critical": "Critical", "high": "High", "medium": "Medium", "low": "Low"},
@@ -198,7 +202,7 @@ STRINGS = {
         "role_name": {"home": "Home", "content": "Content", "trust": "Trust", "legal": "Legal", "meta": "Index"},
         "default_solution": "See the fix above.",
         "no_dim_findings": "No separate issues were detected in this dimension; see the Key findings section.",
-        "adj_note_none": "<p>No bonus or penalty applies to this report, so the total equals the nine-dimension sum.</p>",
+        "adj_note_none": "<p>No bonus or penalty applies to this report, so the total equals the ten-dimension base sum.</p>",
         "advisory_label": "Advisory",
         "advisory_hint": "listed, not scored",
         "scope_warning_fmt": "Required pages not found: {items}. The related dimensions may be understated; improvement notes reflect this.",
@@ -461,14 +465,14 @@ def flatten(report, brand, lang="zh", escape_html=False):
     # ---------- 页码布局 ----------
     N = len(findings)
     M = len(DIM_ORDER)
-    # +1 page for SEO content discoverability (separate from nine-dim total)
-    total_pages = 13 + N + M
+    # SEO is one of the M dimensions (no separate /25 add-on page)
+    total_pages = 12 + N + M
     p_dims_index = 8 + N
-    p_seo = 9 + N + M
-    p_actions = 10 + N + M
-    p_scope = 11 + N + M
-    p_conclusion = 12 + N + M
-    p_glossary = 13 + N + M
+    p_seo = 9 + N + M - 1  # anchor of seo dim page (last dim); kept for template compat
+    p_actions = 9 + N + M
+    p_scope = 10 + N + M
+    p_conclusion = 11 + N + M
+    p_glossary = 12 + N + M
 
     for i, f in enumerate(findings):
         page = 8 + i
@@ -531,6 +535,34 @@ def flatten(report, brand, lang="zh", escape_html=False):
             "findings_md": gf_md,
         })
 
+    # Enrich SEO dimension page from seo_discoverability narrative block
+    _seo_blk = report.get("seo_discoverability") or {}
+    for d in dim_pages:
+        if d["key"] != "seo":
+            continue
+        p_seo = d["page"]
+        if _seo_blk.get("narr"):
+            d["narr"] = E(_seo_blk["narr"])
+        if _seo_blk.get("callout"):
+            d["callout"] = E(_seo_blk["callout"])
+        notes = _seo_blk.get("notes") or []
+        seo_findings = [gf for gf in (_seo_blk.get("findings") or []) if isinstance(gf, dict)]
+        parts = []
+        if notes:
+            note_items = "".join(f"<li>{E(n)}</li>" for n in notes)
+            parts.append(
+                f'<div class="frow"><div class="frow-h"><h4>{"Engine notes" if lang=="en" else "引擎备注"}</h4></div>'
+                f'<ul class="plain">{note_items}</ul></div>'
+            )
+        for gf in seo_findings:
+            parts.append(
+                '<div class="frow"><div class="frow-h">'
+                f'<h4>{E(gf.get("title") or "")}</h4></div>'
+                f'<p class="fix">{E(gf.get("solution") or gf.get("problem") or "")}</p></div>'
+            )
+        if parts:
+            d["findings_html"] = "".join(parts)
+
     # ---------- 目录 / 索引 ----------
     toc_findings_html = "".join(
         f'<li><span class="n mono">{f["n"]}</span>{f["sev_span"]}'
@@ -560,7 +592,6 @@ def flatten(report, brand, lang="zh", escape_html=False):
             f'{S["idx_dim"]} {d["n"]} · {html_mod.escape(d["name"])}</a>'
             for d in dim_pages
         )
-        + f'<a href="#p{p_seo}"><span class="mono">{p_seo:02d}</span>{S["idx_seo"]}</a>'
         + f'<a href="#p{p_actions}"><span class="mono">{p_actions:02d}</span>{S["idx_actions"]}</a>'
         f'<a href="#p{p_scope}"><span class="mono">{p_scope:02d}</span>{S["idx_scope"]}</a>'
         f'<a href="#p{p_conclusion}"><span class="mono">{p_conclusion:02d}</span>{S["idx_conclusion"]}</a>'
@@ -661,11 +692,18 @@ def flatten(report, brand, lang="zh", escape_html=False):
     _o_grade = report.get("grade", "D")
     _o_color, overall_c_class, overall_g_class, _o_bar = grade_meta(_o_grade)
 
-    # ---------- SEO content discoverability (separate from nine-dim) ----------
+    # ---------- SEO content discoverability (dimension chapter; score in /100) ----------
     seo = report.get("seo_discoverability") or {}
-    seo_score = seo.get("score")
-    seo_max = seo.get("max", 25)
-    seo_grade = seo.get("grade") or "—"
+    # Prefer the dimension row when present (v1.2); fall back to seo_discoverability block
+    _seo_dim = next((d for d in (report.get("dimensions") or []) if d.get("key") == "seo"), None)
+    if _seo_dim and _seo_dim.get("score") is not None:
+        seo_score = _seo_dim.get("score")
+        seo_max = _seo_dim.get("max", 15)
+        seo_grade = _seo_dim.get("grade") or seo.get("grade") or "—"
+    else:
+        seo_score = seo.get("dim_score", seo.get("score"))
+        seo_max = seo.get("max", 15)
+        seo_grade = seo.get("grade") or "—"
     seo_conf = seo.get("confidence") or "—"
     if seo_score is None:
         seo_score_disp = "—"
@@ -680,7 +718,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
     if lang == "en":
         seo_notes_md = "\n".join(f"- {n}" for n in seo_notes) if seo_notes else "_No engine notes._"
         seo_notes_html = "".join(f"<li>{E(n)}</li>" for n in seo_notes) if seo_notes else "<li>No engine notes.</li>"
-        seo_sep_note = "Separate from the nine-dimension on-site readiness total — not added into the 100."
+        seo_sep_note = "Part of the technical 100 (15-point dimension). Heuristic raw score is /25, scaled ×15/25 into this dimension."
         seo_default_narr = (
             "SEO content discoverability checks whether important pages can be found and indexed: "
             "intent-matched titles/H1/meta, thin or duplicate risk, internal crawl paths, and sitemap/robots as discovery aids. "
@@ -690,7 +728,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
     else:
         seo_notes_md = "\n".join(f"- {n}" for n in seo_notes) if seo_notes else "_无引擎备注。_"
         seo_notes_html = "".join(f"<li>{E(n)}</li>" for n in seo_notes) if seo_notes else "<li>无引擎备注。</li>"
-        seo_sep_note = "独立于九维站内就绪度总分，不并入 100 分。"
+        seo_sep_note = "计入技术百分制（本维满分 15）。启发式原始分 /25，按 ×15/25 折算入本维。"
         seo_default_narr = (
             "SEO 内容可发现性检查重要页面是否可被发现与索引：意图匹配的标题/H1/meta、薄内容或重复风险、"
             "站内抓取路径，以及 sitemap/robots 作为内容发现辅助。抓取失败（爬虫屏蔽、HTTPS）仍归 Access/ACC，此处交叉引用、不重复扣罚。"
@@ -699,7 +737,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
     seo_narr = E(seo.get("narr") or seo_default_narr)
     seo_callout = E(seo.get("callout") or seo_default_callout)
 
-    # 九维显示值的精确合计（去尾零：62.34 / 62.0 -> 62）
+    # 十维显示值的精确合计（去尾零：62.34 / 62.0 -> 62）
     _ds = sum(float(d.get("score", 0) or 0) for d in report.get("dimensions", []))
     dim_sum = f"{_ds:.2f}".rstrip("0").rstrip(".")
 
@@ -719,7 +757,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "overall_c_class": overall_c_class,
         "overall_g_class": overall_g_class,
         "base_score": report.get("base_score", 0),
-        # 九维「显示值」的精确合计：让评分方法页的表格能自洽（列加起来 = 打印出来的合计）
+        # 十维「显示值」的精确合计：让评分方法页的表格能自洽（列加起来 = 打印出来的合计）
         "dim_sum": dim_sum,
         # 总分/基础分的整数显示（避免 62.3 之类小数进入面向客户的表头）
         "bonus": f"+{bonus}" if bonus else ("none" if lang == "en" else "无"),
@@ -774,7 +812,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "toc_dims_html": toc_dims_html,
         "index_html": index_html,
         "dim_pages": dim_pages,
-        # 仅在确实没有加减分项时提示「总分＝九维合计」，避免与已列出的扣分并存造成误读
+        # 仅在确实没有加减分项时提示「总分＝十维基础合计」，避免与已列出的扣分并存造成误读
         "adj_note": (S["adj_note_none"] if not adj_rows else ""),
         "action_rows": action_rows,
         "next_steps": next_steps,

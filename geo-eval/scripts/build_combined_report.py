@@ -11,8 +11,8 @@ Defaults:
   - Writes report/combined_report.html (or combined_report.zh.html when --lang zh).
   - Client deliverable is HTML only (no .md).
 
-Scores stay separate: technical /100, SEO discoverability /25, Content GEO /100.
-Never invent a single merged total. Never invent AI engine quotes.
+Scores stay separate: technical /100 (includes SEO discoverability as a 15-pt dim),
+Content GEO /100. Never invent a single merged total. Never invent AI engine quotes.
 """
 
 from __future__ import annotations
@@ -105,15 +105,18 @@ STRINGS = {
         "cover_h1": "Combined GEO Report",
         "cover_sub": (
             "This package brings together the technical on-site readiness evaluation "
-            "(nine dimensions + SEO content discoverability) and the Content GEO evaluation "
+            "(10 dimensions /100, including SEO content discoverability) and the Content GEO evaluation "
             "(architecture, taxonomy, writing, authority evidence, buyer-question coverage). "
-            "Scores are reported separately so each track stays actionable."
+            "The two headline scores are reported separately so each track stays actionable."
         ),
         "site": "Site",
         "report_date": "Report date",
         "tech_label": "Technical readiness",
         "seo_label": "SEO discoverability",
         "content_label": "Content GEO",
+        "cover_tech_note": "SEO dim included in technical /100",
+        "tech_card_sub": "10 dimensions · incl. SEO /15",
+        "content_card_sub": "5 dimensions",
         "grade_scale": "Grade scale",
         "intro_kicker": "01 Purpose",
         "intro_h2": "What this combined report is for",
@@ -125,11 +128,11 @@ STRINGS = {
             "Detailed evidence lives in the standalone technical and Content GEO HTML reports."
         ),
         "scores_kicker": "02 Score snapshot",
-        "scores_h2": "Three scores, kept separate",
+        "scores_h2": "Two headline scores, kept separate",
         "scores_note": (
-            "Technical readiness is /100 (nine dimensions). SEO content discoverability is /25 "
-            "and is not added into the technical 100. Content GEO is /100 across five dimensions. "
-            "Do not average or sum these into a single total."
+            "Technical readiness is /100 across ten dimensions (SEO content discoverability is the "
+            "15-point SEO dim inside that total; bonuses/penalties stay outside the dimension table). "
+            "Content GEO is /100 across five dimensions. Do not average or sum these into a single total."
         ),
         "max": "Max",
         "grade": "Grade",
@@ -137,9 +140,9 @@ STRINGS = {
         "score": "Score",
         "confidence": "Confidence",
         "tech_kicker": "03 Technical highlights",
-        "tech_h2": "On-site readiness & SEO discoverability",
-        "tech_nine": "Nine-dimension readiness",
-        "tech_seo": "SEO content discoverability",
+        "tech_h2": "On-site readiness (incl. SEO discoverability)",
+        "tech_nine": "Ten-dimension readiness",
+        "tech_seo": "SEO content discoverability (15 pts of technical 100)",
         "provisional": "Provisional / crawl limited",
         "strengths": "Strengths",
         "key_findings": "Key findings",
@@ -167,8 +170,8 @@ STRINGS = {
         "closing": "Conclusion",
         "footer": "GEO Checker · Combined package",
         "docfoot": (
-            "Combined GEO package by Beansmile · GEO Checker. Technical, SEO discoverability, "
-            "and Content GEO scores are reported separately — not rankings, traffic, or guaranteed AI mentions."
+            "Combined GEO package by Beansmile · GEO Checker. Technical /100 (incl. SEO dim) and "
+            "Content GEO /100 are reported separately — not rankings, traffic, or guaranteed AI mentions."
         ),
         "problem": "Problem",
         "impact": "Impact",
@@ -242,7 +245,7 @@ STRINGS = {
         "cover_kicker": "生成式引擎优化 · 综合包",
         "cover_h1": "GEO 综合评测报告",
         "cover_sub": (
-            "本综合包汇总技术侧站内就绪评测（九维 + SEO 内容可发现性）与内容侧 Content GEO 评测"
+            "本综合包汇总技术侧站内就绪评测（十维 /100，含 SEO 内容可发现性）与内容侧 Content GEO 评测"
             "（信息架构、分类与缺口、编写质量、权威证据、采购问题覆盖）。"
             "各项分数分开呈现，便于分别整改。"
         ),
@@ -251,6 +254,9 @@ STRINGS = {
         "tech_label": "技术就绪度",
         "seo_label": "SEO 可发现性",
         "content_label": "内容 GEO",
+        "cover_tech_note": "SEO 维已计入技术 /100",
+        "tech_card_sub": "十维 · 含 SEO /15",
+        "content_card_sub": "五维",
         "grade_scale": "等级刻度",
         "intro_kicker": "01 用途说明",
         "intro_h2": "这份综合报告用来做什么",
@@ -261,10 +267,10 @@ STRINGS = {
             "完整证据仍以独立的技术报告与内容 GEO 报告为准。"
         ),
         "scores_kicker": "02 分数快照",
-        "scores_h2": "三项分数，分开记录",
+        "scores_h2": "两项总分，分开记录",
         "scores_note": (
-            "技术就绪度为 /100（九维）。SEO 内容可发现性为 /25，不并入技术百分制。"
-            "内容 GEO 为 /100（五维）。请勿把三项平均或加总成一个总分。"
+            "技术就绪度为 /100（十维；SEO 内容可发现性为其中 15 分维，加减分仍单独列出）。"
+            "内容 GEO 为 /100（五维）。请勿把两项平均或加总成一个总分。"
         ),
         "max": "满分",
         "grade": "等级",
@@ -272,9 +278,9 @@ STRINGS = {
         "score": "得分",
         "confidence": "置信度",
         "tech_kicker": "03 技术侧重点",
-        "tech_h2": "站内就绪度与 SEO 可发现性",
-        "tech_nine": "九维就绪度",
-        "tech_seo": "SEO 内容可发现性",
+        "tech_h2": "站内就绪度（含 SEO 可发现性）",
+        "tech_nine": "十维就绪度",
+        "tech_seo": "SEO 内容可发现性（技术百分制中的 15 分维）",
         "provisional": "暂定 / 抓取受限",
         "strengths": "已有基础",
         "key_findings": "关键发现",
@@ -302,7 +308,7 @@ STRINGS = {
         "closing": "结论",
         "footer": "GEO Checker · 综合包",
         "docfoot": (
-            "Beansmile · GEO Checker 综合包。技术、SEO 可发现性与内容 GEO 分数分开呈现——"
+            "Beansmile · GEO Checker 综合包。技术 /100（含 SEO 维）与内容 GEO /100 分开呈现——"
             "不代表排名、流量或保证被 AI 引用。"
         ),
         "problem": "问题",
@@ -600,9 +606,22 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     tech_score = tech.get("overall_score")
     tech_grade = tech.get("grade") or "—"
     seo = tech.get("seo_discoverability") or {}
-    seo_score = seo.get("score")
-    seo_max = seo.get("max") or 25
-    seo_grade = seo.get("grade") or "—"
+    _seo_dim = next((d for d in (tech.get("dimensions") or []) if d.get("key") == "seo"), None)
+    if _seo_dim and _seo_dim.get("score") is not None:
+        seo_score = _seo_dim.get("score")
+        seo_max = _seo_dim.get("max") or 15
+        seo_grade = _seo_dim.get("grade") or seo.get("grade") or "—"
+    else:
+        # migrate legacy /25 blocks into /15 display
+        raw = seo.get("score")
+        mx = seo.get("max") or 15
+        if raw is not None and float(mx) == 25:
+            seo_score = round(float(raw) * 15 / 25, 1)
+            seo_max = 15
+        else:
+            seo_score = seo.get("dim_score", raw)
+            seo_max = seo.get("max") or 15
+        seo_grade = seo.get("grade") or "—"
     seo_conf = seo.get("confidence") or ("provisional" if tech.get("provisional") else "—")
     content_score = content.get("overall_score")
     content_grade = content.get("grade") or "—"
@@ -703,7 +722,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     return f"""<!doctype html><html lang="{esc(lang)}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(brand)} {esc(S['doc_title'])} · {esc(domain)}</title>
-<meta name="description" content="Combined GEO package for {esc(domain)}: technical {esc(tech_disp)}/100, SEO {esc(seo_disp)}/{esc(str(seo_max))}, Content GEO {esc(content_disp)}/100.">
+<meta name="description" content="Combined GEO package for {esc(domain)}: technical {esc(tech_disp)}/100 (incl. SEO dim), Content GEO {esc(content_disp)}/100.">
 <style>{style_css}
 /* Combined report extras on shared technical stylesheet */
 .page {{ min-height: auto; padding-bottom: 2rem; }}
@@ -716,7 +735,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
 .sev-warning {{ background:#ffedd5; color:#9a3412; }}
 .c-a{{color:var(--success)}}.c-b{{color:var(--info)}}.c-c{{color:var(--warning)}}.c-d{{color:var(--danger)}}
 .g-a{{color:var(--success)}}.g-b{{color:var(--info)}}.g-c{{color:var(--warning)}}.g-d{{color:var(--danger)}}
-.score-grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:var(--space-5)}}
+.score-grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:var(--space-5)}}
 .score-card{{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}}
 .score-card .label{{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:600}}
 .score-card .val{{font-family:var(--font-mono);font-size:28px;font-weight:650;margin-top:6px}}
@@ -745,13 +764,13 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
       <div class="cbig">{esc(content_disp)}<small>/100</small><em>{esc(S['content_label'])} {esc(str(content_grade))}</em></div>
       <div><div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{pct}%"></span></div>
       <div class="cm-scale"><span>0</span><span>Pass 60</span><span>Good 80</span><span>100</span></div></div>
-      <p class="cover-score-note">{esc(S['tech_label'])}: {esc(tech_disp)}/100 ({esc(str(tech_grade))}) · {esc(S['seo_label'])}: {esc(seo_disp)}/{esc(str(seo_max))} ({esc(str(seo_grade))})</p></div>
+      <p class="cover-score-note">{esc(S['tech_label'])}: {esc(tech_disp)}/100 ({esc(str(tech_grade))}) · {esc(S.get('cover_tech_note', 'SEO dim in technical /100'))}</p></div>
     </div>
   </div>
   <dl class="cover-facts">
     <div class="wide"><dt>{esc(S['site'])}</dt><dd class="mono">{esc(site_url)}</dd></div>
     <div><dt>{esc(S['report_date'])}</dt><dd class="mono">{esc(date)}</dd></div>
-    <div><dt>{esc(S['confidence'])}</dt><dd>{esc(str(content_conf))} / SEO {esc(str(seo_conf))}</dd></div>
+    <div><dt>{esc(S['confidence'])}</dt><dd>{esc(str(content_conf))} · tech {esc(str(seo_conf))}</dd></div>
     <div><dt>{esc(S['grade_scale'])}</dt><dd class="mono">A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60 · F</dd></div>
   </dl>
   <div class="cover-sign"><span>Prepared by Beansmile · GEO Checker</span> {provisional_badge}</div>
@@ -778,24 +797,18 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     <div class="score-card">
       <div class="label">{esc(S['tech_label'])}</div>
       <div class="val {tc}">{esc(tech_disp)}<small>/100</small> <em class="g {tg}">{esc(str(tech_grade))}</em></div>
-      <div class="sub">9 dimensions · on-site readiness</div>
-    </div>
-    <div class="score-card">
-      <div class="label">{esc(S['seo_label'])}</div>
-      <div class="val {sc}">{esc(seo_disp)}<small>/{esc(str(seo_max))}</small> <em class="g {sg}">{esc(str(seo_grade))}</em></div>
-      <div class="sub">{esc(S['confidence'])}: {esc(str(seo_conf))}</div>
+      <div class="sub">{esc(S['tech_card_sub'])} · {esc(S['confidence'])}: {esc(str(seo_conf))}</div>
     </div>
     <div class="score-card">
       <div class="label">{esc(S['content_label'])}</div>
       <div class="val {cc}">{esc(content_disp)}<small>/100</small> <em class="g {cg}">{esc(str(content_grade))}</em></div>
-      <div class="sub">5 dimensions · {esc(S['confidence'])}: {esc(str(content_conf))}</div>
+      <div class="sub">{esc(S['content_card_sub'])} · {esc(S['confidence'])}: {esc(str(content_conf))}</div>
     </div>
   </div>
   <table class="mtable" style="margin-top:24px"><thead>
     <tr><th>{esc(S['track'])}</th><th>{esc(S['score'])}</th><th>{esc(S['max'])}</th><th class="r">{esc(S['grade'])}</th></tr>
   </thead><tbody>
     <tr><td>{esc(S['tech_label'])}</td><td class="num mono">{esc(tech_disp)}</td><td class="dim mono">/100</td><td class="r">{esc(str(tech_grade))}</td></tr>
-    <tr><td>{esc(S['seo_label'])}</td><td class="num mono">{esc(seo_disp)}</td><td class="dim mono">/{esc(str(seo_max))}</td><td class="r">{esc(str(seo_grade))}</td></tr>
     <tr class="total"><td>{esc(S['content_label'])}</td><td class="num mono">{esc(content_disp)}</td><td class="dim mono">/100</td><td class="r">{esc(str(content_grade))}</td></tr>
   </tbody></table>
   <footer class="pf"><span>{esc(S['footer'])}</span><span class="mono">Beansmile</span></footer>
@@ -811,7 +824,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     <em class="g {tg}">{esc(str(tech_grade))}</em></span></div></div>
   <div class="sublab">{esc(S['tech_nine'])}</div>
   <div class="narr">{tech_summary_html}</div>
-  <div class="sublab" style="margin-top:1.2rem">{esc(S['tech_seo'])} — {esc(seo_disp)}/{esc(str(seo_max))} ({esc(str(seo_grade))})</div>
+  <div class="sublab" style="margin-top:1.2rem">{esc(S['tech_seo'])} — {esc(seo_disp)}/15 ({esc(str(seo_grade))})</div>
   <div class="narr">{inline_md(seo_narr)}</div>
   <div class="sublab">{esc(S['strengths'])}</div>
   <ul class="plain">{tech_strengths}</ul>

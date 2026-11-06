@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-答案可吸收性（absorption）——口径 B：Citability 五子项 20 分制 × 0.75 = 15 分。
+答案可吸收性（absorption）——口径 B：Citability 五子项 20 分制 × 0.6 = 12 分。
 
 与 geo_ready 的 `WebsiteAnalyzer::Analyzers::CitabilityAnalyzer` 逐步对齐，
 两侧对同一站点必须得出同一个可吸收性分数（此前 skill 用「可引用率曲线 + FAQ 3」
 的简化口径，与产品实现是两套模型，同一站点两边分数不一致）。
 
-子项与满分（原始 20 分制，最后 × 0.75 折算到维度 15 分）：
+子项与满分（原始 20 分制，最后 × 0.6 折算到维度 12 分）：
 
 | # | 子项 | 原始分 | 判定 |
 |---|---|---|---|
@@ -643,5 +643,5 @@ def raw_score(detail):
 
 
 def absorption_score(detail):
-    """20 分制 × 0.75 → 维度 15 分。"""
-    return round(raw_score(detail) * 0.75, 1)
+    """20 分制 × 0.6 → 维度 12 分（scoring v1.2）。"""
+    return round(raw_score(detail) * 0.6, 1)

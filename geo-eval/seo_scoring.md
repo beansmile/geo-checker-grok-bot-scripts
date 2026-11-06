@@ -1,10 +1,10 @@
-# SEO Content Discoverability (technical add-on)
+# SEO Content Discoverability (technical dimension)
 
 > **GEO Checker** by **Beansmile**. GEO = Generative Engine Optimization (websites), never geography.
 >
-> This block lives in the **technical** GEO readiness report. It does **not** change the nine-dimension 100-point formula in `scoring.md` (v1.1). Historical technical totals stay comparable.
+> From scoring **v1.2**, SEO content discoverability is a **15-point dimension** inside the technical **100-point** scale (`scoring.md`). It is **not** a standalone /25 total and **not** scored inside Content GEO (`content_scoring.md`).
 >
-> Do **not** score this block inside Content GEO (`content_scoring.md`). Content GEO covers architecture, taxonomy, writing, authority evidence, and buyer-question coverage.
+> Bonuses/penalties (ACC, llms.txt, ItemList, …) remain in `score_adjustments` and are **not** folded into this dimension’s weight.
 
 ## Purpose
 
@@ -18,24 +18,30 @@ It is **not** a full rank-tracking SEO audit (no keyword ranks, backlinks, Core 
 
 | Concern | Where scored |
 |---|---|
-| AI crawler blocked / HTTPS broken / WAF challenge | Technical **ACC** penalties / Access findings |
-| Whether content pages have unique intent titles, thin/dup risk, internal paths to important URLs, sitemap/robots as discovery aids | This **SEO discoverability** block |
+| AI crawler blocked / HTTPS broken / WAF challenge | Technical **ACC** penalties / Access findings (`score_adjustments`) |
+| Whether content pages have unique intent titles, thin/dup risk, internal paths to important URLs, sitemap/robots as discovery aids | This **SEO** dimension (15 pts of the technical 100) |
 
-Cross-reference Access findings when crawl fails; do not double-count the same ACC penalty into this block’s numeric total. If robots/sitemap cannot be verified because of an access failure, note that here and keep confidence provisional.
+Cross-reference Access findings when crawl fails; do not double-count the same ACC penalty into this dimension’s numeric total. If robots/sitemap cannot be verified because of an access failure, note that here and keep confidence provisional.
 
-## Score (standalone, /25)
+## Score (technical dimension, /15)
 
-| Band | Points | Signals |
+Engine still computes a heuristic **raw /25** (same sub-signals as before), then scales into the dimension:
+
+```
+dim_score = min(15, round(raw_score_25 * 15 / 25, 1))
+```
+
+| Band (dim /15) | Approx raw /25 | Signals |
 |---|---|---|
-| Strong | 20–25 | Distinct titles/H1 per intent; meta descriptions present; clear nav + internal links to products/cases; sitemap reachable; little thin/duplicate |
-| Partial | 10–19 | Some indexable pages exist, but titles generic, thin product pages, weak internal links, or sitemap/robots unverifiable |
-| Weak | 0–9 | Critical pages hard to discover; homepage/robots/sitemap failing; thin slogan pages only |
+| Strong | 12–15 ↔ 20–25 | Distinct titles/H1 per intent; meta descriptions present; clear nav + internal links to products/cases; sitemap reachable; little thin/duplicate |
+| Partial | 6–11.9 ↔ 10–19 | Some indexable pages exist, but titles generic, thin product pages, weak internal links, or sitemap/robots unverifiable |
+| Weak | 0–5.9 ↔ 0–9 | Critical pages hard to discover; homepage/robots/sitemap failing; thin slogan pages only |
 
-Grade bands for the block percentage follow the same A+–D map as technical dims (90 / 80 / 70 / 60).
+Grade bands for the dimension percentage follow the same A+–D map as other technical dims (90 / 80 / 70 / 60).
 
-### Heuristic sub-signals (engine)
+### Heuristic sub-signals (engine, max raw 25)
 
-Used by `scripts/seo_analyze.py` (max 25):
+Used by `scripts/seo_analyze.py`:
 
 1. Title presence & length (~6)
 2. H1 presence (~4)
@@ -50,27 +56,34 @@ Used by `scripts/seo_analyze.py` (max 25):
 
 ## Report presentation
 
-- Show as its own chapter / scored card: **SEO content discoverability · xx / 25 (grade)**
-- Clearly label: *Separate from the nine-dimension on-site readiness total — not added into the 100.*
-- Include findings, callout, fetch confidence, and sample scope
+- Include in the technical dimension table / chart as **SEO content discoverability · xx / 15 (grade)** — part of the **100**.
+- Chapter may still expand narrative, notes, findings, and fetch confidence.
+- Do **not** label it “separate from the 100” or “not added into overall_score”.
+- Keep bonuses/penalties on the adjustments page, distinct from dimension weights.
 
 ## Outputs
 
-`report.json` / `report.engine.json` field:
+`report.json` / `report.engine.json`:
 
 ```json
 "seo_discoverability": {
-  "score": 7.3,
-  "max": 25,
+  "score": 4.4,
+  "max": 15,
+  "score_raw_25": 7.3,
+  "max_raw_25": 25,
+  "dim_score": 4.4,
   "grade": "D",
   "confidence": "provisional",
   "notes": [],
   "narr": "",
   "callout": "",
-  "findings": []
+  "findings": [],
+  "rubric": "seo_scoring.md v1.1"
 }
 ```
 
+Also appears in `dimensions[]` with `key: "seo"`, `max: 15`, and contributes to `base_score` / `overall_score`.
+
 ## Version
 
-v1.0 · 2026-11 · Beansmile · GEO Checker
+v1.1 · 2026-11 · Beansmile · GEO Checker · scoring v1.2 dimension (15 of 100)

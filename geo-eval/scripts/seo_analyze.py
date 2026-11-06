@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""SEO content discoverability scoring (technical report add-on).
+"""SEO content discoverability scoring (technical dimension, scoring v1.2).
 
-Separate from the nine-dimension 100-point formula in scoring.md.
+Heuristic raw score is /25; scaled into the technical 100 as a 15-point dim:
+  dim_score = min(15, round(raw_25 * 15 / 25, 1))
 Shared by analyze.py (technical) and optionally content pipelines for reuse.
 Rubric: seo_scoring.md
 """
@@ -209,7 +210,7 @@ def score_seo(
     robots_ok: bool,
     sitemap_ok: bool,
 ) -> tuple[float, list[str]]:
-    """Return (score /25, notes). Same heuristic as former content C-SEO."""
+    """Return (raw_score /25, notes). Same heuristic as former content C-SEO."""
     notes: list[str] = []
     if not pages:
         return 0.0, ["No page bodies available for SEO content checks."]
@@ -292,12 +293,17 @@ def build_seo_block(
         else:
             pages = pages_from_technical_run(run_dir)
 
-    score, notes = score_seo(pages or [], crawl_ok, robots_ok, sitemap_ok)
+    raw_25, notes = score_seo(pages or [], crawl_ok, robots_ok, sitemap_ok)
+    dim_score = round(float(raw_25) * 15 / 25, 1)
+    dim_score = min(15.0, max(0.0, dim_score))
     confidence = "high" if crawl_ok and pages else ("provisional" if pages else "none")
-    pct = (100.0 * score / 25.0) if score is not None else 0
+    pct = (100.0 * dim_score / 15.0) if pages else 0
     return {
-        "score": score,
-        "max": 25,
+        "score": dim_score,
+        "max": 15,
+        "dim_score": dim_score,
+        "score_raw_25": raw_25,
+        "max_raw_25": 25,
         "grade": grade_for_pct(pct) if pages else "F",
         "confidence": confidence,
         "crawl_ok": crawl_ok,
@@ -308,14 +314,14 @@ def build_seo_block(
         "narr": narr,
         "callout": callout,
         "findings": findings or [],
-        "rubric": "seo_scoring.md v1.0",
-        "separate_from_nine_dim": True,
+        "rubric": "seo_scoring.md v1.1",
+        "part_of_technical_100": True,
         "crawl_probe_present": bool(crawl_probe),
     }
 
 
 def attach_to_report(report: dict, run_dir: str) -> dict:
-    """Mutate/return report with seo_discoverability attached (does not change overall_score)."""
+    """Mutate/return report with seo_discoverability attached (caller folds dim into overall_score)."""
     report["seo_discoverability"] = build_seo_block(run_dir)
     return report
 
