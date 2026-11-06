@@ -75,6 +75,10 @@ runs/<site>/<date>_runNN/
 └── report/          # Step 5 报告
 ```
 
+## Language selection
+
+**Default = English.** Enrich + build technical / content / combined in English unless the user’s message explicitly asks for Chinese (中文报告 / Chinese report / 出中文). Do not ask for language by default. Match `--lang` across `build_report.py`, `build_content_report.py`, and `build_combined_report.py`. Never show scoring/rules/rubric version numbers in customer HTML or chat.
+
 ## Product UX + same-crawl Content GEO
 
 ```

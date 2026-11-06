@@ -2,19 +2,35 @@
 name: geo-eval
 description: >-
   Use for website Generative Engine Optimization (GEO) readiness—not geography.
-  Crawl, score, enrich, and deliver English GEO Checker reports: the technical
-  10-dimension on-site readiness report (SEO content discoverability is a
-  15-point technical dimension) and/or a standalone Content GEO report (architecture,
-  taxonomy, writing, authority evidence, and buyer-question coverage), and an
-  optional combined HTML package with a remediation timeline, when the
-  user asks about GEO, content, AI visibility, or whether a site can be
-  understood and cited.
+  Crawl, score, enrich, and deliver GEO Checker reports (English by default;
+  Chinese when the user explicitly asks): the technical 10-dimension on-site
+  readiness report (SEO content discoverability is a 15-point technical
+  dimension) and/or a standalone Content GEO report (architecture, taxonomy,
+  writing, authority evidence, and buyer-question coverage), and an optional
+  combined HTML package with a remediation timeline, when the user asks about
+  GEO, content, AI visibility, or whether a site can be understood and cited.
 ---
 # Website Generative Engine Optimization (GEO) — GEO Checker
 
 **GEO = Generative Engine Optimization.** Scope is **websites** only (not geography/maps).
 
-Scripts crawl and score; **you always do deep enrichment** in English. Brand: **GEO Checker** by **Beansmile**.
+Scripts crawl and score; **you always do deep enrichment** in the **report language** (English by default; Chinese when the user explicitly asked for a Chinese report). Brand: **GEO Checker** by **Beansmile**.
+
+## Language (required)
+
+- **Default = English.** Enrich and build every requested report in English.
+- Switch to Chinese **only** when the user’s message explicitly asks for it (e.g. 中文报告 / Chinese report / 出中文). Do not ask for language unless they asked for both or the request is ambiguous.
+- Never show scoring / rules / rubric version numbers in customer HTML or user chat.
+- For Chinese runs, write Chinese into **primary** narrative fields (not only parallel `*_zh` keys). Builders still accept `*_zh` as fallbacks.
+
+Build commands:
+
+- EN tech: `python3 scripts/build_report.py <run> --lang en`
+- ZH tech: `python3 scripts/build_report.py <run> --lang zh --suffix .zh`
+- Content: `python3 scripts/build_content_report.py <run> [--lang zh]`
+- Combined: `python3 scripts/build_combined_report.py … [--lang zh]`
+
+If Chinese is requested after an English technical HTML was already delivered: produce Chinese content + Chinese combined on the follow-up; prefer re-enriching technical narrative in Chinese then rebuilding tech HTML from the same `report.json`.
 
 ## Runtime install (required)
 
@@ -44,19 +60,19 @@ Prefer “Website GEO (Generative Engine Optimization) readiness…”. Chinese:
 ## LLM / tools (Grok Bot native)
 
 - Crawl + scoring: local Python under `scripts/` (stdlib).
-- Enrichment: **you**, via `prompts.md` (technical, including `seo_discoverability` narrative) and `content_prompts.md` (content). Do **not** set `GEO_EVAL_LLM_API_KEY` or call external OpenAI APIs.
-- Technical reports: `python3 scripts/build_report.py <run> --lang en` → HTML only.
-- Content reports: `python3 scripts/build_content_report.py <run>` → HTML only.
+- Enrichment: **you**, via `prompts.md` (technical, including `seo_discoverability` narrative) and `content_prompts.md` (content). Do **not** set `GEO_EVAL_LLM_API_KEY` or call external OpenAI APIs. Enrich in the report language.
+- Technical reports: `python3 scripts/build_report.py <run> --lang en` (or `--lang zh --suffix .zh`) → HTML only.
+- Content reports: `python3 scripts/build_content_report.py <run> [--lang zh]` → HTML only.
 - Combined package: `python3 scripts/build_combined_report.py <tech_run> --content-run <content_run> [--lang zh]`.
 
 ## Fixed 4 steps (technical on-site readiness)
 
-1. Ensure runtime installed (above).
+1. Ensure runtime installed (above). Detect report language from the user message (EN default).
 2. `cd /workspace/skills/geo-eval && python3 scripts/run.py <URL> --site-type corporate --max-pages 16`
-3. Enrich `report.json` in English per `prompts.md`. Also enrich `seo_discoverability.narr` / `callout` when present (rubric: `seo_scoring.md`). SEO is a **15-point technical dimension** inside `overall_score` /100 (bonuses stay in `score_adjustments`).
-4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` → deliver `report.html` (SEO appears among the ten dimensions). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
+3. Enrich `report.json` in the report language per `prompts.md`. Also enrich `seo_discoverability.narr` / `callout` when present (rubric: `seo_scoring.md`). SEO is a **15-point technical dimension** inside `overall_score` /100 (bonuses stay in `score_adjustments`).
+4. `python3 scripts/build_report.py runs/<domain>/<run> --lang en` (or `--lang zh --suffix .zh`) → deliver `report.html` / `report.zh.html` (SEO appears among the ten dimensions). Client deliverables are **HTML only** (pass `--also-md` only for internal drafts).
 
-Then ask once whether to also produce Content GEO + combined (see below). One crawl powers all three reports when the user says yes.
+Then ask once whether to also produce Content GEO + combined (see below). One crawl powers all three reports when the user says yes. Build content/combined in the **same** report language.
 
 ## After technical HTML: ask once
 
@@ -72,15 +88,14 @@ When the user agrees (or explicitly asks for content / combined after a successf
    python3 scripts/content_eval.py --from-run runs/<domain>/<tech_run>
    ```
 2. Build target procurement questions; run AI/search visibility checks (`live_ui` or labeled `web_retrieval_proxy`). Save `evidence/ai_checks.json` / optional `evidence/offsite.json` under that run if needed.
-3. Enrich `content_report.json` in English per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes).
-4. Same turn:
+3. Enrich `content_report.json` in the **report language** per `content_prompts.md` (company-specific; disclose fetch limits; never invent engine quotes). For Chinese, put Chinese in primary fields.
+4. Same turn (match language):
    ```bash
-   python3 scripts/build_content_report.py runs/<domain>/<tech_run>
+   python3 scripts/build_content_report.py runs/<domain>/<tech_run>           # EN
+   # python3 scripts/build_content_report.py runs/<domain>/<tech_run> --lang zh
    python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
      --content-run runs/<domain>/<tech_run>
-   # Chinese combined:
-   python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
-     --content-run runs/<domain>/<tech_run> --lang zh
+   # … --lang zh for Chinese combined
    ```
    If content artifacts are in a separate content run dir that still reused the tech crawl, pass that path as `--content-run`.
 
