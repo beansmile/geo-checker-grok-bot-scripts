@@ -130,12 +130,35 @@ AI_UA_PROBES = dict(crawler_roles.AI_UA_PROBES)
 SEARCH_UA_PROBES = dict(crawler_roles.SEARCH_UA_PROBES)
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
-# 挑战页特征：SiteGround 用 202 + sg-captcha + meta refresh 跳验证页
-CHALLENGE_MARKERS = re.compile(
-    r"sg-?captcha|/sgcaptcha|captcha|challenge|cf-browser-verification|"
+# Strong challenge-page signals only. The bare words "captcha" / "challenge"
+# appear in ordinary CMS config (e.g. page._captcha_domain_prefix) and must
+# not flag a 200 OK HTML document as a WAF wall.
+STRONG_CHALLENGE_MARKERS = re.compile(
+    r"sg-?captcha|/sgcaptcha|cf-browser-verification|"
     r"just a moment|attention required|verify you are human|"
     r"enable javascript and cookies|checking your browser", re.I)
+WEAK_CHALLENGE_MARKERS = re.compile(r"captcha|challenge", re.I)
 CHALLENGE_HEADERS = re.compile(r"^(sg-captcha|cf-mitigated|x-robot-challenge)", re.I)
+
+
+def is_challenge_page(status, text, size, headers=None):
+    """True only for real WAF/challenge walls, not CMS config mentioning captcha."""
+    text = text or ""
+    size = int(size or 0)
+    has_title = bool(re.search(r"<title[^>]*>.+?</title>", text, re.I | re.S))
+    strong = bool(STRONG_CHALLENGE_MARKERS.search(text))
+    weak = bool(WEAK_CHALLENGE_MARKERS.search(text))
+    chal = strong
+    if weak and not strong and (size < 4000 or not has_title):
+        chal = True
+    for k, v in (headers or {}).items():
+        if CHALLENGE_HEADERS.match(f"{k}") and re.search(r"challenge|block|verify", f"{k}:{v}", re.I):
+            chal = True
+    if status == 202 or status in (403, 429):
+        chal = True
+    if status in (200, 304) and has_title and size >= 4000 and not strong:
+        chal = False
+    return chal
 
 
 def _probe(url, ua, timeout=20):
@@ -151,14 +174,9 @@ def _probe(url, ua, timeout=20):
         return {"status": 0, "challenge": False, "error": str(e)[:200], "size": 0,
                 "latency_ms": int((time.time() - t0) * 1000)}
     text = body.decode("utf-8", "replace")
-    chal = bool(CHALLENGE_MARKERS.search(text))
-    for k, v in (hdrs or {}).items():
-        if CHALLENGE_HEADERS.match(f"{k}") and re.search(r"challenge|block|verify", f"{k}:{v}", re.I):
-            chal = True
-    # 202 且体积很小 → 典型挑战页；403/429 直接算拦截
-    if status == 202 or status in (403, 429):
-        chal = True
-    return {"status": status, "challenge": chal, "size": len(body),
+    size = len(body)
+    chal = is_challenge_page(status, text, size, hdrs)
+    return {"status": status, "challenge": chal, "size": size,
             "content_length": (hdrs or {}).get("content-length"), "error": "",
             "latency_ms": int((time.time() - t0) * 1000)}
 

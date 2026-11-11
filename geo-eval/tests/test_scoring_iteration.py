@@ -22,6 +22,7 @@ import entity_signals  # noqa: E402
 import llms_detect  # noqa: E402
 import page_coverage  # noqa: E402
 import analyze  # noqa: E402
+import run as runmod  # noqa: E402
 
 
 def _page(url, html, role="content", page_type=None):
@@ -379,3 +380,16 @@ class FormulaTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ChallengeDetectionTests(unittest.TestCase):
+    def test_cms_captcha_prefix_is_not_waf(self):
+        html = "<!doctype html><html><head><title>南兴装备股份有限公司</title></head>"
+        html += "<body><script>page._captcha_domain_prefix=\"captcha.c\";</script>"
+        html += "<p>南兴装备股份有限公司成立于1990年代。</p>" + ("正文 " * 2000) + "</body></html>"
+        self.assertFalse(runmod.is_challenge_page(200, html, len(html)))
+
+    def test_real_challenge_page_is_flagged(self):
+        html = "<html><head><title>Just a moment...</title></head><body>Checking your browser</body></html>"
+        self.assertTrue(runmod.is_challenge_page(200, html, len(html)))
+        self.assertTrue(runmod.is_challenge_page(403, "<html>forbidden</html>", 20))
