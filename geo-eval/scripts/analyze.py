@@ -184,6 +184,8 @@ def load_pages(run_dir):
             continue
         slug = os.path.splitext(fname)[0]
         url = url_map.get(slug, slug)
+        if url and not page_coverage.is_sampleable_url(url):
+            continue
         raw = open(os.path.join(pages_dir, fname), encoding="utf-8", errors="ignore").read()
         if fname.endswith((".md", ".txt")) and "<html" not in raw[:500].lower():
             # Wrap snapshot text so downstream tag strippers still yield citeable body text.
@@ -266,23 +268,12 @@ def load_pages(run_dir):
         hierarchy_ok = not (h3s and not h2s)  # 有 H3 无 H2 = 跳级
 
         role = ("home" if slug in ("home", "index") or fname.startswith("home.") else classify_role(url))
-        blob = f"{url} {title}"
         if role == "home" or slug in ("home", "index"):
             page_type = "home"
-        elif re.search(r"product|产品|/cp/", blob, re.I):
-            page_type = "product"
-        elif re.search(r"case|project|工程案例|cases", blob, re.I):
-            page_type = "case"
-        elif re.search(r"news|资讯|动态|media", blob, re.I):
-            page_type = "news"
-        elif re.search(r"about|company|概况|关于", blob, re.I):
-            page_type = "about"
-        elif re.search(r"contact|联系", blob, re.I):
-            page_type = "contact"
-        elif re.search(r"solution|方案|行业", blob, re.I):
-            page_type = "solution"
         else:
-            page_type = role or "content"
+            page_type = page_coverage.classify_url(url, title)
+            if page_type == "other":
+                page_type = role or "content"
         wc = len(re.findall(r"[\w\u4e00-\u9fff]+", content or ""))
         pages.append({
             "url": url, "slug": slug, "role": role, "page_type": page_type,
@@ -459,12 +450,49 @@ def brand_conflict_among(records, aliases):
 
 
 def collect_company_names(pages):
+    """Collect legal-form company names that look like site-identity strings.
+
+    Mentions of other companies in acquisition / subsidiary history must not
+    be treated as conflicting legal names of the site owner.
+    """
+    skip_ctx = re.compile(
+        r"acquired|acquisition|subsidiary|subsidiaries|wholly-?owned|"
+        r"shares of|shareholding|控股|子公司|收购|并购|参股|成为.{0,8}附属",
+        re.I,
+    )
+
+    def is_copyright_identity(text, start, end):
+        left = text[max(0, start - 40):start]
+        right = text[end:min(len(text), end + 40)]
+        if re.search(r"(copyright|\u00a9|&copy;)\s*$", left, re.I):
+            return True
+        if re.search(r"^\s*\.?\s*All Rights Reserved", right, re.I):
+            return True
+        return False
+
     names = {}
     for p in pages:
-        text = p["content"]
-        for name in COMPANY_NAME_RE.findall(text):
-            n = re.sub(r"\s+", " ", name).strip()
-            if len(n) <= 60:
+        chunks = [p.get("title") or "", " ".join(p.get("h1") or []), p.get("content") or ""]
+        for text in chunks:
+            if not text:
+                continue
+            for m in COMPANY_NAME_RE.finditer(text):
+                n = re.sub(r"\s+", " ", m.group(0)).strip()
+                n = re.sub(r"^(Copyright|\u00a9|&copy;)\s+", "", n, flags=re.I).strip()
+                if not n or len(n) > 60:
+                    continue
+                if re.search(r"all rights reserved", n, re.I):
+                    continue
+                if re.match(r"^(the|our|this|your|a|an|rights|reserved)\s+(company|group|corporation|inc|ltd|limited)\.?$", n, re.I):
+                    continue
+                window = text[max(0, m.start() - 180): m.end() + 180]
+                if skip_ctx.search(window) and not is_copyright_identity(text, m.start(), m.end()):
+                    continue
+                # Body mentions of partners, nav labels or machine brands are not
+                # official legal-name variants. Only title / H1 / copyright identity counts.
+                is_identity_chunk = text in (p.get("title") or "", " ".join(p.get("h1") or []))
+                if not is_identity_chunk and not is_copyright_identity(text, m.start(), m.end()):
+                    continue
                 names[n] = names.get(n, 0) + 1
     return list(names)
 
@@ -493,8 +521,27 @@ def detect_ent(pages, domain):
     )
 
     company_names = collect_company_names(pages)
-    company_keys = {normalize_brand(n) for n in company_names} - {""}
-    company_conflict = len(company_keys) >= 2
+    generic_company = re.compile(
+        r"^(the|our|this|your|a|an)\s+(company|group|corporation|inc|ltd|limited)\.?$",
+        re.I,
+    )
+    company_names = [n for n in company_names if not generic_company.match(n or "")]
+
+    def _company_core(n):
+        s = normalize_brand(n)
+        for suf in sorted(LEGAL_SUFFIXES, key=len, reverse=True):
+            s = re.sub(re.escape(suf) + r"$", "", s)
+        return s
+
+    cores = [_company_core(n) for n in company_names if _company_core(n)]
+    distinct = []
+    for c in cores:
+        if any(c != d and (c in d or d in c) for d in cores):
+            continue
+        if c not in distinct:
+            distinct.append(c)
+    # If every remaining core is related by containment, it is one entity, not a conflict.
+    company_conflict = len({c for c in cores}) >= 2 and len(distinct) >= 2
 
     return {"brand_names": list(brand_names), "brand_conflict": brand_conflict,
             "emails": list(emails), "email_conflict": email_conflict,
@@ -551,13 +598,52 @@ def detect_schema(pages):
     return {"org": org, "website": website}
 
 
-def _robots_section_blocks_all(robots, ua):
-    """判断某 User-agent 段是否有「Disallow: /」（整站屏蔽，路径恰好是 /）。"""
-    m = re.search(r"User-agent:\s*" + re.escape(ua) + r"(.*?)(?=User-agent:|\Z)", robots, re.S | re.I)
-    if not m:
-        return None  # 无该 UA 专属段
-    return bool(re.search(r"^Disallow:\s*/\s*$", m.group(1), re.M))
+def _parse_robots_groups(robots):
+    """Split robots.txt into (agents, rule_lines) groups.
 
+    Consecutive User-agent lines share the following directives. Agent names
+    are matched exactly, so Applebot-Extended is not Applebot, and
+    Google-Extended is not Googlebot.
+    """
+    groups = []
+    agents, rules, in_rules = [], [], False
+    for line in (robots or "").splitlines():
+        raw = line.split("#", 1)[0].strip()
+        if not raw:
+            continue
+        m = re.match(r"(?i)^user-agent:\s*(.*)$", raw)
+        if m:
+            if in_rules and agents:
+                groups.append((agents, rules))
+                agents, rules, in_rules = [], [], False
+            name = m.group(1).strip()
+            if name:
+                agents.append(name)
+            continue
+        if agents:
+            rules.append(raw)
+            in_rules = True
+    if agents:
+        groups.append((agents, rules))
+    return groups
+
+
+def _robots_section_blocks_all(robots, ua):
+    """判断某 User-agent 段是否有「Disallow: /」（整站屏蔽，路径恰好是 /）。
+
+    Agent tokens are matched exactly. Applebot-Extended must not satisfy a
+    lookup for Applebot; Google-Extended must not satisfy Googlebot.
+    """
+    target = ua or ""
+    if target in ("*", r"\*"):
+        target = "*"
+    found = False
+    for agents, rules in _parse_robots_groups(robots):
+        if any(a.lower() == target.lower() for a in agents):
+            found = True
+            if any(re.match(r"(?i)^disallow:\s*/\s*$", r) for r in rules):
+                return True
+    return False if found else None
 
 def _load_crawler_payload(run_dir):
     """Read crawler_access.json from either evidence/ or evidence/pages/."""

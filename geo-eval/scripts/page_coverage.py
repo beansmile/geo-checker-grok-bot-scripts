@@ -35,12 +35,13 @@ TYPE_RULES = [
         r"/产品/[^/]+",
         re.I,
     )),
-    ("product", re.compile(r"product|产品|/cp/", re.I)),
+    ("product", re.compile(r"product|产品|chanpin|/cp/|hot-products", re.I)),
     ("case", re.compile(r"case|project|工程案例|cases|客户案例", re.I)),
-    ("solution", re.compile(r"solution|方案|行业", re.I)),
-    ("news", re.compile(r"news|资讯|动态|media", re.I)),
+    # News before solution so 行业新闻 / 媒体视角 are not swallowed by a bare 「行业」.
+    ("news", re.compile(r"news|资讯|动态|媒体|新闻|公告|arcnews|media", re.I)),
+    ("solution", re.compile(r"solution|解决方案|(?<!行)方案", re.I)),
     ("rd", re.compile(r"patent|研发|技术|rd|research|spec", re.I)),
-    ("download", re.compile(r"download|资料|pdf", re.I)),
+    ("download", re.compile(r"download|资料", re.I)),
     ("market", re.compile(r"market|region|cities|locations|coverage|服务区域|/city/|区域业务", re.I)),
 ]
 
@@ -60,9 +61,27 @@ TYPE_BOUND_FINDING_HINTS = {
 }
 
 
-def classify_url(url: str) -> str:
+def is_escaped_external_url(url: str) -> bool:
+    """True for sitemap accidents like /https/irm-cninfo-com-cn/... or /http/www-szse-cn/..."""
     path = urlparse(url or "").path or ""
-    blob = f"{url or ''} {path}"
+    return bool(re.search(r"^/(https?)[-/]", path, re.I))
+
+
+def is_non_html_asset(url: str) -> bool:
+    path = urlparse(url or "").path or ""
+    return bool(re.search(
+        r"\.(pdf|zip|rar|7z|docx?|xlsx?|pptx?|mp4|mp3|avi|wmv|png|jpe?g|gif|webp|svg)(\?|$)",
+        path, re.I,
+    ))
+
+
+def is_sampleable_url(url: str) -> bool:
+    return bool(url) and not is_escaped_external_url(url) and not is_non_html_asset(url)
+
+
+def classify_url(url: str, title: str = "") -> str:
+    path = urlparse(url or "").path or ""
+    blob = f"{url or ''} {path} {title or ''}"
     for name, pat in TYPE_RULES:
         if name == "home":
             if path in ("", "/"):
@@ -108,7 +127,7 @@ def coverage_report(pages, site=None, sitemap_urls=None) -> dict:
 
     sampled = {}
     for p in pages or []:
-        t = p.get("page_type") or classify_url(p.get("url") or "")
+        t = p.get("page_type") or classify_url(p.get("url") or "", p.get("title") or "")
         # Normalize product_detail into its own bucket; product list stays product.
         sampled.setdefault(t, []).append(p.get("url"))
         if t == "product_detail":

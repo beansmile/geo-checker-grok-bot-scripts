@@ -27,6 +27,7 @@ import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import page_coverage
 from urllib.parse import urljoin, urlparse
 
 import crawler_roles
@@ -348,7 +349,12 @@ def main():
 
     home_url = base + "/"
     discovered = [home_url] + [u for u in urls
-                               if u.rstrip("/") != base and not is_xml_url(u)]
+                               if u.rstrip("/") != base and not is_xml_url(u)
+                               and page_coverage.is_sampleable_url(u)]
+    skipped = len([u for u in urls if u.rstrip("/") != base and not is_xml_url(u)
+                   and not page_coverage.is_sampleable_url(u)])
+    if skipped:
+        print(f"      已跳过 {skipped} 个非 HTML / 伪外链路径，不进入抽样")
 
     # 按角色分桶后再抽样：保证 trust / legal 等少数角色不被海量商品页挤掉
     buckets = {}
@@ -373,6 +379,16 @@ def main():
         items = buckets.get(role, [])
         if role == "trust":
             items = sorted(items, key=trust_priority)
+        if role == "content":
+            def content_priority(u):
+                typ = page_coverage.classify_url(u)
+                # Prefer a mix of key types over whatever happens to be first in the sitemap.
+                order = {
+                    "product_detail": 0, "product": 1, "faq": 2, "news": 3,
+                    "case": 4, "solution": 5, "download": 6,
+                }
+                return (order.get(typ, 9), u)
+            items = sorted(items, key=content_priority)
         for u in items[:limit]:
             if len(sampled) >= args.max_pages:
                 break

@@ -71,7 +71,7 @@ SOFT_REDIRECT_RE = re.compile(
 CLAIM_NUM_RE = re.compile(
     r"(?ix)"
     r"(?:"
-    r"(?:\d{2,4}\+?\s*(?:年|years?|patents?|projects?|cities?|countries|clients?|customers?|"
+    r"(?:(?<!\d)(?!(?:19|20)\d{2}\b)\d{1,3}\+?\s*(?:年|years?|patents?|projects?|cities?|countries|clients?|customers?|"
     r"employees?|awards?|patents|专利|项目|城市|客户|员工|奖))"
     r"|(?:300\+|100\+|50\+|30\+|10\+|首家|第一|最大|领先|唯一|No\.?\s*1|number\s*one|"
     r"world[- ]class|industry[- ]leading|best[- ]in[- ]class)"
@@ -203,13 +203,34 @@ def summarize_image_locked(pages: list[dict]) -> dict[str, Any]:
 # ── Entry & URL hygiene ────────────────────────────────────────────────
 
 def detect_soft_redirect(html: str) -> dict[str, Any]:
+    """True for splash/meta-refresh home redirects, not search-box location.href."""
     if not html:
         return {"detected": False}
-    m = SOFT_REDIRECT_RE.search(html)
-    return {
-        "detected": bool(m),
-        "snippet": (m.group(0)[:160] if m else ""),
-    }
+    meta = re.search(
+        r"<meta[^>]+http-equiv=[\"\']?refresh[\"\']?[^>]+content=[\"\']?\s*\d+\s*;\s*url=",
+        html, re.I,
+    )
+    delayed = re.search(
+        r"setTimeout\s*\(\s*(?:function\s*\(|\(\)\s*=>)[^)]{0,120}location",
+        html, re.I,
+    )
+    if meta:
+        return {"detected": True, "snippet": meta.group(0)[:160]}
+    if delayed:
+        return {"detected": True, "snippet": delayed.group(0)[:160]}
+    skip_ctx = re.compile(
+        r"search|keyword|input_|footSearch|getElementById|onsubmit|addEventListener|onclick",
+        re.I,
+    )
+    for m in re.finditer(
+        r"location\s*(?:\.href|\[[\'\"]href[\'\"]\])\s*=|window\.location\s*=",
+        html, re.I,
+    ):
+        ctx = html[max(0, m.start() - 180): m.end() + 180]
+        if skip_ctx.search(ctx):
+            continue
+        return {"detected": True, "snippet": m.group(0)[:160]}
+    return {"detected": False, "snippet": ""}
 
 
 def normalize_home_key(url: str) -> tuple[str, str]:
@@ -365,8 +386,18 @@ def detect_unverified_claims(text: str, outbound_links: list[str] | None = None)
         for L in links
     )
     hits = []
+    ordinal = re.compile(
+        r"第[一二三四五六七八九十百千万0-9]+(?:季度|季报|次|届|轮|批|期|条|款|项|名|周)|"
+        r"first\s+(?:quarter|meeting|half|session|round|interim)|"
+        r"\bQ[1-4]\b",
+        re.I,
+    )
     for m in CLAIM_NUM_RE.finditer(text):
         span = text[max(0, m.start() - 80): m.end() + 120]
+        # 第一季度 / 第一次股东会 / first quarter are administrative ordinals, not boasts.
+        local = text[max(0, m.start() - 8): m.end() + 12]
+        if ordinal.search(local) or ordinal.search(span):
+            continue
         nearby_link = bool(re.search(r"https?://|href=", span, re.I)) or has_proof_link
         if not nearby_link:
             hits.append({

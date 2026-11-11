@@ -393,3 +393,113 @@ class ChallengeDetectionTests(unittest.TestCase):
         html = "<html><head><title>Just a moment...</title></head><body>Checking your browser</body></html>"
         self.assertTrue(runmod.is_challenge_page(200, html, len(html)))
         self.assertTrue(runmod.is_challenge_page(403, "<html>forbidden</html>", 20))
+
+
+class ClassificationAndSamplingTests(unittest.TestCase):
+    def test_escaped_external_and_pdf_are_not_sampleable(self):
+        self.assertTrue(page_coverage.is_escaped_external_url(
+            "https://www.nanxing.com/https/irm-cninfo-com-cn/ircs/x"))
+        self.assertTrue(page_coverage.is_escaped_external_url(
+            "https://www.nanxing.com/https-ir-p5w-net-c-002757-shtml.html"))
+        self.assertTrue(page_coverage.is_non_html_asset(
+            "https://www.nanxingmac.com/images/Nanxing_catalog.pdf"))
+        self.assertTrue(page_coverage.is_sampleable_url("https://www.nanxing.com/products.html"))
+        self.assertFalse(page_coverage.is_sampleable_url(
+            "https://www.nanxing.com/http/www-szse-cn/certificate/x"))
+
+    def test_industry_news_is_news_not_solution(self):
+        self.assertEqual(
+            page_coverage.classify_url("https://www.nanxing.com/foo.html", "行业新闻 - 南兴装备"),
+            "news",
+        )
+        self.assertEqual(
+            page_coverage.classify_url("https://www.nanxing.com/jiejuefangan.html", "橱柜卫浴解决方案"),
+            "solution",
+        )
+
+    def test_faq_and_chanpin_types(self):
+        self.assertEqual(page_coverage.classify_url("https://www.nanxing.com/faqlist.html"), "faq")
+        self.assertEqual(page_coverage.classify_url("https://www.nanxing.com/products.html"), "product")
+        self.assertEqual(page_coverage.classify_url("https://www.nanxing.com/chanpinzhongxinzongliebiao.html"), "product")
+
+
+class RobotsAndEntityNameTests(unittest.TestCase):
+    def test_applebot_extended_is_not_applebot(self):
+        robots = """
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: *
+Allow: /
+"""
+        self.assertTrue(analyze._robots_section_blocks_all(robots, "Applebot-Extended"))
+        self.assertIsNone(analyze._robots_section_blocks_all(robots, "Applebot"))
+        self.assertIsNone(analyze._robots_section_blocks_all(robots, "Googlebot"))
+        self.assertFalse(analyze._robots_section_blocks_all(robots, "*") or False)
+        blocked = []
+        wildcard_all = analyze._robots_section_blocks_all(robots, r"\*")
+        for ua in analyze.AI_CRAWLERS:
+            section_all = analyze._robots_section_blocks_all(robots, ua)
+            if section_all is True or (section_all is None and wildcard_all is True):
+                blocked.append(ua)
+        self.assertIn("Applebot-Extended", blocked)
+        self.assertIn("GPTBot", blocked)
+        self.assertNotIn("Applebot", blocked)
+        decision = __import__("crawler_roles").core_penalty_decision(blocked, [
+            {"ua": "OAI-SearchBot", "status": 200, "challenge": False},
+            {"ua": "GPTBot", "status": 403, "challenge": True},
+        ], waf_challenge=False)
+        self.assertFalse(decision.get("apply"), decision)
+
+    def test_acquisition_history_is_not_legal_name_conflict(self):
+        pages = [
+            {"title": "About-Nanxing Machinery | Woodworking", "h1": [],
+             "content": "Copyright Nanxing Machinery Co., Ltd. All Rights Reserved. "
+                        "Nanxing Machinery successfully acquired Guangdong Weiyi Network Technology Company in April 2018, "
+                        "and Weiyi Network became a wholly-owned subsidiary of Nanxing. "
+                        "In February 2019 Weiyi Network completed the acquisition of 47.00% of the shares of Guangdong Zhixiang Technology Co., Ltd."},
+        ]
+        names = analyze.collect_company_names(pages)
+        self.assertTrue(any("Nanxing Machinery" in n for n in names), names)
+        self.assertFalse(any("Weiyi" in n or "Zhixiang" in n for n in names), names)
+
+
+    def test_the_company_is_not_a_legal_name_conflict(self):
+        pages = [
+            {"title": "Nanxing Machinery Co., Ltd.", "h1": [], "url": "https://www.nanxingmac.com/about.html",
+             "schemas": [], "ogp": {}, "html": "", "links_external": set(),
+             "content": "Copyright Nanxing Machinery Co., Ltd. All Rights Reserved. The Company was founded in 1996. Nanxing Company ships worldwide."},
+        ]
+        names = analyze.collect_company_names(pages)
+        ent = analyze.detect_ent(pages, "nanxingmac.com")
+        self.assertFalse(ent.get("company_conflict"), {"names": names, "ent": ent})
+
+
+class ClaimYearTests(unittest.TestCase):
+    def test_calendar_years_are_not_unverified_claims(self):
+        import geo_signals_v13 as v13
+        text = "南兴装备成立于1996年，2015年扩建工厂，计划2026年发布新机型。公司拥有30年行业经验，已申请200+项专利。"
+        hits = v13.detect_unverified_claims(text, [])
+        claims = " ".join(h["claim"] for h in hits)
+        self.assertNotIn("1996年", claims, hits)
+        self.assertNotIn("2015年", claims, hits)
+        self.assertNotIn("2026年", claims, hits)
+        self.assertNotIn("996年", claims, hits)
+        self.assertNotIn("015年", claims, hits)
+        self.assertTrue(any("30年" in h["claim"] or "200" in h["claim"] for h in hits), hits)
+
+    def test_first_quarter_is_not_a_superlative(self):
+        import geo_signals_v13 as v13
+        text = "2026年第一季度报告 2026 04-25 2026年第一次临时股东会决议公告 2026 07-09"
+        hits = v13.detect_unverified_claims(text, [])
+        self.assertFalse(hits, hits)
+
+    def test_search_box_location_href_is_not_soft_redirect(self):
+        import geo_signals_v13 as v13
+        search = "function go(){ location.href = \"search.html?key=\" + document.getElementById(\"footSearch\").value; }"
+        self.assertFalse(v13.detect_soft_redirect(search).get("detected"))
+        splash = "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/home\"></head></html>"
+        self.assertTrue(v13.detect_soft_redirect(splash).get("detected"))
