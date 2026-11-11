@@ -86,6 +86,11 @@ PAGE_TYPE_RULES = [
     ("about", re.compile(r"about|company|概况|关于", re.I)),
     ("contact", re.compile(r"contact|联系", re.I)),
     ("product", re.compile(r"product|产品|/cp/", re.I)),
+    ("event", re.compile(
+        r"summit|峰会|经销商大会|经销商年会|dealer[- ]?(meet|summit|conference)|"
+        r"open[- ]day|展会|博览|开业典礼",
+        re.I,
+    )),
     ("case", re.compile(r"case|project|工程案例|cases", re.I)),
     ("solution", re.compile(r"solution|方案|行业", re.I)),
     ("news", re.compile(r"news|资讯|动态|media", re.I)),

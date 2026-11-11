@@ -24,6 +24,10 @@ import sys
 from urllib.parse import urlparse
 
 import citability
+import crawler_roles
+import entity_signals
+import llms_detect
+import page_coverage
 
 # ── 指纹/正则 ──────────────────────────────────────────────
 LOREM_PATTERNS = [
@@ -74,8 +78,14 @@ COMPANY_NAME_RE = re.compile(
 )
 LEGAL_SUFFIXES = ["co", "ltd", "limited", "inc", "corp", "corporation", "group", "company", "holdings", "international", "home", "collection", "industry", "industries", "technology"]
 
-# AI 检索爬虫（critical）
-AI_CRAWLERS = ["GPTBot", "OAI-SearchBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "GoogleExtendedCrawler", "Bingbot", "ChatGPT-User", "anthropic-ai"]
+# All known robots tokens (training + search + user fetchers).
+# Core score only uses search-index and user-fetcher tokens — see crawler_roles.py.
+# Google-Extended is a training token with no independent UA; listed for robots parsing only.
+AI_CRAWLERS = sorted(
+    crawler_roles.TRAINING_TOKENS
+    | crawler_roles.SEARCH_INDEX_TOKENS
+    | crawler_roles.USER_FETCHER_TOKENS
+)
 
 # 页面角色优先级（与 run.py 一致）
 ROLE_RULES = [
@@ -338,8 +348,10 @@ def detect_cln(pages):
         min(len(lorem) * 15, 45), min(len(zero) * 10, 20), min(len(legal) * 10, 10),
         min(len(cta) * 5, 10), min(len(demo) * 5, 15),
     ]), 100)
+    similarity = entity_signals.pairwise_similarity(pages)
     return {"lorem": lorem, "zero": zero, "legal": legal, "cta": cta, "soft404": soft404,
-            "demo": demo, "system": system, "bloat_ratio": bloat_ratio, "residue": residue}
+            "demo": demo, "system": system, "bloat_ratio": bloat_ratio, "residue": residue,
+            "similarity": similarity}
 
 
 def page_locale(p):
@@ -547,6 +559,42 @@ def _robots_section_blocks_all(robots, ua):
     return bool(re.search(r"^Disallow:\s*/\s*$", m.group(1), re.M))
 
 
+def _load_crawler_payload(run_dir):
+    """Read crawler_access.json from either evidence/ or evidence/pages/."""
+    candidates = [
+        os.path.join(run_dir, "evidence", "crawler_access.json"),
+        os.path.join(run_dir, "evidence", "pages", "crawler_access.json"),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            try:
+                return json.load(open(path, encoding="utf-8")), path
+            except (ValueError, OSError):
+                continue
+    return {}, None
+
+
+def load_sitemap_urls(run_dir):
+    urls, seen = [], set()
+    ev = os.path.join(run_dir, "evidence")
+    if not os.path.isdir(ev):
+        return urls
+    for root, _dirs, files in os.walk(ev):
+        for fname in files:
+            if not fname.endswith(".xml"):
+                continue
+            try:
+                body = open(os.path.join(root, fname), encoding="utf-8", errors="ignore").read()
+            except OSError:
+                continue
+            for loc in re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", body, re.I):
+                loc = loc.strip()
+                if loc and loc not in seen and not re.search(r"\.xml(\.gz)?$", loc, re.I):
+                    seen.add(loc)
+                    urls.append(loc)
+    return urls
+
+
 def detect_acc(run_dir, base_url):
     robots_path = os.path.join(run_dir, "evidence", "robots.txt")
     blocked = []
@@ -558,26 +606,33 @@ def detect_acc(run_dir, base_url):
             # 有专属段 → 只看专属段；无专属段 → 看通配段（命中 Disallow: / 才算屏蔽）
             if section_all is True or (section_all is None and wildcard_all is True):
                 blocked.append(ua)
-    llms_path = os.path.join(run_dir, "evidence", "llms.txt")
-    has_llms = False
-    if os.path.isfile(llms_path):
-        body = open(llms_path, encoding="utf-8", errors="ignore").read()
-        has_llms = len(body) > 10 and not body.strip().startswith("<!doctype") and not body.strip().startswith("<html")
-    # ACC-02 / ACC-03：读取 run.py 用真实 AI UA 实测的结果（离线可复现）
-    crawler = {}
-    crawler_path = os.path.join(run_dir, "evidence", "crawler_access.json")
-    if os.path.isfile(crawler_path):
-        try:
-            crawler = json.load(open(crawler_path, encoding="utf-8"))
-        except (ValueError, OSError):
-            crawler = {}
+    robots_split = crawler_roles.classify_robots(blocked)
+    llms = llms_detect.load_from_run(run_dir)
+    has_llms = bool(llms.get("present"))
+    crawler, crawler_path = _load_crawler_payload(run_dir)
+    ua_results = list(crawler.get("ua_results") or [])
+    decision = crawler_roles.core_penalty_decision(
+        blocked, ua_results, waf_challenge=bool(crawler.get("waf_challenge")),
+    )
+    engines = decision.get("engines") or crawler_roles.engine_access_status(ua_results, blocked)
+    # Core live blocks only (training bots excluded). Keep ai_blocked as core list
+    # so older report code that reads it does not treat GPTBot as search failure.
+    core_live = list(decision.get("core_live_blocked") or [])
     return {
         "blocked": blocked,
+        "blocked_core": list(robots_split.get("core_blocked") or []),
+        "blocked_training": list(robots_split.get("training_blocked") or []),
         "has_llms": has_llms,
+        "llms": llms,
         "crawler": crawler,
-        "ai_blocked": list(crawler.get("ai_blocked") or []),
-        "waf_challenge": bool(crawler.get("waf_challenge")),
-        "reachable": crawler.get("reachable"),      # True / False / None(未实测)
+        "crawler_path": crawler_path,
+        "ai_blocked": core_live,
+        "training_blocked_live": list(decision.get("training_live_blocked") or []),
+        "waf_challenge": bool(crawler.get("waf_challenge") or decision.get("browser_waf")),
+        "reachable": (not decision.get("apply")),
+        "crawler_decision": decision,
+        "engines": engines,
+        "observation_mode": "raw_http_html",
     }
 
 
@@ -586,26 +641,36 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
     domain = site.get("registrable_domain") or registrable_domain(pages[0]["url"] if pages else "")
     content_pages = [p for p in pages if p["role"] == "content" or p["role"] == "home"]
 
-    # schema (15)
+    # schema (15 internal, then ×12/15). Correctness + consistency with visible
+    # text. sameAs is NOT scored here (counted once in KG from body ∪ schema).
+    # Missing schema must not zero the entity/KG dimensions.
     org = schema_info["org"] or {}
+    consistency = entity_signals.schema_body_consistency(org, pages, ent.get("brand_names"))
+    acc["schema_consistency"] = consistency
     schema_score = 0
     if org:
         schema_score += 5  # Organization 存在
         name = str(org.get("name", ""))
-        if name and not NAME_PLACEHOLDER_RE.search(name):
-            schema_score += 2
-        if org.get("sameAs"):
+        name_conflict = any(c.get("field") == "name" for c in consistency.get("conflicts") or [])
+        if name and not NAME_PLACEHOLDER_RE.search(name) and not name_conflict:
             schema_score += 2
         if org.get("contactPoint") or org.get("logo"):
             schema_score += 2
-        if org.get("foundingDate"):
+        founding_conflict = any(c.get("field") == "foundingDate" for c in consistency.get("conflicts") or [])
+        if org.get("foundingDate") and not founding_conflict:
             schema_score += 1
         if org.get("url"):
             schema_score += 1
+        if not consistency.get("has_conflict"):
+            schema_score += 2  # consistent with visible text
+        elif consistency.get("has_conflict"):
+            # Present-but-conflicting is not a high completeness score.
+            schema_score = max(0, schema_score - 3)
     schema_score += 2 if schema_info["website"] else 0
     schema_score = min(schema_score, 15)
 
-    # entity (15)：15 - 实体扣分
+    # entity (15)：15 - 实体扣分. Body-and-profile identity is enough;
+    # missing schema does not force this to 0.
     entity_deduction = 0
     if ent["brand_conflict"]:
         entity_deduction += 10
@@ -613,46 +678,44 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
         entity_deduction += 8
     entity_score = max(0, min(15, 15 - entity_deduction))
 
-    # ogp (5)：OGP-01/02 的 scope 是 home，只评首页。
-    # 旧实现取「首个带 ogp 的页面」后 break，首页缺 og:image 时会被一篇完整的文章掩盖，
-    # 导致首页的缺口永远看不到分。
+    # ogp (5)：keep the 5-point slot so the 10-dim table still sums to 100,
+    # but lower the contribution of Twitter and treat OG as share hygiene.
+    # twitter:card is 0.5 (was 2.0).
     home = next((p for p in pages if p["role"] == "home"), None)
     ogp_score = 0
     if home and home["ogp"]:
         ogp_score = sum([
-            0.75 if home["ogp"].get("og:title") else 0,
-            0.75 if home["ogp"].get("og:description") else 0,
-            0.75 if home["ogp"].get("og:image") else 0,
+            1.25 if home["ogp"].get("og:title") else 0,
+            1.25 if home["ogp"].get("og:description") else 0,
+            1.25 if home["ogp"].get("og:image") else 0,
             0.75 if home["ogp"].get("og:url") else 0,
-            2.0 if "twitter:card" in (home["html"].lower()) else 0,
+            0.5 if "twitter:card" in (home["html"].lower()) else 0,
         ])
-    # 保留 2 位小数：0.75 × 3 + 2 = 4.25，round(x, 1) 会因银行家舍入变成 4.2
     ogp_score = round(min(ogp_score, 5), 2)
 
     # richness (15)：FAQ 5 + 文章 5 + 内容量 5。
-    # llms.txt 只在 adjustments 里 +3，不在本维重复计分（旧实现同一文件共 6 分）。
-    faq_pages = [p for p in pages if "faq" in p["url"].lower()]
+    # llms.txt is experimental and is not scored here or in adjustments.
+    # Unsampled FAQ (discovered but not fetched) is 未评估 — mid credit, not 0.
+    coverage = acc.get("coverage") or page_coverage.coverage_report(pages, site)
+    acc["coverage"] = coverage
+    faq_pages = [p for p in pages if "faq" in (p["url"] or "").lower() or p.get("page_type") == "faq"]
     article_like = sum(1 for p in pages if any(re.search(r"Article|BlogPosting", str(s.get("@type", ""))) for s in p["schemas"] if isinstance(s, dict)))
     content_len = sum(len(p["content"]) for p in content_pages)
     richness = 0
-    richness += 5 if faq_pages else 0
+    if faq_pages:
+        richness += 5
+    elif page_coverage.type_is_unevaluated(coverage, "faq"):
+        richness += 2.5
+        acc.setdefault("unevaluated_notes", []).append("FAQ 页已在发现范围但未抽样，标为未评估，不按缺失计 0")
     richness += 5 if article_like >= 2 else (2.5 if article_like >= 1 else 0)
     richness += 5 if content_len > 20000 else (2.5 if content_len > 8000 else 0)
     richness = min(richness, 15)
 
-    # kg (10)：sameAs ≤4 + knowsAbout 3 + foundingDate 1 + address 2 = 10
-    # 旧实现 sameAs ≤3 + knowsAbout 2 → 检查项合计只有 8 分，维度满分不可达。
-    kg_score = 0
-    if org:
-        sameas = org.get("sameAs") or []
-        kg_score += min(4, len(sameas) if isinstance(sameas, list) else (1 if sameas else 0))
-        if org.get("knowsAbout"):
-            kg_score += 3
-        if org.get("foundingDate"):
-            kg_score += 1
-        if org.get("address") or org.get("location") or org.get("areaServed"):
-            kg_score += 2
-    kg_score = min(kg_score, 10)
+    # kg (10)：body ∪ schema, each signal counted once. Missing schema does
+    # not zero the dimension when on-page profiles/contact facts exist.
+    kg_info = entity_signals.kg_score_from_signals(pages, org, org.get("sameAs"))
+    acc["kg_detail"] = kg_info
+    kg_score = min(kg_info["score"], 10)
 
     # absorption (15)：口径 B —— Citability 五子项 20 分制 × 0.75。
     # 与 geo_ready 的 CitabilityAnalyzer 同一模型（可引用率 7 + 证据块 7 + 直接回答 3
@@ -670,12 +733,14 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
     def substantial(p):
         return p["url"] not in soft404_urls and len(p["content"].strip()) > 200
 
-    about_pages = [p for p in pages if re.search(r"(about|our-story|/story|mission|/company|history|brand)", p["url"], re.I)]
+    about_pages = [p for p in pages if re.search(r"(about|our-story|/story|mission|/company|history)", p["url"], re.I)]
     contact_pages = [p for p in pages if re.search(r"(contact|support|help|service|faq)", p["url"], re.I)]
     legal_pages = [p for p in pages if p["role"] == "legal"]
     has_about = bool(about_pages)
     has_contact = bool(contact_pages)
     has_legal = bool(legal_pages)
+    # Privacy missing is not escalated to "AI will not trust this company";
+    # empty/default legal templates still don't earn the legal points.
     author_present = any(re.search(r"Person|Author", str(s.get("@type", ""))) for p in pages for s in p["schemas"] if isinstance(s, dict))
     trust = 0
     trust += 4 if has_about and any(substantial(p) for p in about_pages) else 0
@@ -685,18 +750,25 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
     trust += 2 if content_len > 10000 else 0
     trust = min(trust, 15)
 
-    # on_page (5)
-    title_ok = sum(1 for p in content_pages if 10 <= len(p["title"]) <= 60)
+    # on_page (5): mechanical thresholds (title exactly ≤60, exactly one H1)
+    # are hints, not equal to a missing title or missing main text.
+    title_present = sum(1 for p in content_pages if (p.get("title") or "").strip())
     meta_ok = sum(1 for p in content_pages if p["meta"])
-    h1_ok = sum(1 for p in content_pages if len(p["h1"]) == 1)
+    h1_any = sum(1 for p in content_pages if p.get("h1"))
     n = len(content_pages) or 1
     on_page = 0
-    on_page += 1 if title_ok >= n * 0.8 else 0
+    on_page += 2 if title_present >= n * 0.8 else (1 if title_present >= n * 0.5 else 0)
     on_page += 1 if meta_ok >= n * 0.8 else 0
-    on_page += 1 if h1_ok >= n * 0.8 else 0
-    on_page += 2 if title_ok >= n * 0.8 and meta_ok >= n * 0.8 else 0
+    on_page += 1 if h1_any >= n * 0.5 else 0
+    on_page += 1 if title_present >= n * 0.8 and meta_ok >= n * 0.5 else 0
+    acc["on_page_hints"] = {
+        "title_over_60": sum(1 for p in content_pages if len((p.get("title") or "")) > 60),
+        "not_exactly_one_h1": sum(1 for p in content_pages if len(p.get("h1") or []) != 1),
+        "missing_title": sum(1 for p in content_pages if not (p.get("title") or "").strip()),
+        "missing_h1": sum(1 for p in content_pages if not p.get("h1")),
+    }
 
-    # quality (5)：5 - 清洁度扣分
+    # quality (5)：5 - 清洁度扣分. CLN-08 only scores similarity >= 0.9.
     q_deduction = 0
     if cln["lorem"]:
         q_deduction += min(len(cln["lorem"]) * 2, 5)
@@ -706,10 +778,15 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
         q_deduction += min(len(cln["legal"]), 2)
     if cln["demo"]:
         q_deduction += 1
+    sim = cln.get("similarity") or {}
+    if sim.get("scored") and sim.get("verdict") == "fail":
+        q_deduction += 2
     quality = max(0, min(5, 5 - q_deduction))
 
     # v1.2/v1.3: dimensions formerly max 15 scale to max 12 (ogp/kg/on_page/quality unchanged).
-    # SEO is attached later in analyze() from seo_analyze. Weights unchanged in v1.3.
+    # SEO is attached later in analyze() from seo_analyze. Weights unchanged in this iteration
+    # except OG is still a 5-point slot (Twitter weight lowered inside the slot) and
+    # llms.txt is no longer a +3 core bonus.
     scale_15_to_12 = 12 / 15
     return {
         "schema": round(min(schema_score, 15) * scale_15_to_12, 1),
@@ -722,6 +799,7 @@ def score_dimensions(pages, site, cln, ent, schema_info, acc):
         "on_page": on_page,
         "quality": quality,
     }
+
 
 
 def grade_for(score):
@@ -832,33 +910,61 @@ def build_findings(cln, ent, schema_info, acc, pages):
                 })
         return out[:4]
 
-    if _ai_blocked:
+    engines = acc.get("engines") or {}
+    decision = acc.get("crawler_decision") or {}
+    core_live = list(decision.get("core_live_blocked") or _ai_blocked)
+    training_live = list(decision.get("training_live_blocked") or acc.get("training_blocked_live") or [])
+    engine_lines = crawler_roles.engine_status_lines_zh(engines)
+
+    if core_live:
         findings.append({
-            "severity": "严重" if len(_ai_blocked) >= 3 else "高",
-            "title": "AI 检索爬虫实测被拦截（robots.txt 放行不等于能取到）",
-            "problem": f"用真实 AI 爬虫 UA 实测首页：{('、'.join(_ai_blocked))} 共 {len(_ai_blocked)} 个 UA 被拦截"
-                       f"（返回验证页 / 403 / 429 或超时）。而 robots.txt 本身是放行的，说明拦截发生在 CDN/WAF 层，"
-                       f"robots.txt 无法反映。",
-            "impact": "生成式引擎的检索爬虫拿不到页面内容，站内写得再好也不会进入 AI 的答案来源。"
-                      "这类拦截通常对客户不可见——robots.txt 检查一切正常，只有实测才会暴露。",
-            "solution": "在 CDN/WAF 的机器人防护里放行 OAI-SearchBot、GPTBot、ClaudeBot、PerplexityBot、"
-                        "Google-Extended 与 Bingbot，或关闭对已知 AI 检索爬虫的挑战；放行后重跑本项复测。",
-            "evidence": _ua_evidence(set(_ai_blocked)),
+            "severity": "严重" if len(core_live) >= 2 else "高",
+            "id": "ACC-SEARCH-BLOCKED",
+            "root_cause_id": "crawler_search_access",
+            "evidence_kind": "observed",
+            "title": "搜索或按需抓取爬虫实测被拦截（robots.txt 放行不等于能取到）",
+            "problem": f"用搜索索引/按需抓取 UA 实测首页：{('、'.join(core_live))} 被拦截"
+                       f"（返回验证页 / 403 / 429 或超时）。robots.txt 本身可能是放行的，拦截发生在 CDN/WAF 层。"
+                       + (" " + "；".join(engine_lines) if engine_lines else ""),
+            "impact": "搜索索引或对话中的按需抓取拿不到页面，会阻碍生成式搜索读取站点。"
+                      "这不等于训练爬虫被拦截。训练爬虫状态单独记录，不作为“某搜索引擎看不到本站”的依据。",
+            "solution": "在 CDN/WAF 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、"
+                        "ChatGPT-User、Googlebot 与 Bingbot 等搜索/按需抓取爬虫；放行后重跑本项复测。"
+                        "不要用 GPTBot 或 ClaudeBot 的拦截来推断 ChatGPT/Claude 搜索被屏蔽。",
+            "evidence": _ua_evidence(set(core_live)),
         })
-    elif acc.get("waf_challenge"):
+    elif acc.get("waf_challenge") and not (decision.get("core_ok") or []):
         _b = next((r for r in _ua_rows if r.get("ua") == "browser"), {})
         findings.append({
             "severity": "高",
+            "id": "ACC-WAF",
+            "root_cause_id": "crawler_search_access",
+            "evidence_kind": "observed",
             "title": "WAF/机器人挑战会拦截抓取（普通请求即返回验证页）",
             "problem": f"用普通浏览器 UA 请求首页即命中机器人验证（HTTP {_b.get('status')}，"
-                       f"响应体仅 {_b.get('size')} 字节），说明站点前置了 WAF 挑战。"
-                       f"AI 检索爬虫通常不会执行验证脚本，因此同样会被挡在这一层。",
-            "impact": "抓取方需要在 robots.txt 之外再突破一层验证；AI 爬虫一般不具备这种能力，"
-                      "结果是页面内容无法被读取，站内优化无法转化为被引用。",
-            "solution": "在 WAF 中为已知 AI 检索爬虫（OAI-SearchBot、GPTBot、ClaudeBot、PerplexityBot、"
-                        "Google-Extended、Bingbot）配置放行规则，或把挑战策略限定在登录/表单路径。",
+                       f"响应体仅 {_b.get('size')} 字节），且未见搜索索引爬虫成功取到页面。",
+            "impact": "若搜索或按需抓取爬虫同样无法通过挑战，页面内容就无法被读取。"
+                      "若个别搜索爬虫实测已通过，则以分角色结果为准，不把训练爬虫状态写成搜索失败。",
+            "solution": "在 WAF 中为搜索/按需抓取爬虫（OAI-SearchBot、Claude-SearchBot、PerplexityBot、"
+                        "ChatGPT-User、Googlebot、Bingbot）配置放行，或把挑战策略限定在登录/表单路径。",
             "evidence": [{"url": _base,
                           "quote": f"UA browser → HTTP {_b.get('status')}，命中验证页，响应体 {_b.get('size')} 字节"}],
+        })
+    if training_live:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "ACC-TRAINING-INFO",
+            "root_cause_id": "crawler_training_info",
+            "evidence_kind": "observed",
+            "title": "训练爬虫被拦截（信息项，不计入核心访问分）",
+            "problem": f"训练爬虫 {('、'.join(training_live))} 实测被拦截。"
+                       + (" " + "；".join(engine_lines) if engine_lines else ""),
+            "impact": "这只影响模型训练抓取，不能据此写成“ChatGPT/Claude 搜索被屏蔽”。"
+                      "若对应的搜索爬虫（OAI-SearchBot / Claude-SearchBot）未实测，相关搜索状态标为未核实。",
+            "solution": "如需允许训练抓取，可在 robots.txt 或 WAF 中放行 GPTBot、ClaudeBot 等；"
+                        "Google-Extended 是 robots 训练/生成控制令牌，没有可实测的独立 UA，本项不探测、不计入搜索访问核心分。",
+            "evidence": _ua_evidence(set(training_live)),
         })
 
 
@@ -922,12 +1028,35 @@ def build_findings(cln, ent, schema_info, acc, pages):
                          "impact": "AI 无法把站点归到真实实体。",
                          "solution": "将 schema name 改为真实品牌名。",
                          "evidence": [{"url": "", "quote": f'Organization name="{name}"'}]})
-    if acc["blocked"]:
-        findings.append({"severity": "严重", "title": "AI 检索爬虫被 robots 屏蔽",
-                         "problem": f"robots.txt 拦截了 {', '.join(acc['blocked'])}。",
-                         "impact": "AI 抓不到站点内容。",
-                         "solution": "放行 AI 检索爬虫（GPTBot/ClaudeBot 等）。",
-                         "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(acc['blocked'])}"}]})
+    core_robots = list(acc.get("blocked_core") or [])
+    training_robots = list(acc.get("blocked_training") or [])
+    if core_robots:
+        findings.append({
+            "severity": "严重",
+            "id": "ACC-ROBOTS-SEARCH",
+            "root_cause_id": "crawler_search_access",
+            "evidence_kind": "observed",
+            "title": "搜索或按需抓取爬虫被 robots.txt 屏蔽",
+            "problem": f"robots.txt 拦截了搜索/按需抓取爬虫：{', '.join(core_robots)}。",
+            "impact": "自愿遵守 robots.txt 的搜索或按需抓取爬虫不会抓取本站。训练爬虫（如 GPTBot、ClaudeBot、Google-Extended）的屏蔽不在本条范围内。",
+            "solution": "在 robots.txt 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User、Googlebot、Bingbot 等搜索/按需抓取爬虫。",
+            "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(core_robots)}"}],
+        })
+    if training_robots and not core_robots:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "ACC-ROBOTS-TRAINING",
+            "root_cause_id": "crawler_training_info",
+            "evidence_kind": "observed",
+            "title": "robots.txt 屏蔽了训练爬虫（信息项，不计入核心访问分）",
+            "problem": f"robots.txt 拦截了训练爬虫：{', '.join(training_robots)}。"
+                       "若 OAI-SearchBot 放行，不能写成 ChatGPT 搜索被屏蔽；"
+                       "若 Claude-SearchBot 未出现在 robots 且未实测，Claude 搜索状态为未核实，而不是失败。",
+            "impact": "不影响搜索索引或按需抓取的核心访问判定。Google-Extended 没有独立 UA，只作为训练/生成控制令牌记录。",
+            "solution": "如需开放训练抓取，可移除这些 User-agent 的 Disallow: /；搜索访问请单独检查 OAI-SearchBot / Claude-SearchBot。",
+            "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(training_robots)}"}],
+        })
     # OGP：只评首页（OGP-01/02 的 scope=home）。内页缺标签只作为建议项、
     # 不参与计分；反过来，内页有标签也不能掩盖首页的缺口。
     home = next((p for p in pages if p["role"] == "home"), None)
@@ -939,52 +1068,123 @@ def build_findings(cln, ent, schema_info, acc, pages):
             missing.append("twitter:card")
         return missing
 
+    twitter_only = home and ogp_missing(home) == ["twitter:card"]
     if home and ogp_missing(home):
         missing = ogp_missing(home)
-        findings.append({"severity": "高" if not home["ogp"] else "中",
-                         "title": "首页 Open Graph 标签不完整" if home["ogp"] else "首页缺少 Open Graph 标签",
-                         "problem": f"首页缺少 {', '.join(missing)}（OGP 只评首页，内页有覆盖也不补分）。",
-                         "impact": "首页是分享与 AI 摘要最常引用的入口，缺标签会让标题/配图/摘要不可控。",
-                         "solution": "为首页补全 og:title / og:description / og:image / og:url 与 twitter:card。",
-                         "code": OGP_EXAMPLE,
-                         "evidence": [{"url": home["url"], "quote": "缺 " + " / ".join(missing)}]})
+        findings.append({
+            "severity": "低" if twitter_only else "中",
+            "scored": False if twitter_only else True,
+            "id": "OGP-HOME",
+            "root_cause_id": "ogp_share_hygiene",
+            "evidence_kind": "observed",
+            "title": "首页社交分享标签不完整" if home["ogp"] else "首页缺少 Open Graph 分享标签",
+            "problem": f"首页缺少 {', '.join(missing)}（本项只评首页分享标签完整度）。",
+            "impact": "缺少 OG/Twitter 标签主要影响社交平台和部分聊天工具的链接预览（标题、配图）。"
+                      "这不是 AI 理解或信任本站的障碍，也不等于生成式引擎无法引用页面正文。",
+            "solution": "如需控制分享预览，为首页补 og:title / og:description / og:image / og:url；twitter:card 为次要辅助项。",
+            "code": OGP_EXAMPLE,
+            "evidence": [{"url": home["url"], "quote": "缺 " + " / ".join(missing)}],
+        })
     elif not any(p["ogp"] for p in pages) and pages:
-        findings.append({"severity": "高", "title": "开放图谱完全缺失",
-                         "problem": "所有页面都没有 og:title/description/image。",
-                         "impact": "分享与 AI 摘要时没有配图标题。",
-                         "solution": "为重要页面补 og:title/description/image。",
-                         "code": OGP_EXAMPLE,
-                         "evidence": [{"url": pages[0]["url"], "quote": "缺 og:title / og:description / og:image / og:url"}]})
+        findings.append({
+            "severity": "中",
+            "id": "OGP-NONE",
+            "root_cause_id": "ogp_share_hygiene",
+            "evidence_kind": "observed",
+            "title": "开放图谱分享标签缺失",
+            "problem": "抽样页面都没有 og:title/description/image。",
+            "impact": "链接被转发时可能没有稳定的标题与配图。这是分享预览卫生项，不是 AI 理解或信任门槛。",
+            "solution": "为首页和重要落地页补 og:title/description/image。",
+            "code": OGP_EXAMPLE,
+            "evidence": [{"url": pages[0]["url"], "quote": "缺 og:title / og:description / og:image / og:url"}],
+        })
 
     inner_missing_ogp = [p for p in pages if p is not home and p["role"] == "content" and ogp_missing(p)]
     if inner_missing_ogp:
         findings.append({"severity": "低", "scored": False,
+                         "id": "OGP-INNER",
+                         "root_cause_id": "ogp_share_hygiene",
+                         "evidence_kind": "sample",
                          "title": "内页 Open Graph 标签不完整（建议项，不计分）",
                          "problem": f"{len(inner_missing_ogp)} 个内容页缺少 OGP 标签；OGP 维度只评首页，故不计分。",
-                         "impact": "内页被转发或引用时标题与配图可能不完整，但不影响本轮评分。",
-                         "solution": "为文章与重点落地页补 og:title/description/image 与 twitter:card。",
+                         "impact": "内页被转发时预览可能不完整。这不是 AI 理解或信任障碍，也不影响本轮核心分。",
+                         "solution": "如需控制分享预览，为文章与重点落地页补 og:title/description/image。",
                          "code": OGP_EXAMPLE,
                          "evidence": [{"url": p["url"], "quote": "缺 " + " / ".join(ogp_missing(p))} for p in inner_missing_ogp[:3]]})
 
     # ── 维度驱动的发现项 ──
     missing = _org_missing(org) if org else None
     if missing:
-        findings.append({"severity": "高", "title": "Organization 实体属性不完整",
-                         "problem": f"已有 Organization 节点，但缺少：{'、'.join(missing)}。",
-                         "impact": "AI 拿不到可核验的实体事实，难以把品牌与知识图谱中的实体对齐，"
-                                   "在「是什么品牌/在哪/凭什么可信」类问题里引用意愿低。",
-                         "solution": "在 Organization 中补 sameAs、foundingDate、address、knowsAbout；信息与站内 About 页保持一致。",
-                         "code": ORG_JSONLD_EXAMPLE,
-                         "evidence": [{"url": "", "quote": f"缺 {', '.join(missing)}"}]})
+        findings.append({
+            "severity": "中",
+            "id": "SCH-ORG-INCOMPLETE",
+            "root_cause_id": "schema_org",
+            "evidence_kind": "observed",
+            "title": "Organization 结构化属性不完整",
+            "problem": f"已有 Organization 节点，但缺少：{'、'.join(missing)}。",
+            "impact": "这是结构化标记完整度问题。若 About/联系页正文已能识别企业，"
+                      "不能因为缺 schema 字段就写成“主体无法确认”。schema 与站内实体信号不重复计同一 sameAs。",
+            "solution": "在 Organization 中按正文已有事实补全字段，并与可见文本保持一致；不要写与正文冲突的值。",
+            "code": ORG_JSONLD_EXAMPLE,
+            "evidence": [{"url": "", "quote": f"缺 {', '.join(missing)}"}],
+        })
 
-    no_h1 = [p for p in content_pages if len(p["h1"]) != 1]
-    if content_pages and len(no_h1) > len(content_pages) * 0.5:
-        findings.append({"severity": "高", "title": "页面缺少唯一 H1 主标题",
-                         "problem": f"{len(no_h1)}/{len(content_pages)} 个内容页服务端 HTML 中没有且仅有一个 H1。",
-                         "impact": "H1 是页面主题的最强信号，缺失会让 AI 难以判定该页的主实体与主题，摘要时易抓错重点。",
-                         "solution": "商品/内容页主标题改用唯一 H1（每页仅一个），H2/H3 用于分层。",
-                         "code": H1_EXAMPLE,
-                         "evidence": [{"url": p["url"], "quote": (p["h1"][0] if len(p["h1"]) >= 1 else "无 H1")} for p in no_h1[:3]]})
+    missing_h1 = [p for p in content_pages if not p.get("h1")]
+    not_one_h1 = [p for p in content_pages if len(p.get("h1") or []) != 1]
+    missing_title = [p for p in content_pages if not (p.get("title") or "").strip()]
+    long_title = [p for p in content_pages if len((p.get("title") or "")) > 60]
+    if missing_title and len(missing_title) > len(content_pages) * 0.3:
+        findings.append({
+            "severity": "高",
+            "id": "ONP-TITLE-MISSING",
+            "root_cause_id": "onpage_title",
+            "evidence_kind": "observed",
+            "title": "页面缺少 title 标题",
+            "problem": f"{len(missing_title)}/{len(content_pages)} 个内容页没有 title。",
+            "impact": "缺少 title 比“略长于 60 个字符”严重得多，主题信号会弱很多。",
+            "solution": "为每个可索引页写一个能概括本页主题的 title。",
+            "evidence": [{"url": p["url"], "quote": "无 title"} for p in missing_title[:3]],
+        })
+    elif long_title and not missing_title:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "ONP-TITLE-LENGTH",
+            "root_cause_id": "onpage_title_hint",
+            "evidence_kind": "observed",
+            "title": "部分 title 略长于常见展示长度（提示项）",
+            "problem": f"{len(long_title)}/{len(content_pages)} 个内容页 title 超过 60 个字符。这是展示长度提示，不等于缺标题。",
+            "impact": "过长标题在部分搜索结果里可能被截断，但不等于页面无法被理解或索引。",
+            "solution": "可酌情缩短标题；不必为凑 60 字符阈值而牺牲含义。",
+            "evidence": [{"url": p["url"], "quote": (p.get("title") or "")[:80]} for p in long_title[:3]],
+        })
+    if missing_h1 and len(missing_h1) > len(content_pages) * 0.5:
+        findings.append({
+            "severity": "中",
+            "id": "ONP-H1-MISSING",
+            "root_cause_id": "onpage_h1",
+            "evidence_kind": "observed",
+            "title": "部分页面在服务端 HTML 中未见 H1",
+            "problem": f"{len(missing_h1)}/{len(content_pages)} 个内容页没有 H1。这与“不是恰好一个 H1”不是同一问题。",
+            "impact": "完全没有主标题时，主题信号较弱。若正文仍充分，不把它等同于页面没有主内容。",
+            "solution": "为内容页设置能概括主题的主标题（建议用 H1）；不必机械追求每页恰好一个。",
+            "code": H1_EXAMPLE,
+            "evidence": [{"url": p["url"], "quote": "无 H1"} for p in missing_h1[:3]],
+        })
+    elif not_one_h1 and not missing_h1 and len(not_one_h1) > len(content_pages) * 0.5:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "ONP-H1-COUNT",
+            "root_cause_id": "onpage_h1_hint",
+            "evidence_kind": "observed",
+            "title": "部分页面不是恰好一个 H1（提示项）",
+            "problem": f"{len(not_one_h1)}/{len(content_pages)} 个内容页的 H1 数量不是 1（多为多个 H1）。这不等于缺标题或缺正文。",
+            "impact": "多个 H1 是结构提示，严重程度低于缺 title 或完全没有主标题。",
+            "solution": "可整理标题层级，但不要把它当成与缺主文同等的问题。",
+            "code": H1_EXAMPLE,
+            "evidence": [{"url": p["url"], "quote": f"H1×{len(p.get('h1') or [])}"} for p in not_one_h1[:3]],
+        })
 
     cit_blocks = (acc.get("citability") or {}).get("content_blocks") or {}
     if cit_blocks and cit_blocks.get("citability_rate", 0) < 25 and content_pages:
@@ -999,12 +1199,30 @@ def build_findings(cln, ent, schema_info, acc, pages):
                          "evidence": ([{"url": e["url"], "quote": (e.get("text") or "")[:80]} for e in cit_evidence[:3]]
                                       or [{"url": p["url"], "quote": p["content"][:80].strip()} for p in content_pages[:3]])})
 
-    if not any("faq" in p["url"].lower() for p in pages):
-        findings.append({"severity": "中", "title": "缺少 FAQ / 深度内容资产",
-                         "problem": "样本中未发现 FAQ 页，也未发现成规模的指南/博客类长内容。",
-                         "impact": "缺少问答型与教程型内容，AI 在长尾问题里没有可引用的素材。",
-                         "solution": "围绕用户高频问题建 FAQ（配 FAQPage schema）与选购/保养指南类长文。",
-                         "code": FAQ_EXAMPLE})
+    coverage = acc.get("coverage") or {}
+    faq_in_sample = any("faq" in (p["url"] or "").lower() or p.get("page_type") == "faq" for p in pages)
+    if page_coverage.type_is_unevaluated(coverage, "faq") and not faq_in_sample:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "RCH-FAQ-UNEVAL",
+            "evidence_kind": "sample",
+            "title": "FAQ 页未评估（已发现但未抽样）",
+            "problem": "sitemap 或发现范围里有 FAQ 类 URL，但本轮抽样未抓取，不能断言站点缺少 FAQ。",
+            "impact": "相关内容分项按抽样页计，FAQ 标为未评估，不按缺失计 0。",
+            "solution": "如需完整评估 FAQ，请把该页纳入抽样后复测。FAQ 的价值在于真实问答，而不只是标题或某一种 schema 类型。",
+        })
+    elif not faq_in_sample and "faq" in (coverage.get("observed_absent_types") or []):
+        findings.append({
+            "severity": "中",
+            "id": "RCH-FAQ-ABSENT",
+            "evidence_kind": "sample",
+            "title": "发现范围内未见 FAQ 问答页",
+            "problem": "在 sitemap 与本轮抽样中都没有看到 FAQ 类页面。这是范围内的观察，不是对未发现 URL 的全站断言。",
+            "impact": "少了可被直接摘用的问答素材。FAQ 的价值是真实问题与完整答案，而不是有一个 FAQ 标题或 FAQPage 标记。",
+            "solution": "围绕用户真正会问的问题写问答（完整问句和可摘用的答案），需要时再辅以结构化标记。",
+            "code": FAQ_EXAMPLE,
+        })
 
     # ── 更多 R 规则 ──
     # SCH-05：logo 占位/非图片
@@ -1042,11 +1260,18 @@ def build_findings(cln, ent, schema_info, acc, pages):
     # TEC-01：canonical 缺失
     no_canonical = [p["url"] for p in content_pages if not p.get("canonical")]
     if content_pages and len(no_canonical) > len(content_pages) * 0.5:
-        findings.append({"severity": "中", "title": "页面缺少 canonical 标签",
-                         "problem": f"{len(no_canonical)}/{len(content_pages)} 个内容页缺自引用 canonical。",
-                         "impact": "AI 和搜索引擎难以判断权威 URL，可能把参数页/重复页当独立页。",
-                         "solution": "为每个页面补 <link rel=\"canonical\"> 指向权威 URL。",
-                         "evidence": [{"url": u, "quote": "缺 canonical"} for u in no_canonical[:3]]})
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "TEC-CANONICAL-MISSING",
+            "root_cause_id": "canonical_hint",
+            "evidence_kind": "observed",
+            "title": "部分页面缺少 canonical 标签（辅助项）",
+            "problem": f"{len(no_canonical)}/{len(content_pages)} 个内容页缺自引用 canonical。缺少辅助标签的严重程度低于错误的 canonical 或已证实的索引问题。",
+            "impact": "缺标签本身不等于索引失败。若同一内容有多个 URL 且未做跳转，再优先处理冲突或错误配置。",
+            "solution": "为重点可索引页补自引用 canonical；若已有冲突的 canonical，应先修正错误配置。",
+            "evidence": [{"url": u, "quote": "缺 canonical"} for u in no_canonical[:3]],
+        })
 
     # KG-04 / CIT-01：正文缺权威外链。KG 维度只计 sameAs/knowsAbout/foundingDate/address，
     # 本项属于「只报不评」的观察项：列出供改进，但不扣分、不计入严重度色带。
@@ -1211,6 +1436,194 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "solution": "Re-run analyze.py after fixing geo_signals_v13 import path.",
         })
 
+
+    # Schema vs body identity: missing schema ≠ business cannot be identified
+    kg_detail = acc.get("kg_detail") or {}
+    consistency = acc.get("schema_consistency") or {}
+    if not (schema_info.get("org")) and kg_detail.get("body_identifiable"):
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "SCH-ABSENT-BODY-CLEAR",
+            "root_cause_id": "schema_org",
+            "evidence_kind": "observed",
+            "title": "缺少 Organization 结构化标记（正文已能识别主体）",
+            "problem": "抽样页没有可用的 Organization JSON-LD，但 About/联系页或页脚已提供可核验的品牌、地址或联系事实。",
+            "impact": "结构化数据维度会偏低，但这不表示主体无法确认，也不把实体维度打成 0。",
+            "solution": "可按正文已有事实补 Organization 标记，并与可见文本保持一致。",
+            "code": ORG_JSONLD_EXAMPLE,
+        })
+    for c in (consistency.get("conflicts") or []):
+        findings.append({
+            "severity": "中",
+            "id": "SCH-BODY-CONFLICT",
+            "root_cause_id": "schema_body_conflict",
+            "evidence_kind": "observed",
+            "title": "结构化数据与可见正文不一致",
+            "problem": c.get("note") or f"字段 {c.get('field')} 在 schema 与正文中不一致。",
+            "impact": "冲突的标记不能当作完整度加分；应以可见正文为准再改 schema。",
+            "solution": "核对官方口径后，使 schema 与 About/联系页正文一致。",
+            "evidence": [{"url": "", "quote": f"schema={c.get('schema')} body={c.get('body')}"}],
+        })
+
+    # ENT-09/10/11 numeric conflicts — verification first
+    numeric = acc.get("numeric") or {}
+    for rec in numeric.get("ent10_conflicts") or []:
+        findings.append({
+            "severity": "中",
+            "id": "ENT-10",
+            "root_cause_id": f"numeric-{rec.get('entity')}-{rec.get('metric')}",
+            "evidence_kind": "observed",
+            "title": "同一主体的数值主张冲突（已核对年份/口径）",
+            "problem": (
+                f"实体「{rec.get('entity')}」的 {rec.get('metric')} 出现冲突数值 "
+                f"{rec.get('values')}（单位 {rec.get('units')}）。已确认可比较为当前事实。"
+            ),
+            "impact": "生成式引擎可能摘到互相矛盾的数字。",
+            "solution": "统一该主体在当前口径下的官方数字，并在正文标明统计时点与范围。",
+            "evidence": [{"url": u, "quote": q} for u, q in zip(rec.get("urls") or [], rec.get("quotes") or [])],
+        })
+    for rec in numeric.get("ent11_conflicts") or []:
+        findings.append({
+            "severity": "中",
+            "id": "ENT-11",
+            "root_cause_id": f"numeric-{rec.get('entity')}-{rec.get('metric')}",
+            "evidence_kind": "observed",
+            "title": "结构化数据与正文的数值不一致（已核对）",
+            "problem": f"schema {rec.get('metric')}={rec.get('schema')}，正文为 {rec.get('body')}。",
+            "impact": "同一事实的机器可读值与可见值冲突，完整度不能给高分。",
+            "solution": "以官方口径统一 schema 与正文。",
+            "evidence": [{"url": rec.get("url") or "", "quote": rec.get("quote") or ""}],
+        })
+    for rec in (numeric.get("needs_review") or [])[:5]:
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": rec.get("rule") or "ENT-09",
+            "root_cause_id": f"numeric-review-{rec.get('entity')}-{rec.get('metric')}",
+            "evidence_kind": "inference",
+            "title": "数值差异需先核对年份、口径或版本（未自动判为事实错误）",
+            "problem": (
+                f"实体「{rec.get('entity')}」的 {rec.get('metric')} 出现不同数字 "
+                f"{rec.get('values') or [rec.get('schema'), rec.get('body')]}，"
+                f"但带有年份/范围/新闻时效（{rec.get('verification')}），不能直接当作当前事实错误。"
+            ),
+            "impact": "若把带时间范围的新闻亩数等自动标成当前错误，会造成误报。",
+            "solution": "先核对统计时点、口径和版本，再决定是否需要统一当前页表述。",
+            "evidence": [{"url": u, "quote": q} for u, q in zip(rec.get("urls") or [rec.get("url") or ""], rec.get("quotes") or [rec.get("quote") or ""])],
+        })
+
+    # CLN-08 tiers
+    sim = cln.get("similarity") or {}
+    if sim.get("verdict") == "fail":
+        findings.append({
+            "severity": "高",
+            "id": "CLN-08",
+            "root_cause_id": "duplicate_content",
+            "evidence_kind": "observed",
+            "title": "跨页正文高度重复（相似度 ≥ 0.9）",
+            "problem": f"去模板后相似度 {sim.get('best')}：{sim.get('pair')}。",
+            "impact": "近乎复制的页面会稀释可引用的独特内容。",
+            "solution": "合并或差异化这两页，保留一个权威版本。",
+            "evidence": [{"url": u, "quote": f"相似度 {sim.get('best')}"} for u in (sim.get("pair") or [])],
+        })
+    elif sim.get("verdict") == "advisory":
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "CLN-08",
+            "root_cause_id": "duplicate_content",
+            "evidence_kind": "observed",
+            "title": "跨页正文较相似（0.75–0.9，建议项，不计分）",
+            "problem": f"去模板后相似度 {sim.get('best')}：{sim.get('pair')}。未达到 0.9 的计分门槛。",
+            "impact": "可能存在模板化段落，但不按复制站扣核心分。0.5–0.75 的相似度不再计分。",
+            "solution": "可酌情差异化重复段落，不是必须立即处理的核心项。",
+            "evidence": [{"url": u, "quote": f"相似度 {sim.get('best')}"} for u in (sim.get("pair") or [])],
+        })
+
+    # llms.txt experimental
+    llms = acc.get("llms") or {}
+    findings.append({
+        "severity": "低",
+        "scored": False,
+        "id": "ACC-07-LLMS",
+        "root_cause_id": "llms_experimental",
+        "evidence_kind": "observed",
+        "title": "llms.txt 为实验/辅助项（不计入核心 100 分）",
+        "problem": (
+            ("检测到可用的 llms.txt，质量：" + str(llms.get("quality") or "ok") + "。")
+            if llms.get("present") else
+            ("未检测到可用的 llms.txt。" + "；".join(llms.get("reasons") or []) )
+        ),
+        "impact": "本项只展示有无与质量，不升也不降核心准备度分数。"
+                  "Google Search 不使用 llms.txt；这一结论只适用于 Google，不推广到所有引擎。"
+                  "有无该文件都不能单独判定站点严重未就绪。",
+        "solution": "如需提供给自愿读取该约定的系统，可发布真实的 text/plain llms.txt，避免用 HTML 软 404 伪装。",
+        "evidence": [{"url": llms.get("url") or "/llms.txt", "quote": (llms.get("body_preview") or "；".join(llms.get("reasons") or []) or "n/a")[:180]}],
+    })
+
+    # Bare currency
+    bare = ((acc.get("citability") or {}).get("bare_currency")) or []
+    if bare:
+        findings.append({
+            "severity": "低",
+            "id": "CIT-CURRENCY",
+            "root_cause_id": "bare_currency",
+            "evidence_kind": "observed",
+            "title": "出现未标明单位的金额",
+            "problem": f"抽样正文中有 {len(bare)} 处价格/金额未写明货币单位（例如只有数字）。",
+            "impact": "无单位的金额难以被准确摘用或比较。",
+            "solution": "在金额旁写明货币或单位（元、万元、USD 等）。",
+            "evidence": [{"url": b.get("url") or "", "quote": b.get("quote") or b.get("amount")} for b in bare[:4]],
+        })
+
+    # Unsampled product detail must not yield "missing spec table"
+    if page_coverage.type_is_unevaluated(coverage, "product_detail") or page_coverage.type_is_unevaluated(coverage, "product"):
+        findings.append({
+            "severity": "低",
+            "scored": False,
+            "id": "SCOPE-PRODUCT-UNEVAL",
+            "evidence_kind": "sample",
+            "title": "产品详情页未评估",
+            "problem": "发现范围内有产品类 URL，但本轮抽样未抓取产品详情页。不能据此断言缺少规格表或参数。",
+            "impact": "内容与覆盖相关分数按抽样页计算，相关类型标为未评估，不按缺失计 0。",
+            "solution": "如需评估规格与参数，请把代表性产品详情页纳入抽样后复测。",
+        })
+
+    # Privacy: never escalate to "AI will not trust this company"
+    if "privacy" in (coverage.get("observed_absent_types") or []) or any(
+        "privacy" in (w.get("required") or "") for w in (acc.get("coverage") and []) or []
+    ):
+        pass  # wording is handled if a legal finding already exists; see below
+
+    # Observation mode disclosure
+    findings.append({
+        "severity": "低",
+        "scored": False,
+        "id": "OBS-RAW-HTML",
+        "evidence_kind": "sample",
+        "title": "本轮证据来自原始 HTML（非渲染 DOM）",
+        "problem": (acc.get("fetch_observation") or {}).get("note_zh")
+                   or "观察基于 HTTP 原始 HTML，不是浏览器渲染后的 DOM。",
+        "impact": "仅存在于客户端渲染后的内容可能未被计入。这是样本与采集方式说明，不是额外扣分。",
+        "solution": "若关键事实只在渲染后出现，需要补充渲染抓取后再评估那些字段。",
+    })
+
+    # Drop or rewrite any finding that would claim unsampled pages are missing specs
+    kept = []
+    for f in findings:
+        blob = " ".join(str(f.get(k) or "") for k in ("title", "problem", "impact", "solution"))
+        if page_coverage.should_suppress_missing_finding(coverage, blob):
+            f = dict(f)
+            f["scored"] = False
+            f["severity"] = "低"
+            f["evidence_kind"] = "sample"
+            f["title"] = (f.get("title") or "") + "（改为未评估，因相关页未抽样）"
+            f["problem"] = "该判断所依赖的页面类型本轮未抓取，已改为未评估，不按缺失计 0。"
+            f["impact"] = "不对未抓取页面做缺失断言。"
+        kept.append(f)
+    findings = kept
+
     return findings
 
 
@@ -1221,14 +1634,25 @@ def build_strengths(cln, ent, acc, schema_info):
     org = schema_info["org"] or {}
     if org.get("sameAs") and org.get("foundingDate"):
         strengths.append("Organization 结构化数据完整（sameAs 社交链接 + 成立日期）。")
-    if acc["has_llms"]:
-        strengths.append("提供 llms.txt，已向 AI 提供结构化站点摘要。")
-    if not acc["blocked"]:
-        if acc.get("reachable") is True:
-            strengths.append("robots.txt 放行 AI 检索爬虫，实测四个 AI UA 均可正常抓取。")
-        elif acc.get("reachable") is None:
-            strengths.append("robots.txt 未屏蔽任何 AI 检索爬虫（未做实测可达性）。")
-        # reachable is False：实测被拦截，不得作为优势（另出 finding）
+    if acc.get("has_llms"):
+        strengths.append("提供 llms.txt（实验/辅助项，不计入核心分）。")
+    engines = acc.get("engines") or {}
+    chatgpt = (engines.get("chatgpt_search") or {}).get("search_status")
+    claude = (engines.get("claude_search") or {}).get("search_status")
+    decision = acc.get("crawler_decision") or {}
+    if not (acc.get("blocked_core") or decision.get("core_live_blocked") or decision.get("core_robots_blocked")):
+        if decision.get("core_ok"):
+            strengths.append(
+                "搜索/按需抓取爬虫可访问（"
+                + "、".join(decision.get("core_ok") or [])
+                + "）。训练爬虫状态单独记录，不作为搜索访问结论。"
+            )
+        elif not acc.get("blocked_core"):
+            strengths.append("robots.txt 未屏蔽搜索/按需抓取爬虫。")
+    if chatgpt == "allowed":
+        strengths.append("ChatGPT 搜索爬虫（OAI-SearchBot）可访问；GPTBot 训练状态不改变这一判定。")
+    if claude == "unverified":
+        pass  # do not list as a strength
     return strengths or ["本次未发现明显亮点。"]
 
 
@@ -1293,8 +1717,8 @@ def build_dimension_details(dims, pages, cln, ent, schema_info, acc):
     org = schema_info["org"] or {}
     content_pages = [p for p in pages if p["role"] in ("content", "home")]
     n = len(content_pages) or 1
-    title_ok = sum(1 for p in content_pages if 10 <= len(p["title"]) <= 60)
-    h1_ok = sum(1 for p in content_pages if len(p["h1"]) == 1)
+    title_ok = sum(1 for p in content_pages if (p.get("title") or "").strip())
+    h1_ok = sum(1 for p in content_pages if p.get("h1"))
     meta_ok = sum(1 for p in content_pages if p["meta"])
     missing_org = _org_missing(org)
     home = next((p for p in pages if p["role"] == "home"), None)
@@ -1314,18 +1738,27 @@ def build_dimension_details(dims, pages, cln, ent, schema_info, acc):
                                  else ("为外部域名/免费邮箱（W 警告项，不计分）" if ent.get("email_off_domain") else "与站点一致")) +
                    "。"),
         "ogp": ("首页分享标签 " + ("缺失 " + "、".join(home_ogp_missing) if home_ogp_missing else "完整") +
-                "（只评首页，内页不计分）。"),
+                "（只评首页分享预览卫生，内页不计分；不是 AI 理解或信任门槛）。"),
         "richness": (f"FAQ 页 {faq_count} 个；文章/博客页 {article_count} 个；"
-                     f"内容页正文合计 {total_content_len} 字符。"),
-        "kg": ("实体信号：sameAs " + (f"{len(org.get('sameAs') or [])} 条" if org.get("sameAs") else "缺") +
-               "、foundingDate " + ("有" if org.get("foundingDate") else "缺") +
-               "、knowsAbout " + ("有" if org.get("knowsAbout") else "缺") + "。"),
+                     f"内容页正文合计 {total_content_len} 字符。"
+                     + ((" 未评估类型：" + "、".join((acc.get("coverage") or {}).get("unevaluated_types") or []))
+                        if (acc.get("coverage") or {}).get("unevaluated_types") else "")),
+        "kg": (
+            "站内实体信号（正文与 schema 去重合计）：社交/档案 "
+            + (f"{len((acc.get('kg_detail') or {}).get('profiles') or [])} 条"
+               if (acc.get("kg_detail") or {}).get("profiles") else "未见")
+            + "、成立信息 "
+            + ("有" if (acc.get("kg_detail") or {}).get("founding") else "缺")
+            + "、地址/联系 "
+            + ("有" if (acc.get("kg_detail") or {}).get("address") else "缺")
+            + "。缺 schema 不表示主体无法确认。"
+        ),
         "absorption": _absorption_detail(acc),
         "trust": ("信任页：About " + ("有" if any('about' in p['url'].lower() for p in pages) else "缺") +
                   "、Contact " + ("有" if any('contact' in p['url'].lower() for p in pages) else "缺") +
                   "、合规页 " + ("有" if any(p['role'] == 'legal' for p in pages) else "缺") +
                   "（About/Contact 需实质内容，默认合规模板不计分）。"),
-        "on_page": (f"Title 合格 {title_ok}/{n}、Meta {meta_ok}/{n}、唯一 H1 {h1_ok}/{n}。"),
+        "on_page": (f"有 title {title_ok}/{n}、有 Meta {meta_ok}/{n}、有 H1 {h1_ok}/{n}（长度略超 60 或并非恰好一个 H1 只作提示）。"),
         "quality": ("占位文案 " + (f"{len(cln['lorem'])} 处" if cln['lorem'] else "无") +
                     "、0 值计数器 " + (f"{len(cln['zero'])} 处" if cln['zero'] else "无") +
                     "、默认合规模板 " + (f"{len(cln['legal'])} 处" if cln['legal'] else "无") + "。"),
@@ -1345,16 +1778,30 @@ def build_scope(pages, site, acc):
         "sitemap_count": site.get("sitemap", {}).get("url_count", len(pages)),
         "sampled_count": len(pages),
         "role_counts": role_counts,
-        "blocked": acc["blocked"],
-        "has_llms": acc["has_llms"],
+        "blocked": acc.get("blocked_core") or [],
+        "blocked_all": acc.get("blocked") or [],
+        "blocked_training": acc.get("blocked_training") or [],
+        "has_llms": acc.get("has_llms"),
+        "llms": acc.get("llms") or {"present": acc.get("has_llms"), "experimental": True, "in_core_score": False},
         # run.py 的必检页后置补入结果：找不到 FAQ/About/Contact/Privacy 时在此告警，
-        # 报告「检测范围」页据此提示「相关维度可能因缺页被低估」。
+        # 报告「检测范围」页据此提示「相关维度可能因缺页被低估」。未抽样 ≠ 缺失。
         "scope_warnings": list(site.get("scope_warnings") or []),
+        "coverage": acc.get("coverage") or {},
+        "unevaluated_types": (acc.get("coverage") or {}).get("unevaluated_types") or [],
+        "score_scope": "sampled_pages",
         "crawler_access": {
             "reachable": acc.get("reachable"),
             "ai_blocked": acc.get("ai_blocked") or [],
+            "training_blocked_live": acc.get("training_blocked_live") or [],
             "waf_challenge": bool(acc.get("waf_challenge")),
+            "engines": acc.get("engines") or {},
+            "roles": {
+                "search_index": (acc.get("crawler_decision") or {}).get("core_ok"),
+                "core_blocked": (acc.get("crawler_decision") or {}).get("core_live_blocked"),
+                "training_blocked": (acc.get("crawler_decision") or {}).get("training_live_blocked"),
+            },
         },
+        "observation_mode": acc.get("observation_mode") or "raw_http_html",
         # 站点快照说明（例如线上被验证码拦截、改用归档证据时，明确写清快照日期与来源）
         "note": site.get("snapshot_note") or "",
     }
@@ -1447,6 +1894,16 @@ def analyze(run_dir):
         org["sameAs"] = clean_same_as(org.get("sameAs"), domain)
         schema_info["org"] = org
     acc = detect_acc(run_dir, base_url)
+    sitemap_urls = load_sitemap_urls(run_dir)
+    acc["coverage"] = page_coverage.coverage_report(pages, site, sitemap_urls)
+    acc["numeric"] = entity_signals.analyze_numeric_conflicts(
+        pages, schema_info.get("org"), default_entity=domain,
+    )
+    acc["fetch_observation"] = {
+        "kind": "raw_http_html",
+        "note_zh": "本轮观察来自 HTTP 原始 HTML，不是渲染后的 DOM。",
+        "note_en": "Observations are from raw HTTP HTML, not a rendered DOM.",
+    }
 
     dims = score_dimensions(pages, site, cln, ent, schema_info, acc)
 
@@ -1484,30 +1941,36 @@ def analyze(run_dir):
         base = min(base, ceiling)
 
     # penalty / bonus
+    # Training-bot blocks do not enter the core −15. llms.txt is experimental
+    # and no longer grants a general-purpose +3 in the core 100.
+    # Documented ItemList +3 is applied here (bonus cap ≤ +10).
     penalty, bonus = 0, 0
     adjustments = []
-    # ACC-01 / ACC-02 / ACC-03：AI 检索爬虫不可达 → −15。
-    # robots.txt 屏蔽与实测拦截（WAF/挑战页）是同一个后果的两种成因，只扣一次，不叠加。
-    robots_blocked = list(acc.get("blocked") or [])
-    live_blocked = list(acc.get("ai_blocked") or [])
-    _waf = bool(acc.get("waf_challenge"))
-    if robots_blocked or live_blocked or _waf:
+    decision = acc.get("crawler_decision") or crawler_roles.core_penalty_decision(
+        acc.get("blocked") or [], (acc.get("crawler") or {}).get("ua_results") or [],
+        waf_challenge=bool(acc.get("waf_challenge")),
+    )
+    if decision.get("apply"):
         penalty += 15
-        if robots_blocked and (live_blocked or _waf):
-            reason = ("AI 爬虫不可达：robots.txt 屏蔽 " + ", ".join(robots_blocked)
-                      + "；实测同样被拦截（WAF/挑战页）。两种成因计一次")
-        elif robots_blocked:
-            reason = f"AI 爬虫被 robots.txt 屏蔽（{', '.join(robots_blocked)}）"
-        else:
-            names = ", ".join(live_blocked) if live_blocked else "普通请求"
-            reason = f"AI 爬虫实测被拦截（{names} 命中 WAF/挑战页，robots.txt 放行但取不到）"
+        reason = crawler_roles.penalty_reason_zh(decision) or "搜索/按需抓取爬虫不可达"
         adjustments.append({"type": "penalty", "points": -15, "reason": reason})
-    if acc["has_llms"]:
+    has_itemlist = any(
+        re.search(r"ItemList", str(s.get("@type", "")))
+        for p in pages for s in (p.get("schemas") or []) if isinstance(s, dict)
+    )
+    if has_itemlist:
         bonus += 3
-        adjustments.append({"type": "bonus", "points": 3, "reason": "有 llms.txt"})
+        adjustments.append({"type": "bonus", "points": 3, "reason": "有 ItemList Schema"})
 
     bonus = min(bonus, 10)
     overall = int(max(0, min(100, base - penalty + bonus)))
+    acc["score_formula"] = {
+        "expression": "overall = clamp(0, 100, int(base_score - penalty + bonus))",
+        "base_score": base,
+        "penalty": penalty,
+        "bonus": bonus,
+        "overall": overall,
+    }
     grade = grade_for(overall)
 
     dims_meta = [
@@ -1572,6 +2035,21 @@ def analyze(run_dir):
         "llm_enabled": llm_enabled,
         "overall_summary": summary,
         "closing": "优先处理上述高优先级问题，再持续补充真实内容与实体声明。" if findings else "技术基础与内容结构良好，保持并持续补充真实内容即可。",
+        "score_formula": acc.get("score_formula") or {
+            "expression": "overall = clamp(0, 100, int(base_score - penalty + bonus))",
+            "base_score": base, "penalty": penalty, "bonus": bonus, "overall": overall,
+        },
+        "coverage": acc.get("coverage") or {},
+        "llms": acc.get("llms") or {"present": bool(acc.get("has_llms")), "experimental": True, "in_core_score": False},
+        "crawler_engines": acc.get("engines") or {},
+        "observation_mode": acc.get("observation_mode") or "raw_http_html",
+        "counters": {
+            "sampled_count": len(pages),
+            "sitemap_count": site.get("sitemap", {}).get("url_count", len(pages)),
+            "finding_count": len(findings),
+            "bare_currency": len(((acc.get("citability") or {}).get("bare_currency")) or []),
+            "citability_rate": (acc.get("absorption_rate")),
+        },
     }
     # SEO narrative block (score already folded into dims / overall_score)
     report_out["seo_discoverability"] = seo_block

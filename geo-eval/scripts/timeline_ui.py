@@ -311,10 +311,18 @@ def collect_items(
         item = _as_item(raw, lang=lang, page_count=page_count)
         if not item:
             continue
-        key = re.sub(r"\s+", " ", item["title"].lower())[:80]
-        # Prefer keeping distinct titles; also collapse identical kinds for infra fixes
-        kind_collapse = item["kind"] in ("https", "robots_sitemap", "bot_allowlist", "retest")
+        root = str((raw or {}).get("root_cause_id") or "") if isinstance(raw, dict) else ""
+        key = root or re.sub(r"\s+", " ", item["title"].lower())[:80]
+        # Prefer keeping distinct titles; also collapse identical kinds / root causes
+        # so the same hours are not stacked twice in the timeline.
+        kind_collapse = item["kind"] in ("https", "robots_sitemap", "bot_allowlist", "retest", "schema_og")
         if key in seen:
+            for existing in items:
+                if (existing.get("root_cause_id") or re.sub(r"\s+", " ", existing["title"].lower())[:80]) == key:
+                    existing["effort_days"] = max(existing["effort_days"], item["effort_days"])
+                    if item["detail"] and item["detail"] not in (existing.get("detail") or ""):
+                        existing["detail"] = ((existing.get("detail") or "") + " · " + item["detail"]).strip(" ·")
+                    break
             continue
         if kind_collapse and item["kind"] in kinds_seen:
             # merge detail into existing
@@ -325,6 +333,7 @@ def collect_items(
                     existing["effort_days"] = max(existing["effort_days"], item["effort_days"])
                     break
             continue
+        item["root_cause_id"] = root
         seen.add(key)
         kinds_seen.add(item["kind"])
         items.append(item)

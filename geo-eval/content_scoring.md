@@ -161,3 +161,11 @@ Per content run directory:
 
 v1.2 · 2026-11 · Beansmile · GEO Checker · aligns with product **scoring v1.3**  
 *(v1.0 had C-SEO 25 inside Content GEO; moved to technical `seo_scoring.md` in v1.1. v1.2 adds extractability / claim-evidence / intent-coverage heuristics without changing the five-dim weights.)*
+
+
+## Sampling vs missing (Checker)
+
+- Role-quota sampling may leave key types (e.g. product detail) unfetched. Mark those **未评估 / not evaluated**. Do not auto-score 0, and do not emit confident findings such as “missing spec table” for pages never fetched.
+- If key types are unevaluated, the headline Content GEO total is a **sampled-pages score**; a complete content total is deferred or clearly labelled.
+- Dealer summits / events are not delivery case studies. Different hotline numbers may serve different purposes and are not automatic entity conflicts. Not listing every group business on About is not automatically a gap. A missing privacy policy is a compliance-page observation, not “AI will not trust this company.” FAQ value is real questions and answers, not the heading or a particular schema type.
+- Do not fold mention / citation / share-of-voice rates into Content GEO.

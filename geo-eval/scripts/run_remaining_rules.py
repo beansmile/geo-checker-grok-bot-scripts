@@ -40,9 +40,13 @@ for i,a in enumerate(content):
     for b in content[i+1:]:
         A,B=S2[a],S2[b]; j=len(A&B)/max(1,len(A|B))
         if j>best[2]: best=(a,b,j)
-new.append(R("CLN-08","fail" if best[2]>0.5 else "pass","S2","medium","R",
-  [ev(pages[best[0]]["url"],"body",f"与 {pages[best[1]]['url']} 去模板后相似度 {round(best[2],3)}")],
-  "跨页正文相似度检查（去导航/页脚后）","Cross-page body similarity check (boilerplate removed)",{"max_jaccard":round(best[2],3),"pair":[best[0],best[1]]}))
+# Tiers: score only >= 0.9; 0.75-0.9 advisory (na); 0.5-0.75 no longer scored.
+_cln08 = "fail" if best[2] >= 0.9 else ("na" if best[2] >= 0.75 else "pass")
+_cln08_zh = "跨页正文高度重复（相似度≥0.9）" if best[2] >= 0.9 else (
+    "跨页正文较相似（0.75–0.9，建议项）" if best[2] >= 0.75 else "跨页正文相似度未达计分门槛")
+new.append(R("CLN-08",_cln08,"S2","medium","R",
+  [ev(pages[best[0]]["url"],"body",f"与 {pages[best[1]]['url']} 去模板后相似度 {round(best[2],3)}")] if best[0] else [],
+  _cln08_zh,"Cross-page body similarity check (boilerplate removed)",{"max_jaccard":round(best[2],3),"pair":[best[0],best[1]],"tier":_cln08}))
 # ENT-03 电话/地址真实性
 phones=set(re.findall(r"\+?\d[\d\s\-()]{8,}\d", text("contact")))
 addr="Xinggang East Road" in text("contact")

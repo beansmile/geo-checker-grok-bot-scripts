@@ -29,6 +29,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
+import crawler_roles
+
 # 抓取 UA：与 geo_ready 的 HttpFetcher::USER_AGENT 保持一致的主流桌面 Chrome 串。
 # 早期带 `GeoEval/1.0` 后缀、版本停在 Chrome/126，部分站点会按「非主流 UA」直接 403/挑战。
 UA = {
@@ -99,20 +101,33 @@ def fetch(url, timeout=15):
         return 0, str(e).encode("utf-8", "replace")
 
 
-# ── ACC-02 / ACC-03：AI 爬虫实测可达性 + WAF 挑战识别 ──────────────
-# rules.md 要求用真实 AI UA 实抓，而不是只读 robots.txt：
-#   ACC-02 AI UA 可达性：OAI-SearchBot / GPTBot / ClaudeBot / PerplexityBot 各抓首页
-#   ACC-03 WAF/挑战拦截迹象：普通 UA 抓取返回挑战页 / 403 / 429
-AI_UA_PROBES = {
-    "OAI-SearchBot": "Mozilla/5.0 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)",
-    "GPTBot":        "Mozilla/5.0 (compatible; GPTBot/1.0; +https://openai.com/gptbot)",
-    "ClaudeBot":     "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
-    "PerplexityBot": "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
-}
-# scoring v1.3: lightweight multi-UA smoke also records one mainstream searchbot
-SEARCH_UA_PROBES = {
-    "Googlebot": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-}
+def fetch_with_meta(url, timeout=15, headers=None):
+    """Fetch and keep status + Content-Type (used for llms.txt soft-404 / MIME checks)."""
+    req = urllib.request.Request(url, headers=headers or UA)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return {
+                "status": r.status,
+                "body": r.read(),
+                "content_type": (r.headers or {}).get("Content-Type") or (r.headers or {}).get("content-type"),
+                "error": "",
+            }
+    except urllib.error.HTTPError as e:
+        return {
+            "status": e.code,
+            "body": e.read(),
+            "content_type": (e.headers or {}).get("Content-Type") if e.headers else None,
+            "error": "",
+        }
+    except Exception as e:  # noqa: BLE001
+        return {"status": 0, "body": b"", "content_type": None, "error": str(e)[:200]}
+
+
+# ── ACC-02 / ACC-03：分角色实测可达性 + WAF 挑战识别 ──────────────
+# 搜索索引 / 按需抓取 / 训练爬虫分开探测。不探测 Google-Extended（无独立 UA）。
+# Claude 搜索状态看 Claude-SearchBot，不看 ClaudeBot。
+AI_UA_PROBES = dict(crawler_roles.AI_UA_PROBES)
+SEARCH_UA_PROBES = dict(crawler_roles.SEARCH_UA_PROBES)
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
 # 挑战页特征：SiteGround 用 202 + sg-captcha + meta refresh 跳验证页
@@ -171,19 +186,24 @@ def test_crawler_access(base_url, out_path):
     print(f"      [crawler] {'browser':14s} HTTP {baseline['status']:<3} "
           f"{'CHALLENGE' if baseline['challenge'] else 'ok'}  {baseline['size']}B  {lat_s}")
 
-    smoke_names = {"browser", "Googlebot", "OAI-SearchBot", "GPTBot"}
-    ai_blocked = [r for r in results if r["ua"] in AI_UA_PROBES and (r["challenge"] or r["status"] in (0, 403, 429))]
+    smoke_names = {"browser", "Googlebot", "OAI-SearchBot", "Claude-SearchBot", "ChatGPT-User"}
+    decision = crawler_roles.core_penalty_decision([], results, waf_challenge=bool(baseline["challenge"]))
     payload = {
         "url": base_url,
         "ua_results": results,
-        "ai_blocked": [r["ua"] for r in ai_blocked],
+        # Backward compatible key: core (search/user) blocks only — never training bots.
+        "ai_blocked": list(decision.get("core_live_blocked") or []),
+        "training_blocked": list(decision.get("training_live_blocked") or []),
+        "core_ok": list(decision.get("core_ok") or []),
         "waf_challenge": bool(baseline["challenge"]),
-        "reachable": all(r["status"] == 200 and not r["challenge"] for r in results if r["ua"] in AI_UA_PROBES or r["ua"] == "browser"),
+        "reachable": not decision.get("apply"),
+        "engines": decision.get("engines") or {},
         "multi_ua_smoke": {
             "ua": [r["ua"] for r in results if r["ua"] in smoke_names],
-            "note": "Access evidence only; not a scored dimension.",
+            "note": "Access evidence only; training bots are informational and do not drive core access score.",
         },
     }
+    # Write canonical path (evidence/crawler_access.json) plus the requested path.
     save(out_path, json.dumps(payload, ensure_ascii=False, indent=2))
     return payload
 
@@ -291,10 +311,18 @@ def main():
     print(f"[1/4] 抓 robots / sitemap / llms  →  {base}")
     robots_body = fetch(base + "/robots.txt")[1]
     sitemap_body = fetch(base + "/sitemap.xml")[1]
-    llms_body = fetch(base + "/llms.txt")[1]
+    llms_meta = fetch_with_meta(base + "/llms.txt")
+    llms_body = llms_meta.get("body") or b""
     save(os.path.join(run_dir, "evidence", "robots.txt"), robots_body)
     save(os.path.join(run_dir, "evidence", "sitemap.xml"), sitemap_body)
     save(os.path.join(run_dir, "evidence", "llms.txt"), llms_body)
+    save(os.path.join(run_dir, "evidence", "llms.meta.json"), json.dumps({
+        "url": base + "/llms.txt",
+        "status": llms_meta.get("status"),
+        "content_type": llms_meta.get("content_type"),
+        "error": llms_meta.get("error") or "",
+        "bytes": len(llms_body) if isinstance(llms_body, (bytes, bytearray)) else None,
+    }, ensure_ascii=False, indent=2))
 
     print("[2/4] 从 sitemap 发现 URL 并分类")
     urls = expand_sitemap(base, sitemap_body, run_dir)
@@ -352,16 +380,30 @@ def main():
     print(f"[3/4] 抓取 {len(sampled)} 个深检页面（并发）")
     def fetch_one(u):
         code, body = fetch(u)
-        return u, code, body
+        retried = False
+        first_status = code
+        if code == 500:
+            # Cheap single retry so a one-off 500 is not treated as a hard failure.
+            time.sleep(0.4)
+            code, body = fetch(u)
+            retried = True
+        return u, code, body, {"retried": retried, "first_status": first_status}
 
     pages = []
     with ThreadPoolExecutor(max_workers=5) as ex:
-        for u, code, body in ex.map(fetch_one, sampled):
+        for u, code, body, meta in ex.map(fetch_one, sampled):
             slug = re.sub(r"[^a-z0-9]+", "_", urlparse(u).path.strip("/") or "home").strip("_") or "home"
             save(os.path.join(ev, f"{slug}.html"), body)
             role = "home" if urlparse(u).path in ("", "/") else classify_role(u)
-            pages.append({"url": u, "slug": slug, "role": role, "status": code})
-            print(f"      [{code}] {u}  ({role})")
+            rec = {"url": u, "slug": slug, "role": role, "status": code,
+                   "observation": "raw_http_html"}
+            if meta.get("retried"):
+                rec["retried_from"] = meta.get("first_status")
+                if code == 500:
+                    rec["single_observation_note"] = "HTTP 500 after one retry; treat as a limited observation."
+            pages.append(rec)
+            tag = f"{code}" + (" retry" if meta.get("retried") else "")
+            print(f"      [{tag}] {u}  ({role})")
 
     with open(os.path.join(ev, "pages.list"), "w", encoding="utf-8") as f:
         f.write("\n".join(f"{p['slug']}|{p['url']}" for p in pages))
@@ -382,7 +424,10 @@ def main():
     # ACC-02 / ACC-03：用真实 AI UA 实测可达性（robots.txt 只管自愿遵守，不代表能取到）
     print("[4/5] 实测 AI 爬虫可达性（ACC-02/ACC-03）")
     try:
-        test_crawler_access(site["url"], os.path.join(ev, "crawler_access.json"))
+        # Canonical location is evidence/crawler_access.json; also copy under pages/ for older runs.
+        canon = os.path.join(run_dir, "evidence", "crawler_access.json")
+        payload = test_crawler_access(site["url"], canon)
+        save(os.path.join(ev, "crawler_access.json"), json.dumps(payload, ensure_ascii=False, indent=2))
     except Exception as e:  # noqa: BLE001
         print(f"      [crawler] 实测失败，已跳过：{e}")
 

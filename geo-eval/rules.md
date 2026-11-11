@@ -86,7 +86,7 @@
 | ACC-04 | sitemap 有效性 | 存在 `sitemap(.xml|_index.xml)` 且可解析；robots 声明一致；content 页占比 <50% → S3 | S3 | 3 | R | site |
 | ACC-05 | HTTPS 与重定向 | 非 HTTPS → S1（-10）；HTTPS 但 http 不跳转 → S2（-3）；主 URL 跳数 >2 → S3（-3） | S1/S2/S3 | -10/-3/-3 | R | site |
 | ACC-06 | 无 JS 内容可读性 | 服务端 HTML 的 body 文本 <300 字符或关键内容缺失（H1/正文/schema 均在 JS 注入）→ S1；CSR 启发式命中 → issue + 架构警告 | S1 | 6 | R | home+content |
-| ACC-07 | llms.txt（可选） | `/llms.txt`、`/llms-full.txt`：200 且 body >10 字符、非 HTML、非软 404（不含 `404`/`not found`/`页面不存在`）→ 存在给可选加分；缺失不扣分（Google 官方不读取该文件） | S4（可选） | +3（bonus） | R | site |
+| ACC-07 | llms.txt（可选） | `/llms.txt`、`/llms-full.txt`：200 且 body >10 字符、非 HTML、非软 404（不含 `404`/`not found`/`页面不存在`）→ 存在给可选加分；缺失不扣分（Google 官方不读取该文件）。Checker 核心 100 分不再加减此项，仅作实验/辅助展示 | S4（可选） | 0（不计核心分） | R | site |
 
 ### 2.2 CLN 页面清洁度
 
@@ -99,7 +99,7 @@
 | CLN-05 | 默认合规模板 | 隐私/条款页命中 WordPress 默认模板句式（"When visitors leave comments…"/"Gravatar service"/"An anonymized string created from your email address"）→ S2 | S2 | 4 | R | legal |
 | CLN-06 | 占位 CTA/空链接 | CTA 文本为 `Discover more`/`Read more`/`Click here`/`Learn more` 且 href 为 `#`/空/`javascript:void(0)` → S3；同页 ≥3 处 → S2 | S3/S2 | 3/5 | R | content |
 | CLN-07 | 软 404 | 200 但标题/正文含 `404`/`not found`/`页面不存在`，或正文 <200 字符且无 H1 → S3 | S3 | 4 | R | site |
-| CLN-08 | 重复/复制内容 | 跨页 5-gram 重复率 >0.5（去模板/导航后）且占正文 >50% → S2 | S2 | 5 | R | content |
+| CLN-08 | 重复/复制内容 | 去模板后相似度 ≥0.9 → 计分；0.75–0.9 仅建议项；0.5–0.75 不再计分 | S2 / W | 质量维 | R | content |
 | CLN-09 | 索引膨胀 | (system + demo + legal) 可索引页 / 扫描页 >20% → S2“索引垃圾稀释正文” | S2 | 5 | R | site |
 | CLN-10 | Template Residue Score | 按 CLN-02/03/04/05/06 命中数与覆盖页数加权（0–100）；≥30 判“显著模板残留” | S2 | 并入 CLN 各项 | R | site |
 | CLN-11 | 模板来源指纹 | 与公开 Template Kit 文案/结构特征比对（如 Pabriz + Elementor Demo 串），给出“疑似基于 XX 模板二开” | S3（提示） | 2 | R+LLM | site |
@@ -170,7 +170,7 @@
 ### 2.8 RCH 内容丰富度与新鲜度
 
 > v1.1 引擎计分口径：FAQ 5 + 文章 5（1 篇 2.5）+ 正文体量 5（>8k 得 2.5）= 15。
-> 下表为规则判定阈值与历史子分方案；**llms.txt 不在本维计分**，只在加分项 +3。
+> 下表为规则判定阈值与历史子分方案；**llms.txt 不在本维计分，也不在核心加减分中计分**，仅作实验/辅助展示。
 > 抽样时 FAQ/About/Contact/Privacy 必检页会被强制补入（见 §0.3）。
 
 | ID | 规则 | 判定与阈值 | 严重度 | 分值影响 | 方法 | 范围 |
@@ -265,8 +265,8 @@
 | 严重实体不一致 | ENT-01 / ENT-02（≥2 个邮箱域） | -8~-12 / -5~-10 |
 | 单一邮箱域 ≠ 站点域（含免费邮箱） | ENT-02（W） | 0（列出不计分） |
 | lorem/占位主体内容 | CLN-03 | 按占比 -3~-10 |
-| 复制站/纯模板站 | CLN-08/10 | -10~-20 |
-| llms.txt | ACC-07 | +3（可选） |
+| 复制站/纯模板站 | CLN-08 | 仅 ≥0.9 计分（见 scoring.md）；不再使用 −10~−20 加减分 |
+| llms.txt | ACC-07 | 不计核心分（实验/辅助展示） |
 | ItemList Schema | SCH-01 | +3（FAQPage 缺失自 v2026.10 起不计分） |
 | 加分上限 | — | bonus 合计 ≤ +10，且不抵消真实性问题 |
 | Trust Ceiling | TRU-07 | 维度与总分上限压缩（见 TRU-07） |

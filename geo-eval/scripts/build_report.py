@@ -164,11 +164,13 @@ STRINGS = {
             "blocked_robots": "被 robots.txt 屏蔽",
             "unknown": "未做实测",
         },
-        "scope_llms_yes": "有",
-        "scope_llms_no": "无",
+        "scope_llms_yes": "有（实验项，不计入核心分）",
+        "scope_llms_no": "无（实验项，不计入核心分）",
         "calc_rule": (
             "十维显示值合计 <b>{dim_sum}</b> → 基础分（保留一位小数）<b>{base}</b> → "
-            "本页无加减分，基础分向下取整得最终总分 <b>{overall}</b> / 100（{grade}）。"
+            "{adj_clause}"
+            "最终总分 <b>{overall}</b> / 100（{grade}）。"
+            "计算式为 overall = clamp(0, 100, int(base − penalty + bonus))。"
         ),
     },
     "en": {
@@ -249,12 +251,13 @@ STRINGS = {
             "blocked_robots": "blocked by robots.txt",
             "unknown": "not live-tested",
         },
-        "scope_llms_yes": "present",
-        "scope_llms_no": "absent",
+        "scope_llms_yes": "present (experimental, not in the core score)",
+        "scope_llms_no": "absent (experimental, not in the core score)",
         "calc_rule": (
             "Displayed dimension scores total <b>{dim_sum}</b> → base score (1 decimal place) "
-            "<b>{base}</b> → with no bonus or penalty on this page, the base score is rounded "
-            "down to a whole number for the final score: <b>{overall}</b> / 100 ({grade})."
+            "<b>{base}</b> → {adj_clause}"
+            "final score <b>{overall}</b> / 100 ({grade}). "
+            "Formula: overall = clamp(0, 100, int(base − penalty + bonus))."
         ),
     },
 }
@@ -654,9 +657,11 @@ def flatten(report, brand, lang="zh", escape_html=False):
     )
     # 爬虫状态优先取实测结果：robots.txt 放行不等于能抓到
     _cr = scope.get("crawler_access") or {}
-    if _cr.get("reachable") is False or _cr.get("ai_blocked") or _cr.get("waf_challenge"):
+    _engines = _cr.get("engines") or {}
+    _core_blocked = _cr.get("ai_blocked") or (_cr.get("roles") or {}).get("core_blocked") or []
+    if _core_blocked or (_cr.get("reachable") is False and not (_cr.get("roles") or {}).get("search_index")):
         _crawler_state = S["scope_crawler"]["blocked_live"]
-    elif _cr.get("reachable") is True:
+    elif _cr.get("reachable") is True or (_cr.get("roles") or {}).get("search_index"):
         _crawler_state = S["scope_crawler"]["ok_live"]
     elif scope.get("blocked"):
         _crawler_state = S["scope_crawler"]["blocked_robots"]
@@ -686,6 +691,12 @@ def flatten(report, brand, lang="zh", escape_html=False):
     if missing_required:
         scope_warning_text = S["scope_warning_fmt"].format(items=S["scope_warning_sep"].join(missing_required))
         scope_warning_html = f'<p class="note scope-warning">{E(scope_warning_text)}</p>'
+    uneval = scope.get("unevaluated_types") or (scope.get("coverage") or {}).get("unevaluated_types") or []
+    if uneval:
+        label = "未评估（已发现但未抽样）" if lang != "en" else "Not evaluated (discovered but not sampled)"
+        extra = label + "：" + ", ".join(uneval)
+        scope_warning_text = (scope_warning_text + " " + extra).strip()
+        scope_warning_html += f'<p class="note scope-warning">{E(extra)}</p>'
 
     # 结论页「下一步」：report.json 可用 next_steps 覆盖（站点定制），否则用默认三步
     _raw_steps = report.get("next_steps") or S["default_next_steps"]
@@ -796,10 +807,24 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "ceiling_note": report.get("ceiling_note", ""),
         "ceiling_block": (f'<p>{E(report.get("ceiling_note", ""))}</p>'
                           if report.get("ceiling_note") else ""),
-        "calc_rule": S["calc_rule"].format(dim_sum=dim_sum,
-                                           base=report.get("base_score", 0),
-                                           overall=report.get("overall_score", 0),
-                                           grade=report.get("grade", "D")),
+        "calc_rule": S["calc_rule"].format(
+            dim_sum=dim_sum,
+            base=report.get("base_score", 0),
+            overall=report.get("overall_score", 0),
+            grade=report.get("grade", "D"),
+            adj_clause=(
+                (
+                    f"加减分：罚分 <b>-{penalty}</b>、加分 <b>+{bonus}</b> → "
+                    if lang != "en" else
+                    f"adjustments: penalty <b>-{penalty}</b>, bonus <b>+{bonus}</b> → "
+                )
+                if (penalty or bonus) else
+                (
+                    "无加减分 → " if lang != "en"
+                    else "no bonus or penalty on this page → "
+                )
+            ),
+        ),
         # closing / overall_summary 允许含 <strong>/<br>，两种语言都不转义
         "closing": report.get("closing", ""),
         "overall_summary": report.get("overall_summary", report.get("closing", "")),

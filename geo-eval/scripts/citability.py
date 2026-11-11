@@ -540,6 +540,56 @@ def query_alignment_summary(page_pairs):
     }
 
 
+
+# ── 裸金额（无单位）检测，对齐网站标准评测 citability 口径 ────────
+# 有单位的金额（¥ / $ / 元 / USD 等）不算裸金额；年份、百分比、计数单位也不算。
+_CURRENCY_CONTEXT = re.compile(
+    r"(价格|售价|报价|单价|总价|定价|成交价|零售价|price|cost|fee|amount|pricing)",
+    re.I,
+)
+_CURRENCY_UNIT = re.compile(
+    r"(元|万元|亿元|美元|美金|人民币|港币|澳元|欧元|英镑|日元|"
+    r"RMB|CNY|USD|EUR|GBP|JPY|HKD|AUD|¥|￥|\$|€|£)",
+    re.I,
+)
+_BARE_AFTER_CONTEXT = re.compile(
+    r"(?:价格|售价|报价|单价|总价|定价|成交价|零售价|price|cost|fee|amount|pricing)"
+    r"\s*[:：]?(?:约|approximately|approx\.?|around)?\s*"
+    r"(?P<amount>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+\.\d+|\d{2,8})"
+    r"(?!\s*(?:元|万元|亿元|美元|美金|人民币|港币|澳元|欧元|英镑|日元|"
+    r"RMB|CNY|USD|EUR|GBP|JPY|HKD|AUD|¥|￥|\$|€|£|万|亿|%|％|年|个|人|次|台|套))",
+    re.I,
+)
+
+
+def find_bare_currency(text, url=""):
+    """Return list of plain currency amounts that lack a unit."""
+    hits = []
+    for m in _BARE_AFTER_CONTEXT.finditer(text or ""):
+        start, end = m.start(), m.end()
+        window = (text or "")[max(0, start - 12):min(len(text or ""), end + 12)]
+        # Unit immediately before the amount (e.g. ¥12800 / USD 12,800)
+        prefix = (text or "")[max(0, start - 8):m.start("amount")]
+        if _CURRENCY_UNIT.search(prefix):
+            continue
+        if _CURRENCY_UNIT.search(window[window.find(m.group("amount")) + len(m.group("amount")):]):
+            continue
+        hits.append({
+            "url": url,
+            "amount": m.group("amount"),
+            "quote": re.sub(r"\s+", " ", m.group(0))[:120],
+        })
+    return hits
+
+
+def collect_bare_currency(pages):
+    out = []
+    for p in pages or []:
+        out.extend(find_bare_currency(p.get("content") or "", p.get("url") or ""))
+        # Also scan html-stripped already in content; skip raw html to avoid attrs.
+    return out
+
+
 # ── 主入口 ─────────────────────────────────────────────────────────
 def analyze(pages):
     """pages: analyze.py 的 page dict 列表（需含 html/url/title/h1）。返回子项明细。"""

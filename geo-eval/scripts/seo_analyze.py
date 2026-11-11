@@ -304,23 +304,108 @@ def score_seo(
     try:
         import geo_signals_v13 as v13
         hy = v13.url_hygiene_findings(pages, [p.get("url") or "" for p in pages])
+        for f in hy:
+            if f.get("id") == "SEO-URL-02":
+                f["scored"] = False
+                f["severity"] = f.get("severity") or "低"
         findings.extend(hy)
         if any(f.get("id") == "SEO-URL-01" for f in hy):
             score -= 1.5
             notes.append("Homepage soft/JS splash redirect detected (discoverability hygiene).")
         if any(f.get("id") == "SEO-URL-02" for f in hy):
-            score -= 1.0
-            notes.append("Canonical tags missing on most sampled pages.")
+            # Missing canonical is an auxiliary hint, not a core deduction.
+            notes.append("Canonical tags missing on most sampled pages (advisory; missing tag is less serious than a conflicting canonical).")
         if any(f.get("id") == "SEO-URL-03" for f in hy):
             score -= 1.0
-            notes.append("Canonical mismatches page URL on one or more samples.")
+            notes.append("Canonical mismatches page URL on one or more samples (wrong configuration, scored).")
         if any(f.get("id") == "SEO-URL-04" for f in hy):
             score -= 1.0
             notes.append("Multiple home host/path variants without 301 evidence in sample.")
     except Exception as exc:  # noqa: BLE001
         notes.append(f"URL hygiene checks skipped: {exc}")
 
+    # hreflang incomplete coverage and html lang issues are advisory only.
+    # A lang attribute issue is not a Google language-identification failure.
+    adv = advisory_i18n_and_links(pages)
+    notes.extend(adv["notes"])
+    findings.extend(adv["findings"])
+
     return clamp(round(score, 1), 0, 25), notes, findings
+
+
+def advisory_i18n_and_links(pages: list[dict]) -> dict:
+    """hreflang / html lang / sampled broken internals — advisory, not core weight."""
+    import re
+    notes, findings = [], []
+    hreflang_pages = 0
+    langs = set()
+    missing_lang = 0
+    href_re = re.compile(r"""hreflang\s*=\s*['"][^'"]+['"]""", re.I)
+    lang_re = re.compile(r"""<html[^>]*\slang=['"]([^'"]+)""", re.I)
+    a_re = re.compile(r"""href=['"]([^'"]+)['"]""", re.I)
+    for p in pages or []:
+        html = p.get("html") or ""
+        if href_re.search(html):
+            hreflang_pages += 1
+        m = lang_re.search(html)
+        if m:
+            langs.add(m.group(1).lower())
+        elif html:
+            missing_lang += 1
+    n = len(pages or [])
+    multilingual = (hreflang_pages > 0) or (len(langs) >= 2)
+    if multilingual and hreflang_pages and hreflang_pages < max(2, int(0.5 * n)):
+        notes.append("Multilingual site appears to have incomplete hreflang coverage in the sample (advisory only).")
+        findings.append({
+            "id": "SEO-HREFLANG",
+            "scored": False,
+            "severity": "低",
+            "title": "hreflang 覆盖不完整（建议项）",
+            "problem": f"抽样中仅 {hreflang_pages}/{n} 页见到 hreflang。这是建议项，不计入核心重权。",
+            "impact": "多语言站点的 hreflang 不完整可能影响语言版本选择，但不把它当作 Google 语言识别失败。",
+            "solution": "按实际语言版本补双向 hreflang；不要把 html lang 属性问题夸大为索引失败。",
+        })
+    if missing_lang and n and missing_lang > n * 0.5:
+        notes.append("Many sampled pages lack an html lang attribute (advisory; not treated as a Google language-identification failure).")
+        findings.append({
+            "id": "SEO-HTML-LANG",
+            "scored": False,
+            "severity": "低",
+            "title": "部分页面缺少 html lang（建议项）",
+            "problem": f"{missing_lang}/{n} 个抽样页未见 html lang 属性。",
+            "impact": "这是辅助标记问题，不能写成“Google 无法识别页面语言”或语言识别失败。",
+            "solution": "可在 html 根元素声明正确语言代码；优先级低于抓取、正文与错误的语言配置。",
+        })
+    status_by_url = {}
+    for p in pages or []:
+        status_by_url[(p.get("url") or "").rstrip("/")] = p.get("status")
+    broken = []
+    for p in pages or []:
+        html = p.get("html") or ""
+        for href in a_re.findall(html)[:80]:
+            if href.startswith(("#", "javascript:", "mailto:", "tel:")):
+                continue
+            for u, st in status_by_url.items():
+                if st in (404, 410) and u and u in href.rstrip("/"):
+                    broken.append({"from": p.get("url"), "to": u, "status": st})
+                    break
+    if broken:
+        notes.append(
+            f"{len(broken)} sampled-page internal link(s) point at a sampled 404/410 URL "
+            "(advisory; not a core heavy weight)."
+        )
+        findings.append({
+            "id": "SEO-BROKEN-INTERNAL",
+            "scored": False,
+            "severity": "低",
+            "title": "抽样页上存在失效内链（建议项）",
+            "problem": f"在已抓取页面之间发现 {len(broken)} 条指向 404/410 的内链。未对全站做额外死链爬取。",
+            "impact": "失效内链是建议项，不按核心重权扣分。",
+            "solution": "修复或移除这些已观察到的失效链接。",
+            "evidence": [{"url": b["from"], "quote": f"→ {b['to']} HTTP {b['status']}"} for b in broken[:4]],
+        })
+    return {"notes": notes, "findings": findings}
+
 
 
 def build_seo_block(

@@ -15,6 +15,8 @@ import os
 import sys
 from datetime import datetime
 
+import page_coverage
+
 DIMS = [
     ("information_architecture", "C-IA", "Information architecture", 20),
     ("taxonomy_gaps", "C-TAX", "Content taxonomy & gaps", 15),
@@ -70,12 +72,30 @@ def score_ia(types: dict, pages: list | None = None, corpus_text: str = "") -> t
         score += 2
     if "market" in present:
         score += 1
+    coverage = (pages and (pages[0].get("_coverage") if pages else None)) or {}
+    # Prefer explicit coverage when the caller attached it; else we only know sampled types.
+    uneval = set((coverage or {}).get("unevaluated_types") or [])
     if missing:
-        notes.append("Missing or not sampled intent page types: " + ", ".join(missing))
+        still_missing, not_eval = [], []
+        for m in missing:
+            if m in uneval or m == "product" and "product_detail" in uneval:
+                not_eval.append(m)
+            else:
+                still_missing.append(m)
+        if not_eval:
+            notes.append("未评估（已发现但未抽样）的页面类型：" + "、".join(not_eval) + "。不按缺失计 0。")
+        if still_missing:
+            notes.append("抽样与发现范围内未见：" + "、".join(still_missing) + "（范围内观察，不是对未抓页面的断言）。")
     if types.get("product", 0) and types.get("case", 0) == 0:
-        notes.append("Products exist without deep project-case pages in sample.")
+        if "case" in uneval:
+            notes.append("产品页已抽样，案例页标为未评估，不把经销商大会或新闻当成交付案例。")
+        else:
+            notes.append("抽样中有产品页，但未见深度项目案例页。经销商峰会/大会不算交付案例。")
     if types.get("about") and not types.get("rd"):
-        notes.append("R&D / specs / docs likely folded into About rather than dedicated URLs.")
+        if "rd" in uneval:
+            notes.append("研发/规格页未评估，不因 About 页未穷尽集团业务而记缺口。")
+        else:
+            notes.append("抽样未见独立研发/规格 URL；这不等于要求 About 页列出全部集团业务。")
     return clamp(round(score, 1), 0, 20), notes
 
 
@@ -128,7 +148,7 @@ def score_writing(pages: list) -> tuple[float, list]:
     if slogan_pages:
         notes.append(f"{slogan_pages} page(s) lean on slogans without enough specs/standards.")
     if not any(p.get("spec_hits", 0) >= 3 for p in pages):
-        notes.append("Few extractable specification blocks across the sample.")
+        notes.append("Few extractable specification blocks across the sampled pages (not a claim about unfetched product-detail URLs).")
     locked_pages = [p for p in pages if p.get("image_locked")]
     if locked_pages:
         final = clamp(round(final - min(6.0, 1.5 * len(locked_pages)), 1), 0, 20)
@@ -148,10 +168,10 @@ def score_authority(pages: list, offsite: list | None = None) -> tuple[float, li
     if deep_cases:
         score += min(4, 2 * len(deep_cases))
     else:
-        notes.append("No deep on-site case write-up observed in sample.")
+        notes.append("No deep on-site delivery case study observed in the sample. A dealer summit or event page is not a delivery case study.")
         if thin_cases:
             score += 0.5
-            notes.append("Case URLs exist but are too thin to cite.")
+            notes.append("Case-like URLs exist but are too thin to cite.")
     if any(p.get("page_type") == "rd" for p in pages):
         score += 2
     else:
@@ -229,6 +249,20 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
     extract = json.load(open(extract_path, encoding="utf-8"))
     pages = extract.get("pages") or []
     types = extract.get("page_type_counts") or {}
+    site = {}
+    sp = os.path.join(run_dir, "site.json")
+    if os.path.isfile(sp):
+        try:
+            site = json.load(open(sp, encoding="utf-8"))
+        except (ValueError, OSError):
+            site = {}
+    sitemap_urls = page_coverage.load_sitemap_urls(run_dir)
+    coverage = page_coverage.coverage_report(pages, site, sitemap_urls)
+    for p in pages:
+        p["_coverage"] = coverage
+    # Event pages (dealer summit, etc.) must not inflate case counts.
+    if types.get("event"):
+        types = dict(types)
 
     crawl_probe = {}
     probe_path = os.path.join(run_dir, "evidence", "crawl_probe.json")
@@ -291,6 +325,7 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
     total = round(sum(d["score"] for d in dimensions), 1)
     confidence = "high" if crawl_ok and pages else ("provisional" if pages else "none")
     grade = "F" if unevaluable else grade_for(total, 100)
+    complete_deferred = bool(coverage.get("complete_total_deferred"))
 
     engine = {
         "schema": "content_geo.engine.v1",
@@ -304,6 +339,11 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
         "crawl_probe": crawl_probe,
         "overall_score": None if unevaluable else total,
         "grade": grade,
+        "score_scope": "sampled_pages",
+        "complete_total_deferred": complete_deferred,
+        "coverage": coverage,
+        "unevaluated_types": coverage.get("unevaluated_types") or [],
+        "score_scope_note": coverage.get("note_zh") or coverage.get("note_en"),
         "dimensions": dimensions,
         "page_type_counts": types,
         "pages_analyzed": len(pages),
