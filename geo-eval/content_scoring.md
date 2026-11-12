@@ -163,6 +163,10 @@ v1.2 · 2026-11 · Beansmile · GEO Checker · aligns with product **scoring v1.
 *(v1.0 had C-SEO 25 inside Content GEO; moved to technical `seo_scoring.md` in v1.1. v1.2 adds extractability / claim-evidence / intent-coverage heuristics without changing the five-dim weights.)*
 
 
+## Score granularity
+
+- Displayed dimension scores and the Content GEO total use **0.5 increments only** (0, 0.5, 1, …). Intermediate heuristics may use finer steps, but the published score is snapped to the nearest 0.5 (halfway cases away from zero). Do not show 7.3 or 15.1.
+
 ## Sampling vs missing (Checker)
 
 - Role-quota sampling may leave key types (e.g. product detail) unfetched. Mark those **未评估 / not evaluated**. Do not auto-score 0, and do not emit confident findings such as “missing spec table” for pages never fetched.

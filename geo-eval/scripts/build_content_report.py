@@ -62,6 +62,19 @@ def esc(s: str) -> str:
     return html_mod.escape(s or "", quote=False)
 
 
+
+def format_score(n) -> str:
+    """Show integers as 18, half-points as 17.5; never 18.0 or 7.3."""
+    if n is None or n == "":
+        return "—"
+    x = float(n)
+    if abs(x - round(x)) < 1e-9:
+        return str(int(round(x)))
+    return f"{x:.1f}"
+
+
+
+
 def inline_md(s: str) -> str:
     """Light **bold** and `code` for HTML prose (already escaped)."""
     s = esc(s)
@@ -500,7 +513,7 @@ def render_md(data: dict, lang: str = "en") -> str:
     score_line = (
         S["unevaluable"]
         if data.get("unevaluable") or score is None
-        else f"**{score} / 100 ({grade})**"
+        else f"**{format_score(score)} / 100 ({grade})**"
     )
     lines: list[str] = []
     lines.append(f"# {S['md_title'].format(brand=brand)}")
@@ -531,10 +544,10 @@ def render_md(data: dict, lang: str = "en") -> str:
     lines.append("|---|---|---|---|")
     for d in data.get("dimensions") or []:
         lines.append(
-            f"| {d.get('name')} | {d.get('score')} | /{d.get('max')} | {d.get('grade')} |"
+            f"| {d.get('name')} | {format_score(d.get('score'))} | /{d.get('max')} | {d.get('grade')} |"
         )
     if score is not None:
-        lines.append(f"| **{S['md_total']}** | **{score}** | **/100** | {grade} |")
+        lines.append(f"| **{S['md_total']}** | **{format_score(score)}** | **/100** | {grade} |")
     lines.append("")
     lines.append(S["md_grade_scale"])
     lines.append("")
@@ -554,7 +567,7 @@ def render_md(data: dict, lang: str = "en") -> str:
     lines.append(S["md_h_dims"])
     lines.append("")
     for i, d in enumerate(data.get("dimensions") or [], 1):
-        lines.append(f"### {i} · {d.get('name')} ({d.get('score')} / {d.get('max')} · {d.get('grade')})")
+        lines.append(f"### {i} · {d.get('name')} ({format_score(d.get('score'))} / {d.get('max')} · {d.get('grade')})")
         lines.append("")
         lines.append(d.get("narr") or " ".join(d.get("notes") or []) or S["none"])
         lines.append("")
@@ -826,20 +839,20 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     grade = data.get("grade") or "—"
     conf = data.get("confidence") or "—"
     date = (data.get("generated_at") or datetime.now().isoformat())[:10]
-    score_disp = "—" if score is None else str(score)
+    score_disp = "—" if score is None else format_score(score)
     _, c_class, g_class, bar = grade_meta(grade if score is not None else "F")
     pct = 0 if score is None else max(0, min(100, float(score)))
 
     dims = data.get("dimensions") or []
     dim_rows = "".join(
-        f"<tr><td>{esc(d.get('name'))}</td><td class=\"num mono\">{esc(str(d.get('score')))}</td>"
+        f"<tr><td>{esc(d.get('name'))}</td><td class=\"num mono\">{esc(format_score(d.get('score')))}</td>"
         f"<td class=\"dim mono\">/{esc(str(d.get('max')))}</td>"
         f"<td class=\"dim mono r\">{esc(str(d.get('grade')))}</td></tr>"
         for d in dims
     )
     if score is not None:
         dim_rows += (
-            f"<tr class=\"total\"><td>{esc(S['total_row'])}</td><td class=\"num mono\">{esc(str(score))}</td>"
+            f"<tr class=\"total\"><td>{esc(S['total_row'])}</td><td class=\"num mono\">{esc(format_score(score))}</td>"
             f"<td class=\"dim mono\">/100</td><td class=\"r\">{esc(str(grade))}</td></tr>"
         )
 
@@ -857,7 +870,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     <span class="ph-right"><span class="mono">{esc(date)}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">{esc(S['dim_kicker'].format(n=i))}</div>
     <h2>{esc(d.get('name'))}</h2></div>
-    <div class="pmeta"><span class="scorechip {dc}"><b>{esc(str(d.get('score')))}</b>
+    <div class="pmeta"><span class="scorechip {dc}"><b>{esc(format_score(d.get('score')))}</b>
     <span>/{esc(str(d.get('max')))}</span><em class="g {dg}">{esc(str(d.get('grade')))}</em></span></div></div>
   <div class="mini"><i style="width:{dp}%;background:{dbar}"></i></div>
   <div class="narr">{inline_md(d.get('narr') or '')}</div>

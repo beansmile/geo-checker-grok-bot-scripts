@@ -503,3 +503,48 @@ class ClaimYearTests(unittest.TestCase):
         self.assertFalse(v13.detect_soft_redirect(search).get("detected"))
         splash = "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/home\"></head></html>"
         self.assertTrue(v13.detect_soft_redirect(splash).get("detected"))
+
+
+class ContentScoreGranularityTests(unittest.TestCase):
+    def test_snap_half_values(self):
+        import content_analyze as ca
+        self.assertEqual(ca.snap_half(7.3), 7.5)
+        self.assertEqual(ca.snap_half(15.1), 15.0)
+        self.assertEqual(ca.snap_half(58.3), 58.5)
+        self.assertEqual(ca.snap_half(52.6), 52.5)
+        self.assertEqual(ca.snap_half(17.5), 17.5)
+        self.assertEqual(ca.snap_half(11.5), 11.5)
+        self.assertEqual(ca.snap_half(4.0), 4.0)
+        self.assertEqual(ca.snap_half(18), 18.0)
+        self.assertEqual(ca.snap_half(7.25), 7.5)
+        self.assertEqual(ca.snap_half(7.24), 7.0)
+        self.assertEqual(ca.snap_half(0), 0.0)
+
+    def test_dimension_and_overall_only_half_increments(self):
+        import content_analyze as ca
+        pages = []
+        for i, wc in enumerate([40, 90, 210, 300, 55, 130, 80, 250, 60, 180]):
+            pages.append({
+                "url": f"https://example.com/p{i}",
+                "page_type": "product" if i % 2 == 0 else "news",
+                "word_count": wc,
+                "spec_hits": i % 3,
+                "evidence_hits": (i + 1) % 3,
+                "slogan_hits": 4 if i == 2 else 0,
+                "headings": ["h1", "h2", "h3"] if i % 2 else ["h1"],
+                "image_locked": i in (1, 4),
+            })
+        wr, _ = ca.score_writing(pages)
+        tax, _ = ca.score_taxonomy({"product": 5, "news": 5, "about": 1}, pages)
+        au, _ = ca.score_authority(pages)
+        qu, _ = ca.score_query(pages)
+        ia, _ = ca.score_ia({"product": 5, "news": 5, "about": 1, "solution": 1}, pages, "")
+        for name, val in (("write", wr), ("tax", tax), ("auth", au), ("query", qu), ("ia", ia)):
+            self.assertEqual(val, ca.snap_half(val), f"{name}={val} is not a 0.5 increment")
+        total = ca.snap_half(ia + tax + wr + au + qu)
+        self.assertEqual(total, ca.snap_half(total))
+        for val in (ia, tax, wr, au, qu, total):
+            tenth = int(round(val * 10)) % 10
+            self.assertIn(tenth, (0, 5), f"{val} has a 0.1 remainder")
+
+

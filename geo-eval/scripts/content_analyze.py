@@ -11,6 +11,7 @@ Does NOT touch the technical 10-dimension /100 formula in scoring.md.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 from datetime import datetime
@@ -44,6 +45,21 @@ def grade_for(score: float, max_score: float | None = None) -> str:
 
 def clamp(n, lo, hi):
     return max(lo, min(hi, n))
+
+
+
+def snap_half(n) -> float:
+    """Nearest 0.5; halfway cases move away from zero.
+
+    Content GEO customer scores only use 0 / 0.5 increments (e.g. 7.5, 15),
+    never 0.1-level precision such as 7.3 or 15.1.
+    """
+    x = float(n)
+    if x >= 0:
+        return math.floor(x * 2 + 0.5) / 2.0
+    return -math.floor(-x * 2 + 0.5) / 2.0
+
+
 
 
 
@@ -96,7 +112,7 @@ def score_ia(types: dict, pages: list | None = None, corpus_text: str = "") -> t
             notes.append("研发/规格页未评估，不因 About 页未穷尽集团业务而记缺口。")
         else:
             notes.append("抽样未见独立研发/规格 URL；这不等于要求 About 页列出全部集团业务。")
-    return clamp(round(score, 1), 0, 20), notes
+    return clamp(snap_half(score), 0, 20), notes
 
 
 def score_taxonomy(types: dict, pages: list) -> tuple[float, list]:
@@ -116,7 +132,7 @@ def score_taxonomy(types: dict, pages: list) -> tuple[float, list]:
     if types.get("news", 0) >= 2 and types.get("case", 0) <= 1:
         notes.append("Evidence is skewed to news posts rather than structured case/product knowledge pages.")
         score -= 1.5
-    return clamp(round(score, 1), 0, 15), notes
+    return clamp(snap_half(score), 0, 15), notes
 
 
 def score_writing(pages: list) -> tuple[float, list]:
@@ -143,7 +159,7 @@ def score_writing(pages: list) -> tuple[float, list]:
         score += clamp(local, 0, 3)
     # normalize to 20 (v1.1)
     avg = score / max(1, len(pages))
-    final = clamp(round(avg * (20 / 3), 1), 0, 20)  # avg~3 → 20
+    final = clamp(snap_half(avg * (20 / 3)), 0, 20)  # avg~3 → 20
     slogan_pages = sum(1 for p in pages if p.get("slogan_hits", 0) >= 3 and p.get("spec_hits", 0) < 2)
     if slogan_pages:
         notes.append(f"{slogan_pages} page(s) lean on slogans without enough specs/standards.")
@@ -151,7 +167,7 @@ def score_writing(pages: list) -> tuple[float, list]:
         notes.append("Few extractable specification blocks across the sampled pages (not a claim about unfetched product-detail URLs).")
     locked_pages = [p for p in pages if p.get("image_locked")]
     if locked_pages:
-        final = clamp(round(final - min(6.0, 1.5 * len(locked_pages)), 1), 0, 20)
+        final = clamp(snap_half(final - min(6.0, 1.5 * len(locked_pages))), 0, 20)
         notes.append(
             f"{len(locked_pages)} page(s) appear image-locked / non-extractable — "
             "move key facts into HTML text (product/case/article field checklists)."
@@ -209,7 +225,7 @@ def score_authority(pages: list, offsite: list | None = None) -> tuple[float, li
             f"evidence links (e.g. {', '.join(str(x) for x in claim_examples[:3])}). "
             "Publish proof pages and link claims to them — entity trust for AI citation, not local SEO."
         )
-    return clamp(round(score, 1), 0, 20), notes
+    return clamp(snap_half(score), 0, 20), notes
 
 
 def score_query(pages: list, ai_checks: list | None = None) -> tuple[float, list]:
@@ -239,7 +255,7 @@ def score_query(pages: list, ai_checks: list | None = None) -> tuple[float, list
             notes.append("No checked question cited the official domain in retrieval proxies.")
     else:
         notes.append("AI mention checks not attached yet — Agent should fill query × engine table.")
-    return clamp(round(score, 1), 0, 25), notes
+    return clamp(snap_half(score), 0, 25), notes
 
 
 def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = None) -> dict:
@@ -322,7 +338,7 @@ def analyze(run_dir: str, ai_checks: list | None = None, offsite: list | None = 
             "callout": "",
         })
 
-    total = round(sum(d["score"] for d in dimensions), 1)
+    total = snap_half(sum(d["score"] for d in dimensions))
     confidence = "high" if crawl_ok and pages else ("provisional" if pages else "none")
     grade = "F" if unevaluable else grade_for(total, 100)
     complete_deferred = bool(coverage.get("complete_total_deferred"))
