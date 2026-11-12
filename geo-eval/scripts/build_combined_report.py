@@ -893,10 +893,10 @@ def collect_actions(tech: dict, content: dict, lang: str = "en") -> list:
     actions = list(content.get("priority_actions") or [])
     seo = tech.get("seo_discoverability") or {}
     existing = " ".join(_action_blob(a) for a in actions)
-    # Tech findings / next steps are later merged into the timeline; treat them
-    # as already covered so an untranslated SEO copy is not added beside them.
+    # Tech findings are later merged into the timeline; treat them as already
+    # covered so an untranslated SEO copy is not added beside them.
+    # Do not pre-seed next_steps here — those still need to be folded in below.
     existing += " " + " ".join(_action_blob(f) for f in (tech.get("findings") or []))
-    existing += " " + " ".join(_action_blob(s) for s in (tech.get("next_steps") or []))
     for f in seo.get("findings") or []:
         if not isinstance(f, dict) or not (f.get("solution") or f.get("solution_zh")):
             continue
