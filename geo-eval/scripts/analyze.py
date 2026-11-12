@@ -1534,20 +1534,45 @@ def build_findings(cln, ent, schema_info, acc, pages):
         })
 
 
-    # Schema vs body identity: missing schema ≠ business cannot be identified
+    # Schema vs body identity: missing Organization is scored in the schema
+    # dimension (presence alone is 5 raw / 4.0 of 12). It must not zero entity/KG
+    # when the body already identifies the business — that is a wording constraint,
+    # not a reason to mark the finding advisory.
     kg_detail = acc.get("kg_detail") or {}
     consistency = acc.get("schema_consistency") or {}
-    if not (schema_info.get("org")) and kg_detail.get("body_identifiable"):
+    if not (schema_info.get("org")):
+        body_clear = bool(kg_detail.get("body_identifiable"))
+        if body_clear:
+            title = "缺少 Organization 结构化标记（正文已能识别主体）"
+            problem = (
+                "抽样页没有可用的 Organization JSON-LD，但关于我们、联系页或页脚已提供可核验的品牌与联系事实。"
+                "这计入结构化数据维，不是主体识别失败，也不把实体维打成 0。"
+            )
+            fid = "SCH-ABSENT-BODY-CLEAR"
+        else:
+            title = "缺少 Organization 结构化标记"
+            problem = (
+                "抽样页没有可用的 Organization JSON-LD。这计入结构化数据维："
+                "组织节点是该维的基础分项。"
+            )
+            fid = "SCH-ABSENT"
         findings.append({
-            "severity": "低",
-            "scored": False,
-            "id": "SCH-ABSENT-BODY-CLEAR",
+            "severity": "中",
+            "scored": True,
+            "id": fid,
             "root_cause_id": "schema_org",
             "evidence_kind": "observed",
-            "title": "缺少 Organization 结构化标记（正文已能识别主体）",
-            "problem": "抽样页没有可用的 Organization JSON-LD，但 About/联系页或页脚已提供可核验的品牌、地址或联系事实。",
-            "impact": "结构化数据维度会偏低，但这不表示主体无法确认，也不把实体维度打成 0。",
-            "solution": "可按正文已有事实补 Organization 标记，并与可见文本保持一致。",
+            "title": title,
+            "problem": problem,
+            "impact": (
+                "结构化数据维满分 12。仅补上 Organization 节点（与正文一致）即可先获得 4 分；"
+                "再补名称、logo 或联系方式、官网网址，这一维还能继续提高。"
+                "这评的是机器可理解性，不是 Google 排名因子，也不表示主体无法确认。"
+            ),
+            "solution": (
+                "在首页与关于我们增加与可见正文一致的 Organization JSON-LD"
+                "（法定名称、官网、logo、联系方式），不要填写与正文冲突的字段。"
+            ),
             "code": ORG_JSONLD_EXAMPLE,
         })
     for c in (consistency.get("conflicts") or []):

@@ -259,7 +259,12 @@ class SchemaEntityTests(unittest.TestCase):
             schema = report["category_scores"]["schema"]["score"]
             self.assertLess(schema, entity)  # missing schema hurts schema dim, not entity
             self.assertTrue(any(f.get("id") == "SCH-ABSENT-BODY-CLEAR" for f in report["findings"]))
+            absent = next(f for f in report["findings"] if f.get("id") == "SCH-ABSENT-BODY-CLEAR")
+            self.assertIs(absent.get("scored"), True)
+            self.assertEqual(absent.get("severity"), "中")
             self.assertFalse(any("无法把站点归到真实实体" in (f.get("title") or "") for f in report["findings"]))
+            # Presence alone is 5 raw × 12/15 = 4.0 of the schema dimension.
+            self.assertEqual(schema, 0)
 
     def test_schema_conflict_is_not_high_completeness(self):
         html = HOME.replace("</head>", '''<script type="application/ld+json">
