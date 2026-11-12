@@ -32,9 +32,11 @@ from urllib.parse import urlparse
 
 try:
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 
 from combined_score import (
     CONTENT_WEIGHT,
@@ -1246,8 +1248,7 @@ ol.refs li{{margin:0 0 14px}}
     <p class="cover-sub">{esc(S['cover_sub'])}</p>
     <div class="cover-score">
       <div class="cbig">{esc(combined_disp)}<small>/100</small><em>{esc(combined_label)} {esc(str(combined_grade))}</em></div>
-      <div><div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{pct_disp}%"></span></div>
-      <div class="cm-scale"><span>0</span><span>{esc(S['pass_label'])}</span><span>{esc(S['good_label'])}</span><span>100</span></div></div>
+      <div>{meter_html(combined_score, S['pass_label'], S['good_label'])}
       <p class="cover-score-note">{esc(S['tech_label'])}: {esc(tech_disp)}/100 ({esc(str(tech_grade))}) · {esc(S['content_label'])}: {esc(content_disp)}/100 ({esc(str(content_grade))})</p>
       <p class="cover-comp">{esc(S['weights_line'])} · {esc(gate_text)}</p>
       <p class="cover-score-note">{esc(S['cover_what'])}</p></div>

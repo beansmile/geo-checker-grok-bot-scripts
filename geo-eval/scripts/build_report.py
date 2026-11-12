@@ -28,9 +28,11 @@ from urllib.parse import urlparse
 
 try:
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 
 # Internal JSON fallback only (not printed in client HTML chrome)
 VERSION_FALLBACK = "v1.3"
@@ -913,6 +915,11 @@ def main():
 
     # HTML：正文按语言单独转义一次（防止 <title> 等 raw-text 元素吞掉后续文档）
     data_html = flatten(report, brand, lang=lang, escape_html=True)
+    data_html["cover_meter"] = meter_html(
+        report.get("overall_score", 0),
+        "Pass 60" if lang == "en" else "及格 60",
+        "Good 80" if lang == "en" else "良好 80",
+    )
     data_html["style"] = style
     if lang == "en":
         deck_js = deck_js.replace("已复制", "Copied")

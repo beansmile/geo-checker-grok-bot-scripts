@@ -9,6 +9,7 @@
 """
 import os, sys, json, html, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from report_meter import meter_html
 import build_report_official as O          # 复用 v2.0 组件与文案（会同时刷新 v1.1 / v2.0）
 B = O.B
 ROOT = B.ROOT
@@ -98,9 +99,7 @@ def page_footer():
     return f'<footer class="pf"><span>GEO SCORING · 评测报告（待审核）</span><span class="mono">报告编号 {E(DOC_NO)}</span></footer>'
 
 def cover_meter():
-    v = sc["overall_score"]
-    return f'''<div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{v}%"></span></div>
-      <div class="cm-scale"><span>0</span><span>及格 60</span><span>良好 80</span><span>100</span></div></div>'''
+    return meter_html(sc["overall_score"], "及格 60", "良好 80")
 
 def sev_strip():
     order = [("S1", "danger", "严重"), ("S2", "warning", "高"), ("S3", "info", "中"), ("S4", "muted", "低")]
@@ -660,10 +659,21 @@ pre{margin:0;color:#E2E8F0;padding:var(--space-4);overflow:auto;font-size:12.6px
 .cbig{font-size:78px;line-height:.9;font-weight:700;letter-spacing:-.04em}
 .cbig small{font-size:22px;color:#A5B4FC;font-weight:500;letter-spacing:0}
 .cbig em{display:block;font-style:normal;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#A5B4FC;margin-top:8px}
-.cmeter{min-width:260px}
-.cm-track{height:10px;border-radius:2px;background:rgba(255,255,255,.2);overflow:hidden}
-.cm-fill{display:block;height:100%;background:#fff}
-.cm-scale{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:#A5B4FC;font-family:var(--font-mono)}
+.cmeter{min-width:260px;position:relative}
+.cm-track{position:relative;height:12px;border-radius:6px;background:rgba(255,255,255,.2);overflow:visible}
+.cm-fill{display:block;height:100%;border-radius:6px;background:#fff}
+.cm-fill.is-low{background:#F87171}
+.cm-fill.is-mid{background:#FBBF24}
+.cm-fill.is-high{background:#34D399}
+.cm-track::before,.cm-track::after{content:"";position:absolute;top:-3px;width:2px;height:18px;background:rgba(255,255,255,.55);transform:translateX(-50%);pointer-events:none}
+.cm-track::before{left:60%}
+.cm-track::after{left:80%}
+.cm-scale{position:relative;height:16px;margin-top:10px;font-size:11.5px;color:#A5B4FC;font-family:var(--font-mono)}
+.cm-k{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
+.cm-k-0{left:0;transform:none}
+.cm-k-60{left:60%}
+.cm-k-80{left:80%}
+.cm-k-100{left:100%;transform:translateX(-100%)}
 .cover-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--space-4) var(--space-6);
  border-top:1px solid rgba(255,255,255,.22);padding-top:var(--space-5);margin:0}
 .cover-facts dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#A5B4FC;margin-bottom:5px}
@@ -783,7 +793,13 @@ ul.bullets li::before{content:"";position:absolute;left:2px;top:16px;width:6px;h
  .page-dark{background:#fff;color:var(--text);--text:#0F172A;--text-2:#475569;--text-3:#5E6C7F;--border:#E2E8F0;
   --border-2:#CBD5E1;--surface:#F7F9FC;--surface-2:#F7F9FC;--surface-3:#E8EEF5;--primary:#4F46E5;--mark-bg:#4F46E5;--mark-fg:#fff}
  .cover h1,.cover-sub,.cbig small,.cover-no,.cover-facts dt,.cover-sign,.cm-scale,.cover .pkicker{color:inherit!important}
- .cover-sub{color:#475569!important}.cm-fill{background:#0F172A}.cm-track{background:#E8EEF5}
+ .cover-sub{color:#475569!important}
+ .cm-track{background:#E8EEF5}
+ .cm-track::before,.cm-track::after{background:#94A3B8}
+ .cm-fill.is-low{background:#DC2626}
+ .cm-fill.is-mid{background:#D97706}
+ .cm-fill.is-high{background:#15803D}
+ .cm-fill{background:#0F172A}
  .cover{border-bottom:2px solid var(--text);padding-bottom:6mm}
  .frow,.arow,.callout,.codewrap,.evrow li,.signrow{break-inside:avoid}
  .page{animation:none!important;opacity:1!important;transform:none!important}

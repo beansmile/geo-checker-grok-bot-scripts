@@ -29,10 +29,12 @@ from datetime import datetime
 
 try:
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 except ImportError:
     import os as _os, sys as _sys
     _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
+    from report_meter import meter_html
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
@@ -1029,8 +1031,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     <h1>{esc(brand)}<br>{esc(S['cover_h1'])}</h1>
     <p class="cover-sub">{esc(S['cover_sub'])}</p>
     <div class="cover-score"><div class="cbig">{esc(score_disp)}<small>/100</small><em>{esc(S['cover_score_em'].format(grade=grade))}</em></div>
-    <div><div class="cmeter"><div class="cm-track"><span class="cm-fill" style="width:{pct}%"></span></div>
-    <div class="cm-scale"><span>0</span><span>{esc(S['pass_label'])}</span><span>{esc(S['good_label'])}</span><span>100</span></div></div>
+    <div>{meter_html(score, S['pass_label'], S['good_label'])}
     <p class="cover-score-note">{esc(S['cover_score_note'].format(conf=conf))}</p></div></div>
   </div>
   <dl class="cover-facts">
