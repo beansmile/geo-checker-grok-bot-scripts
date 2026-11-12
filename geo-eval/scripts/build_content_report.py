@@ -94,17 +94,14 @@ def looks_cjk(s: str | None) -> bool:
 STRINGS = {
     "en": {
         "html_lang": "en",
-        "title_suffix": "Content GEO Report",
+        "title_suffix": "GEO Content Report",
         "meta_desc": "Content GEO evaluation for {domain}: {score}/100 ({grade}).",
-        "topbar_doc": "{brand} · Content GEO · {domain}",
+        "topbar_doc": "{domain} GEO Content Report",
         "cover_no": "Beansmile · GEO Checker",
-        "cover_kicker": "Generative Engine Optimization · Content evaluation",
-        "cover_h1": "Content GEO Report",
-        "cover_sub": (
-            "Whether site content can be understood, trusted, and cited — architecture, "
-            "page types, writing, authority evidence, and buyer-question coverage."
-        ),
-        "cover_score_em": "Content GEO {grade}",
+        "cover_kicker": "Generative Engine Optimization",
+        "cover_h1": "GEO Content Report",
+        "cover_sub": "Checks whether the site’s content is clear, credible, and able to answer buyers’ questions.",
+        "cover_score_em": "Content score {grade}",
         "pass_label": "Pass 60",
         "good_label": "Good 80",
         "cover_score_note": "Confidence: {conf}. Not a search-ranking audit.",
@@ -114,7 +111,7 @@ STRINGS = {
         "grade_scale": "Grade scale",
         "grade_scale_value": "A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60",
         "prepared_by": "Prepared by Beansmile · GEO Checker",
-        "footer": "GEO Checker · Content GEO",
+        "footer": "GEO Checker · Content report",
         "docfoot": (
             "Content GEO evaluation by Beansmile · GEO Checker. Measures whether website "
             "content can be understood, trusted and cited — not rankings, traffic, or "
@@ -270,50 +267,43 @@ STRINGS = {
     },
     "zh": {
         "html_lang": "zh-CN",
-        "title_suffix": "内容 GEO 评测报告",
-        "meta_desc": "{domain} 内容 GEO 评测：{score}/100（{grade}）。",
-        "topbar_doc": "{brand} · 内容 GEO · {domain}",
+        "title_suffix": "GEO 内容报告",
+        "meta_desc": "{domain} GEO 内容报告：内容分 {score}/100（{grade}）。",
+        "topbar_doc": "{domain} GEO 内容报告",
         "cover_no": "Beansmile · GEO Checker",
-        "cover_kicker": "生成式引擎优化 · 内容评测",
-        "cover_h1": "内容 GEO 评测报告",
-        "cover_sub": (
-            "评估站点内容是否可被生成式引擎理解、信任与引用——信息架构、页面类型、写作质量、"
-            "权威证据与采购问题覆盖。"
-        ),
-        "cover_score_em": "内容 GEO {grade}",
+        "cover_kicker": "生成式引擎优化",
+        "cover_h1": "GEO 内容报告",
+        "cover_sub": "检查网站内容是否写得清楚、可信，能否回答买家的问题。",
+        "cover_score_em": "内容分 {grade}",
         "pass_label": "及格 60",
         "good_label": "良好 80",
-        "cover_score_note": "置信度：{conf}。非搜索排名审计。",
+        "cover_score_note": "60 分以下表示准备不足。这不是搜索排名，也不表示 AI 已经提到你的次数。",
         "site": "站点",
         "report_date": "报告日期",
         "pages_analyzed": "分析页数",
         "grade_scale": "等级刻度",
         "grade_scale_value": "A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60",
         "prepared_by": "Beansmile · GEO Checker 编制",
-        "footer": "GEO Checker · 内容 GEO",
-        "docfoot": (
-            "Beansmile · GEO Checker 内容 GEO 评测。衡量网站内容是否可被理解、信任与引用——"
-            "不代表排名、流量或保证被 AI 提及。"
-        ),
+        "footer": "GEO Checker · 内容报告",
+        "docfoot": "Beansmile · GEO Checker 内容报告。分数反映内容是否清楚、可信，不是搜索排名或访问量。",
         "sec_overall": "01 总体评价",
         "kicker_overall": "01 总体评价",
-        "h2_overall": "内容 GEO：{score} / 100（{grade}）",
-        "fetch_disclosure": "抓取披露",
+        "h2_overall": "内容分：{score} / 100（{grade}）",
+        "fetch_disclosure": "抓取说明",
         "one_line": "一句话结论",
         "sec_method": "02 评分方法",
         "kicker_method": "02 评分方法",
-        "h2_method": "内容 GEO 分数如何计算",
+        "h2_method": "内容分是怎么计算的",
         "method_body": (
-            "五个维度合计 100 分。标题、抓取路径、sitemap/robots 等发现辅助项见技术报告的 SEO 章节。"
+            "五个部分合计 100 分。页面标题、网站地图和 robots.txt 等情况，见技术报告。"
         ),
         "th_dimension": "维度",
         "th_score": "得分",
         "th_max": "满分",
         "th_grade": "等级",
-        "total_row": "内容 GEO 总分",
+        "total_row": "内容总分",
         "grade_note": (
-            "等级刻度：A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D &lt; 60 · F = 无法评测。"
-            "内容 GEO 量规。"
+            "等级：A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D &lt; 60。"
         ),
         "sec_strengths": "03 已有基础",
         "kicker_strengths": "03 表现良好的部分",
@@ -369,7 +359,7 @@ STRINGS = {
         "h2_actions": "有序下一步",
         "sec_scope": "检测范围",
         "kicker_scope": "检测范围",
-        "h2_scope": "本次评测覆盖范围",
+        "h2_scope": "本次检查范围",
         "fetch_mode": "抓取模式",
         "pages_analyzed_inline": "分析页数",
         "sample_urls": "抽样 URL",
@@ -380,21 +370,18 @@ STRINGS = {
         "kicker_timeline": "12 后续跟进",
         "h2_timeline": "有序下一步与时间表",
         "none": "—",
-        "md_title": "{brand} — 内容 GEO 评测报告",
+        "md_title": "{domain} GEO 内容报告",
         "md_intro": (
-            "本报告评估站点**内容**是否可被生成式引擎理解、信任与引用：信息架构、页面类型与缺口、"
-            "写作质量、权威证据，以及对真实采购问题的覆盖（含标注方法的 AI / 搜索可见性检查）。"
-            "**GEO = 生成式引擎优化**（网站），不是地理。"
+            "本报告检查网站内容是否写得清楚、可信，能否回答买家的问题。"
         ),
         "md_h_overall": "## 1. 总体评价",
         "md_one_line": "> **一句话结论**：{closing}",
         "md_fetch": "**抓取披露**：{text}",
-        "md_h_method": "## 2. 内容 GEO 评分方法",
+        "md_h_method": "## 2. 内容分是怎么计算的",
         "md_method_body": (
-            "五个维度合计 100 分。SEO 内容可发现性（标题、抓取路径、sitemap/robots 等发现辅助）"
-            "计入技术 GEO 就绪报告，不在本报告。"
+            "五个部分合计 100 分。页面标题、网站地图和 robots.txt 等情况见技术报告。"
         ),
-        "md_grade_scale": "等级刻度：A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D < 60 · F = 无法评测。",
+        "md_grade_scale": "等级：A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D < 60。",
         "md_h_strengths": "## 3. 表现良好的部分",
         "md_none_listed": "- _（暂无）_",
         "md_h_dims": "## 4. 分维度评估",
@@ -435,7 +422,7 @@ STRINGS = {
         "md_h_conclusion": "## 14. 结论",
         "md_prepared": "*Beansmile · GEO Checker 编制*",
         "md_pending": "_待充实。_",
-        "md_total": "内容 GEO 总分",
+        "md_total": "内容总分",
         "unevaluable": "无法评测",
         "confidence_prefix": "置信度：",
     },
@@ -1028,7 +1015,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
 
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(brand)} {esc(S['title_suffix'])} · {esc(domain)}</title>
+<title>{esc(domain)} {esc(S['title_suffix'])}</title>
 <meta name="description" content="{esc(S['meta_desc'].format(domain=domain, score=score_disp, grade=grade))}">
 <style>{style_css}
 /* Content GEO extras on shared technical stylesheet */
@@ -1054,7 +1041,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     <span class="cover-no mono">{esc(S['cover_no'])}</span></div>
   <div class="cover-mid">
     <div class="pkicker light">{esc(S['cover_kicker'])}</div>
-    <h1>{esc(brand)}<br>{esc(S['cover_h1'])}</h1>
+    <h1>{esc(domain)}<br>{esc(S['cover_h1'])}</h1>
     <p class="cover-sub">{esc(S['cover_sub'])}</p>
     <div class="cover-score"><div class="cbig">{esc(score_disp)}<small>/100</small><em>{esc(S['cover_score_em'].format(grade=grade))}</em></div>
     <div>{meter_html(score, S['pass_label'], S['good_label'])}

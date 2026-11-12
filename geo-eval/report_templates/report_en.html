@@ -1,11 +1,11 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{brand}} GEO Readiness Report · {{domain}}</title>
-<meta name="description" content="GEO on-site readiness report for {{domain}}: readiness {{overall_score}}/100 ({{grade}}).">
+<title>{{domain}} GEO Technical Report</title>
+<meta name="description" content="{{domain}} GEO technical report: technical score {{overall_score}}/100 ({{grade}}).">
 <style>{{style}}</style></head><body>
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
-  <span class="doc">{{brand}} · GEO on-site readiness assessment · {{domain}}</span>
+  <span class="doc">{{domain}} GEO Technical Report</span>
   <span class="right"><span class="now">Section <b id="now-page">01 / {{total_pages_pad}}</b></span>
   <button class="btn" type="button" onclick="document.getElementById('index').classList.add('show')">Index</button></span>
 </div><div class="progress"><i></i></div></div>
@@ -16,9 +16,9 @@
   <div class="cover-top"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#fff"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="#312E81"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="#312E81" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="#312E81" opacity=".62"/></svg><b>GEO Checker</b></span>
     <span class="cover-no mono">Beansmile · GEO Checker</span></div>
   <div class="cover-mid">
-    <div class="pkicker light">Generative Engine Optimization · Technical &amp; content readiness assessment</div>
-    <h1>{{brand}}<br>GEO Readiness Report</h1>
-    <p class="cover-sub">Checks whether your website states clearly who you are, what you offer and where your numbers come from — the foundation for AI to understand, trust and recommend you.</p>
+    <div class="pkicker light">Generative Engine Optimization</div>
+    <h1>{{domain}}<br>GEO Technical Report</h1>
+    <p class="cover-sub">Checks whether the site can be crawled, read and verified by AI search, from a technical point of view.</p>
     <div class="cover-score"><div class="cbig">{{overall_score}}<small>/100</small><em>On-site readiness {{grade}}</em></div><div>{{cover_meter}}<p class="cover-score-note">Below 60 means not ready. This is not a search ranking, and it does not measure how often AI actually mentions you.</p></div></div>
   </div>
   <dl class="cover-facts">
@@ -37,17 +37,17 @@
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 02 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">Orientation</div><h2>Read this report in three minutes</h2></div></div>
   <div class="nextgrid">
-    <div><span class="dimcell-n mono">1 · What we checked</span><p>Whether your website can be understood, trusted and cited by AI search and answer engines such as ChatGPT, Perplexity and Google AI Overviews.</p></div>
-    <div><span class="dimcell-n mono">2 · What {{overall_score}} / 100 ({{grade}}) means</span><p>It is not an exam grade or a search ranking. It reports whether the site states clearly who the brand is and whether its content can be used as fact — and whether AI can read and trust it.</p></div>
-    <div><span class="dimcell-n mono">3 · Why it matters now</span><p>Buyers are shifting from search engines to asking AI directly. Which supplier AI recommends depends on whose website it can read and trust.</p></div>
-    <div><span class="dimcell-n mono">4 · What you need to do</span><p>Most issues are one-off legacy problems: a single focused clean-up resolves the majority. Start with the action list under Priority actions.</p></div>
+    <div><span class="dimcell-n mono">1 · What we checked</span><p>This report checks whether the site can be crawled and understood by AI search, including crawler access, page structure and structured data.</p></div>
+    <div><span class="dimcell-n mono">2 · What {{overall_score}} / 100 ({{grade}}) means</span><p>This is the technical score. Below 60 means readiness is insufficient. It is not a search ranking, and it is not a count of AI mentions.</p></div>
+    <div><span class="dimcell-n mono">3 · Why it matters</span><p>AI has to be able to open and read your pages before it can use your content to answer questions.</p></div>
+    <div><span class="dimcell-n mono">4 · What to do next</span><p>Start with the action list under Priority recommendations.</p></div>
   </div>
   <div class="sublab">How to read this report</div>
   <div class="readguide">
     <div><b>Quick scan</b><span class="mono">~3 min</span><p>This page &rarr; Overall assessment &rarr; Action list &rarr; Conclusion.</p></div>
     <div><b>Full read</b><span class="mono">~30 min</span><p>Overall assessment &rarr; Key findings &rarr; Dimension assessment &rarr; Action list.</p></div>
     <div><b>Technical reference</b><span class="mono">as needed</span><p>Scoring method, dimension assessment, and reference code for your web vendor.</p></div>
-  </div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  </div><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 3 index -->
 <section class="page" id="p3" data-page="3" aria-label="Section 3 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -69,7 +69,7 @@
     <li><span class="n mono">{{p_conclusion}}</span><a href="#p{{p_conclusion}}">Conclusion</a><span class="dots"></span><span class="c mono">07</span></li>
     <li><span class="n mono">{{p_glossary}}</span><a href="#p{{p_glossary}}">Appendix · Glossary</a><span class="dots"></span><span class="c mono">A</span></li>
   </ol>
-  <p class="note">To navigate: scroll, or press &larr; / &rarr; to move a section, ESC to open the index. Each section is self-contained.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">To navigate: scroll, or press &larr; / &rarr; to move a section, ESC to open the index. Each section is self-contained.</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 4 overall -->
 <section class="page" id="p4" data-page="4" aria-label="Section 4 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -84,7 +84,7 @@
     <div><span class="statn">Impact</span><p>These issues make it harder for AI and search engines to confirm <b>who the brand is and whether a given passage can be treated as fact</b>. Whether they reduce how often ChatGPT, Perplexity or Google AI Overviews name you was not measured here; that remains an inference to be verified later.</p></div>
   </div>
   <div class="callout"><b>One-line conclusion</b><p>{{closing}}</p></div>
-  <p class="note">The score in this report measures readiness to be correctly understood, trusted and cited by generative search engines. It is not a ranking or traffic outcome.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">The score in this report measures readiness to be correctly understood, trusted and cited by generative search engines. It is not a ranking or traffic outcome.</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 5 strengths -->
 <section class="page" id="p5" data-page="5" aria-label="Section 5 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -92,7 +92,7 @@
   <span class="ph-right"><span class="mono">{{date}}</span><span class="pgnum mono">Section 05 / {{total_pages}}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">02 What's already working</div><h2>Existing foundations</h2></div></div>
   <ul class="plain">{{#strengths}}<li>{{.}}</li>{{/strengths}}</ul>
-  <p class="note">These are the existing foundations confirmed as sound during the assessment. Keep them intact through any changes.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">These are the existing foundations confirmed as sound during the assessment. Keep them intact through any changes.</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 
 <!-- 6 dimension score preview (immediately before scoring method) -->
@@ -109,7 +109,7 @@
     </div>
   </div>
   <p class="note">Dimension total <b class="mono">{{dim_sum}}</b> / 100. The next section covers adjustments and the final score.</p>
-  <footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 7 method -->
 <section class="page" id="p7" data-page="7" aria-label="Section 7 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -142,7 +142,7 @@
     <li>To be AI-friendly, both <b>access crawlers</b> (search-index and on-demand fetchers such as Googlebot, OAI-SearchBot, Claude-SearchBot, PerplexityBot and ChatGPT-User) and <b>training crawlers</b> (such as GPTBot, ClaudeBot and Google-Extended) should be allowed, but they serve different purposes and are scored differently. Access crawlers are a prerequisite for content to be considered in AI search; blocking them deducts the core access penalty (−15, once). Training crawlers collect corpora for model training and should also be allowed; a block is reported as a recommended fix, but it does not take the same core penalty and must not be written as “a search engine cannot see this site.” Vendors configure the two separately: blocking GPTBot does not mean ChatGPT search is blocked; blocking Google-Extended does not affect Google Search or AI Overviews, though allowing it is still recommended so Gemini and similar products may use the content for training.</li>
     <li>Title and meta description length, number of headings per page and similar items are <b>hygiene checks</b> used to keep the assessment consistent. They are not hard search engine requirements. What matters is whether content can be cited as a block and carries verifiable facts.</li>
     <li>Checked against official guidance: Google states meta descriptions have no fixed length limit (longer ones are simply truncated in display); structured data is not a general ranking factor (this report still scores it as machine-readability, not as a Google ranking factor); FAQ rich results stopped showing on 7 May 2026 (the Search Console report retired in June 2026 and API support in August 2026), and HowTo rich results were retired in 2023; an organisation's official accounts (sameAs) and contact points (contactPoint) are recommended where applicable, not required.</li>
-  </ul><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  </ul><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 8 findings overview -->
 <section class="page" id="p8" data-page="8" aria-label="Section 8 of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -151,7 +151,7 @@
   <div class="ptitle"><div><div class="pkicker">03 Key findings</div><h2>The {{findings_count}} issues to prioritise</h2></div>
   <div class="pmeta mono dim">Ordered by impact</div></div>
   <ol class="toc">{{toc_findings_html}}</ol>
-  <p class="note">Each issue has its own page with the original evidence and a recommended fix; some include paste-ready reference code (examples only — replace with your real values).</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">Each issue has its own page with the original evidence and a recommended fix; some include paste-ready reference code (examples only — replace with your real values).</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- findings (one page each) -->
 {{#findings}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="Section {{page}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -164,7 +164,7 @@
   <p class="fix lead-fix">{{solution}}</p>
   {{evidence_html}}
   {{code_html}}
-  <footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>{{/findings}}
+  <footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>{{/findings}}
 
 <!-- dimension overview -->
 <section class="page" id="p{{p_dims_index}}" data-page="{{p_dims_index}}" aria-label="Section {{p_dims_index}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -175,7 +175,7 @@
   <figure class="chart" role="img" aria-label="Scores and headroom across the ten dimensions"><div class="lc">{{#dim_pages}}<div class="lc-row"><div class="lc-name">{{name}}</div>
     <div class="lc-track"><span class="lc-fill" style="width:{{pct}}%;background:{{bar}}"></span><span class="lc-space" style="width:{{remaining}}%"></span></div>
     <div class="lc-val"><b>{{score}}</b><span>/{{max}}</span><em class="g {{g_class}}">{{grade}}</em></div></div>{{/dim_pages}}</div><figcaption>The dark bar is the current score; the light bar is the remaining headroom. Each bar is scaled to that dimension's own maximum (12 / 15 / 10 / 5).</figcaption></figure>
-  <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <div class="dimgrid">{{#dim_pages}}<a class="dimcell" href="#{{anchor}}"><span class="dimcell-n mono">{{n}}</span><b>{{name}}</b><span class="dimcell-s {{c_class}}">{{score}}/{{max}} · {{grade}}</span></a>{{/dim_pages}}</div><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- dimensions (one page each) -->
 {{#dim_pages}}<section class="page" id="{{anchor}}" data-page="{{page}}" aria-label="Section {{page}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -186,7 +186,7 @@
   <div class="mini"><i style="width:{{pct}}%;background:{{bar}}"></i></div>
   <div class="narr">{{narr}}</div>
   <div class="sublab">Main findings in this dimension</div>{{findings_html}}
-  <div class="callout"><b>How to improve</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
+  <div class="callout"><b>How to improve</b><p>{{callout}}</p></div><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>{{/dim_pages}}
 
 
 <!-- SEO dimension is rendered via dim_pages -->
@@ -197,7 +197,7 @@
   <div class="ptitle"><div><div class="pkicker">05 Priority actions</div><h2>Action list, ordered by priority</h2></div></div>
   <p class="narr">Expectation: completing the first few items should visibly improve the score under this report's scale. <b>This is a directional estimate — it reflects only the removal of scored deductions, and does not guarantee more actual AI citations.</b></p>
   <div class="actions">{{#action_rows}}<div class="arow"><div><h4>{{action}}</h4><p>{{detail}}</p></div><span class="owner {{owner_class}}">{{owner}}</span>{{sev_span}}</div>{{/action_rows}}</div>
-  <p class="note">The fix text doubles as the acceptance criterion. Scores are left for internal re-testing.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">The fix text doubles as the acceptance criterion. Scores are left for internal re-testing.</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- scope -->
 <section class="page" id="p{{p_scope}}" data-page="{{p_scope}}" aria-label="Section {{p_scope}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -208,7 +208,7 @@
   {{scope_note_html}}
   {{scope_warning_html}}
   <div class="sevbar"><div class="sb-track">{{scope_bars}}</div><div class="sb-legend">{{scope_legend}}<span class="muted">{{sampled_count}} pages sampled</span></div></div>
-  <p class="note">Assessment is based on the site snapshot taken on {{date}}. Findings must be re-verified after page content or structure changes.</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">Assessment is based on the site snapshot taken on {{date}}. Findings must be re-verified after page content or structure changes.</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- conclusion -->
 <section class="page" id="p{{p_conclusion}}" data-page="{{p_conclusion}}" aria-label="Section {{p_conclusion}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -219,7 +219,7 @@
   <div class="narr lead">{{closing}}</div>
   <div class="nextgrid">{{#next_steps}}<div><span class="dimcell-n mono">{{label}}</span><b>{{title}}</b><p>{{body}}</p></div>{{/next_steps}}</div>
   {{timeline_html}}
-  <p class="note">GEO Checker · Beansmile</p><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  <p class="note">GEO Checker · Beansmile</p><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- appendix glossary -->
 <section class="page" id="p{{p_glossary}}" data-page="{{p_glossary}}" aria-label="Section {{p_glossary}} of {{total_pages}}"><header class="ph"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="var(--mark-bg)"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="var(--mark-fg)"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="var(--mark-fg)" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="var(--mark-fg)" opacity=".62"/></svg><b>GEO Checker</b></span>
@@ -237,7 +237,7 @@
     <tr><td><b>Lorem ipsum</b></td><td>Placeholder filler text left in a template — an empty shop sign</td></tr>
     <tr><td><b>canonical / robots.txt</b></td><td>Tells machines which is the official URL, and who is allowed in to read the site</td></tr>
     <tr><td><b>Recoverable deductions</b></td><td>Removing these deductions raises the score on our scale. It does not guarantee AI mentions you more often</td></tr>
-  </tbody></table><footer class="pf"><span>GEO Checker · Readiness report</span><span class="mono">Beansmile</span></footer></section>
+  </tbody></table><footer class="pf"><span>GEO Checker · Technical report</span><span class="mono">Beansmile</span></footer></section>
 </div>
 
 <div class="index" id="index" role="dialog" aria-modal="true" aria-label="Report index">

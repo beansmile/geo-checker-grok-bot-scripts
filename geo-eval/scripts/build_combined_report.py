@@ -215,15 +215,10 @@ SOURCES = [
 STRINGS = {
     "en": {
         "html_lang": "en",
-        "doc_title": "Combined GEO Report",
-        "cover_kicker": "Generative Engine Optimization · Combined package",
-        "cover_h1": "Combined GEO Report",
-        "cover_sub": (
-            "This package brings together the technical on-site readiness evaluation "
-            "(10 dimensions /100, including SEO content discoverability) and the Content GEO evaluation "
-            "(architecture, taxonomy, writing, authority evidence, buyer-question coverage). "
-            "The two component scores stay independent; the combined score is a third headline number."
-        ),
+        "doc_title": "GEO Combined Report",
+        "cover_kicker": "Generative Engine Optimization",
+        "cover_h1": "GEO Combined Report",
+        "cover_sub": "Combines the technical and content evaluations into one overall score, with priority recommendations.",
         "site": "Site",
         "report_date": "Report date",
         "tech_label": "Technical readiness",
@@ -231,18 +226,15 @@ STRINGS = {
         "content_label": "Content GEO",
         "combined_label": "Combined score",
         "combined_label_sampled": "Sampled-pages combined score",
-        "cover_tech_note": "SEO dim included in technical /100",
-        "tech_card_sub": "10 dimensions · incl. SEO /15 · weight 40%",
-        "content_card_sub": "5 dimensions · weight 60%",
-        "combined_card_sub": "Technical 40% + Content 60%, then an access gate",
+        "cover_tech_note": "SEO is included in the technical score",
+        "tech_card_sub": "10 items · includes SEO (15 pts) · 40%",
+        "content_card_sub": "5 items · 60%",
+        "combined_card_sub": "Technical 40% + content 60%; capped if search crawlers are blocked",
         "weights_line": "Weights: content 60% · technical 40%",
-        "gate_off": "Access gate not applied",
-        "gate_hard": "Access gate applied: combined score capped at 30",
-        "gate_soft": "Access gate applied: combined score capped at 50",
-        "cover_what": (
-            "This is an on-site readiness combined score, not a citation rate, "
-            "mention rate, ranking, or traffic forecast."
-        ),
+        "gate_off": "Search crawlers can access the site, so the combined score is not capped.",
+        "gate_hard": "Search crawlers are blocked, so the combined score is capped at 30.",
+        "gate_soft": "Some search crawlers are blocked, so the combined score is capped at 50.",
+        "cover_what": "This is a combined score, not a search ranking, and it does not predict traffic or whether AI will mention you.",
         "grade_scale": "Grade scale",
         "grade_scale_value": "A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60",
         "pass_label": "Pass 60",
@@ -258,11 +250,9 @@ STRINGS = {
         "intro_kicker": "01 Combined conclusion",
         "intro_h2": "What this combined score means",
         "intro_lead": (
-            "The combined score is an executive headline for on-site readiness: "
-            "technical readiness contributes 40%, Content GEO contributes 60%, and an access "
-            "gate may cap the result when search indexing or on-demand crawlers are blocked. "
-            "It is <strong>not</strong> a citation rate, mention rate, share of voice, ranking, "
-            "or traffic prediction, and it does not guarantee that a generative engine will cite this site."
+            "The combined score brings the technical score (40%) and the content score (60%) together. "
+            "If search crawlers are blocked, the combined score is capped. "
+            "It is not a search ranking, and it does not predict traffic or whether AI will mention you."
         ),
         "intro_this_score": (
             "This site’s {label} is {score}/100 ({grade}). Technical readiness is {tech}/100 ({tech_grade}); "
@@ -279,10 +269,8 @@ STRINGS = {
         "scores_kicker": "02 Score composition",
         "scores_h2": "How the combined score is calculated",
         "scores_note": (
-            "The two component scores remain independent and are still shown in full. "
-            "The combined score is a third headline: it weights the displayed technical overall "
-            "at 40% and the displayed Content GEO overall at 60%, then applies an access gate. "
-            "It is not a third independent rubric, and it does not average the two scores as 50/50."
+            "The technical and content scores are still shown on their own. "
+            "The combined score is 40% technical and 60% content; it is capped if search crawlers are blocked."
         ),
         "formula_label": "Formula used in this report",
         "formula_text": "Combined = clamp(0, 100, snap-to-0.5(0.40 × technical + 0.60 × content))",
@@ -294,41 +282,25 @@ STRINGS = {
             "A combined score is not published because one of the two component scores is missing."
         ),
         "narrative_kicker": "How to read the 40/60 contract",
-        "layer1_lead": "Layer 1 — Technical discoverability is a prerequisite for content to be considered.",
+        "layer1_lead": "What the technical score covers",
         "layer1_body": (
-            "This maps to the access gate, and to keeping a 40% technical weight. "
-            "Google states that a page must already be indexed and meet Search technical requirements "
-            "to be eligible to appear as a supporting link in AI Overviews or AI Mode; meeting those "
-            "technical requirements also applies to AI formats. Official documentation from OpenAI, "
-            "Anthropic, Meta, and Kimi independently supports this access-eligibility layer: allowing "
-            "each vendor’s search crawler is described as a prerequisite for appearing in that vendor’s "
-            "search results or being cited. Training-crawler blocks (for example GPTBot, ClaudeBot, "
-            "or KimiBot) do not trigger this gate, which is consistent with those vendors’ practice of "
-            "keeping training and search settings independent. Training crawlers should still be "
-            "allowed if the site wants to be AI-friendly, so the content can enter model-training "
-            "corpora; that is a recommendation, not a trigger for this gate."
+            "The technical score is 40% of the combined score. It looks at whether the site can be crawled and understood. "
+            "If search crawlers are blocked, the combined score is capped. "
+            "A block on training crawlers (such as GPTBot or ClaudeBot) does not trigger that cap, "
+            "but those crawlers should still be allowed if you want the content to enter model-training material."
         ),
-        "layer2_lead": "Layer 2 — Once a site is accessible, differentiation is in the content.",
+        "layer2_lead": "What the content score covers",
         "layer2_body": (
-            "This maps to a 60% content weight. Google is currently the only major vendor that "
-            "explicitly says creating unique, useful content will, over time, likely influence a site’s "
-            "presence in generative AI search more than the other suggestions in its guide. The KDD 2024 "
-            "paper “GEO: Generative Engine Optimization” found that content-side methods (such as adding "
-            "statistics, quotations, and citations) can improve visibility in generative-engine answers "
-            "once a source has already been retrieved. OpenAI only says that ranking uses multiple factors "
-            "to help users find “relevant, reliable information,” and that placement is not guaranteed — "
-            "that must not be stretched into a claim that OpenAI also says content weighs more than technical access."
+            "The content score is 60% of the combined score. It looks at whether the writing is clear and credible, "
+            "and whether it can answer buyers’ questions. "
+            "Once a site can be accessed, content does more to decide whether AI will use the information, "
+            "so content carries the larger weight."
         ),
-        "layer3_lead": "Layer 3 — 40/60 is our product contract, not a percentage any vendor published.",
+        "layer3_lead": "How to read the score",
         "layer3_body": (
-            "We do not use 50/50, because that would treat “whether a page can be considered” as equal "
-            "to “what wins after it is considered,” which would sit poorly with Google’s statement that "
-            "content is likely to matter more. We do not use 30/70, because our technical 100 already "
-            "includes discoverability, HTML absorption, and page quality; lowering the technical weight "
-            "further would understate extractability barriers that are real on JavaScript-heavy sites. "
-            "Vendor statements apply only to that vendor’s own product. The paper’s observation that "
-            "content-side methods can boost visibility by up to 40% is an experimental result; it is "
-            "not the same thing as our 40% technical weight, and it is not a citation-rate promise."
+            "The technical and content scores are shown separately. "
+            "The combined score is 40% technical and 60% content, then rounded to the nearest 0 or 0.5. "
+            "This is how this report is calculated. Official notes and papers are listed at the end for reference."
         ),
         "max": "Max",
         "grade": "Grade",
@@ -350,18 +322,17 @@ STRINGS = {
         "shared_kicker": "05 Shared findings",
         "shared_h2": "Issues that span both tracks",
         "shared_note": (
-            "The same root cause is written once here, with a note on which tracks it affects. "
-            "Technical absorption and content writing can both flag extractable-body gaps; "
-            "that overlap is disclosed, not deducted twice out of the combined score."
+            "The same issue is written once here, with a note on whether it affects the technical score, "
+            "the content score, or both. Thin extractable text can affect both; it is not deducted again "
+            "from the combined score."
         ),
         "timeline_kicker": "06 Priority actions & effort",
         "timeline_h2": "Unified next steps and an effort-based timeline",
         "timeline_intro": (
-            "Durations come from this run’s findings and priority actions — not a fixed "
-            "multi-week calendar. HTTPS/crawl restores are same-day work; content builds take longer. "
-            "Adjust owners and overlap to your capacity; finish with a same-sample re-test. "
-            "These items describe a direction of improvement; they do not promise that the combined "
-            "score will reach a stated target."
+            "Timelines are estimates from this run and can be adjusted. "
+            "Access and page-structure fixes can often be done quickly; content work takes longer. "
+            "After changes, we recommend testing the same sample pages again. "
+            "The table describes a direction of improvement; it does not promise a specific combined score."
         ),
         "actions_h3": "Priority actions from both tracks",
         "priority": "Priority",
@@ -373,37 +344,32 @@ STRINGS = {
         "scope_kicker": "07 Scope & disclosure",
         "scope_h2": "What was evaluated",
         "scope_overlap": (
-            "The combined score is a composite of the two existing headline totals. "
-            "It does not deduplicate overlap between technical absorption and content writing, "
-            "or between entity and authority evidence."
+            "The combined score is calculated from the existing technical and content totals. "
+            "Thin extractable text can affect both scores; it is not deducted a third time from the combined score."
         ),
         "scope_excluded": (
-            "Not included in the combined score: mention rate, citation rate, share of voice; "
-            "llms.txt and other experimental conventions; off-site brand monitoring. "
-            "A training-crawler block does not trigger the access gate and is not entered into the "
-            "combined formula, but allowing those crawlers is still recommended so content can enter "
-            "model-training corpora."
+            "The combined score does not include how often AI mentions or cites the site, or files such as llms.txt. "
+            "A block on training crawlers does not lower the combined score, but those crawlers should still be allowed "
+            "so the content can enter model-training material."
         ),
-        "scope_absent": "“Not seen in scope” does not mean the type is absent from the entire site.",
+        "scope_absent": "Not seeing a page type in the sample does not mean it is missing from the whole site.",
         "unevaluated": "Types unevaluated or not seen in scope",
         "fetch_disclosure": "Fetch disclosure",
         "closing_kicker": "08 Closing",
         "closing_h2": "Closing",
         "closing_template": (
-            "The combined judgment is a {label} of {score}/100 ({grade}). {gate} "
-            "First action: {first} "
-            "We recommend re-testing against the same sample URLs. "
-            "This score does not represent rankings, traffic, or a guarantee of AI citation."
+            "The combined score is a {label} of {score}/100 ({grade}). {gate} "
+            "Recommended first step: {first} "
+            "We recommend testing the same sample pages again after changes. "
+            "This score is not a search ranking, and it does not guarantee that AI will cite the site."
         ),
         "refs_kicker": "09 Sources",
         "refs_h2": "Reference sources",
         "refs_disclaimer": (
-            "The following materials are cited to explain the scoring principles. "
-            "They do not mean that these organizations published or endorse this report’s "
-            "specific scores or weights. Each vendor’s statements apply only to that vendor’s "
-            "own products. Apart from Google, the vendor documents below mainly describe "
-            "access and display prerequisites and do not publish a content-versus-technical split. "
-            "Academic findings are experimental observations, not a citation-rate promise."
+            "The sources below explain the scoring principles. They do not mean these organizations "
+            "published or endorse this report’s scores or weights. Each vendor’s statements apply only "
+            "to that vendor’s own products. The 40/60 split is this report’s method, not a percentage "
+            "published by a vendor."
         ),
         "none": "—",
         "problem": "Problem",
@@ -411,23 +377,18 @@ STRINGS = {
         "fix": "Fix",
         "footer": "GEO Checker · Combined package",
         "docfoot": (
-            "Combined GEO package by Beansmile · GEO Checker. "
-            "Technical /100 and Content GEO /100 stay independent; the combined /100 is a third "
-            "headline (content 60%, technical 40%, plus an access gate). "
-            "Not rankings, traffic, or guaranteed AI mentions."
+            "Beansmile · GEO Checker combined report. "
+            "The technical and content scores are shown separately; the combined score is 40% technical and 60% content. "
+            "This is not a search ranking or a traffic forecast."
         ),
         "alt_link": "preprint",
     },
     "zh": {
         "html_lang": "zh-CN",
-        "doc_title": "GEO 综合评测报告",
-        "cover_kicker": "生成式引擎优化 · 综合包",
-        "cover_h1": "GEO 综合评测报告",
-        "cover_sub": (
-            "本综合包汇总技术侧站内就绪评测（十维 /100，含 SEO 内容可发现性）与内容侧 Content GEO 评测"
-            "（信息架构、分类与缺口、编写质量、权威证据、采购问题覆盖）。"
-            "技术分与内容分仍独立保留，综合分是第三个头条数。"
-        ),
+        "doc_title": "GEO 综合报告",
+        "cover_kicker": "生成式引擎优化",
+        "cover_h1": "GEO 综合报告",
+        "cover_sub": "把技术评测和内容评测合在一起，给出总分和优先改进建议。",
         "site": "站点",
         "report_date": "报告日期",
         "tech_label": "技术就绪度",
@@ -435,15 +396,15 @@ STRINGS = {
         "content_label": "内容 GEO",
         "combined_label": "综合分",
         "combined_label_sampled": "抽样页综合分",
-        "cover_tech_note": "SEO 维已计入技术 /100",
-        "tech_card_sub": "十维 · 含 SEO /15 · 权重 40%",
-        "content_card_sub": "五维 · 权重 60%",
-        "combined_card_sub": "技术 40% + 内容 60%，再视访问门槛封顶",
+        "cover_tech_note": "SEO 已计入技术分",
+        "tech_card_sub": "10 项 · 含 SEO 15 分 · 占 40%",
+        "content_card_sub": "5 项 · 占 60%",
+        "combined_card_sub": "技术 40% + 内容 60%；搜索爬虫被挡住时会设上限",
         "weights_line": "权重：内容 60% · 技术 40%",
-        "gate_off": "访问门槛未生效",
-        "gate_hard": "访问门槛已生效：综合分上限 30",
-        "gate_soft": "访问门槛已生效：综合分上限 50",
-        "cover_what": "这是站内准备度综合分，不是引用率、提及率、排名或流量预测。",
+        "gate_off": "搜索爬虫可以访问，综合分没有设上限。",
+        "gate_hard": "搜索爬虫被挡住，综合分上限为 30。",
+        "gate_soft": "部分搜索爬虫被挡住，综合分上限为 50。",
+        "cover_what": "这是综合分，不是搜索排名，也不预测访问量或 AI 会不会提到你。",
         "grade_scale": "等级刻度",
         "grade_scale_value": "A+≥90 · A≥80 · B≥70 · C≥60 · D&lt;60",
         "pass_label": "及格 60",
@@ -457,29 +418,27 @@ STRINGS = {
         "content_pages": "内容",
         "confidence": "置信度",
         "intro_kicker": "01 综合结论",
-        "intro_h2": "综合分是什么、本站卡在哪里",
+        "intro_h2": "综合分说明",
         "intro_lead": (
-            "本报告的综合分是站内准备度的管理头条：技术就绪度占 40%，内容 GEO 占 60%，"
-            "若搜索索引或按需抓取爬虫被拦截，再用访问门槛对综合分设上限。"
-            "它<strong>不是</strong>引用率、提及率、声量、排名或流量预测，也不保证生成式引擎会引用本站。"
+            "综合分把技术分和内容分合在一起：技术占 40%，内容占 60%。"
+            "如果搜索爬虫被挡住，综合分会有上限。"
+            "这不是搜索排名，也不预测访问量或 AI 会不会提到你。"
         ),
         "intro_this_score": (
-            "本站{label}为 {score} 分（{grade} 级）。技术就绪度 {tech}/100（{tech_grade}），"
-            "内容 GEO {content}/100（{content_grade}）。{gate}"
+            "本站{label}为 {score} 分（{grade} 级）。技术分 {tech}/100（{tech_grade}），"
+            "内容分 {content}/100（{content_grade}）。{gate}"
         ),
         "intro_tech": "技术侧",
         "intro_content": "内容侧",
-        "intro_priority": "建议先做的一条线",
+        "intro_priority": "建议先做",
         "intro_overlap": (
-            "可抽取正文不足会同时出现在技术吸收维与内容写作维。综合分直接使用两侧已有总分，"
-            "不对这一重叠做去重折算。"
+            "“能抽出的正文偏少”会同时影响技术分和内容分。综合分直接使用这两项已有总分，不再另外扣一次。"
         ),
         "scores_kicker": "02 分数构成",
         "scores_h2": "综合分如何计算",
         "scores_note": (
-            "技术 /100 与内容 GEO /100 仍独立保留，并在本页完整展示。"
-            "综合分是第三个头条数：先按展示中的技术总分 40%、内容总分 60% 加权，再视访问门槛封顶。"
-            "它不是第三套独立打分，也不是把两项按 50/50 平均。"
+            "技术分和内容分仍然单独显示。综合分按技术 40%、内容 60% 计算；"
+            "如果搜索爬虫被挡住，再设上限。"
         ),
         "formula_label": "本报告采用的算式",
         "formula_text": "综合分 = clamp(0, 100, 按 0.5 分档(0.40 × 技术分 + 0.60 × 内容分))",
@@ -488,36 +447,22 @@ STRINGS = {
         ),
         "formula_missing": "因缺少其中一侧总分，本次不发布综合分。",
         "narrative_kicker": "口径说明",
-        "layer1_lead": "第一层：技术可发现性是内容被考虑的前提。",
+        "layer1_lead": "技术分看什么",
         "layer1_body": (
-            "这对应本报告的访问门槛，以及技术分仍占 40%。"
-            "Google 写明：要作为 AI Overviews 或 AI Mode 的支持链接出现，页面必须已被索引，"
-            "且符合 Search 技术要求、能以摘要形式出现在搜索结果中；满足技术要求同样适用于 AI 格式。"
-            "OpenAI、Anthropic、Meta 和 Kimi 的官方文档也分别把允许各自的搜索爬虫访问，"
-            "写成出现在该产品搜索结果或被引用的前提，用于支撑这一访问资格层。"
-            "训练爬虫（如 GPTBot、ClaudeBot、KimiBot）被拦截不触发本门槛，"
-            "这与各家把训练和搜索分开设置的官方做法一致。"
-            "但要对 AI 友好，训练爬虫也应开放，以便内容进入模型训练语料；这是建议，不是本门槛的触发条件。"
+            "技术分占综合分的 40%，看网站能不能被抓取和读懂。"
+            "如果搜索爬虫被挡住，综合分会有上限。"
+            "训练爬虫（如 GPTBot、ClaudeBot）被挡住不会触发这个上限，"
+            "但仍建议开放，好让内容进入模型的学习材料。"
         ),
-        "layer2_lead": "第二层：一旦可被访问，差异化在内容。",
+        "layer2_lead": "内容分看什么",
         "layer2_body": (
-            "这对应内容分占 60%。目前只有 Google 在官方指南中明确写到："
-            "创造人们认为独特、有吸引力且有用的内容，长远来看很可能比该指南中其他建议，"
-            "更能影响网站在生成式 AI 搜索中的存在感。"
-            "KDD 2024 论文《GEO: Generative Engine Optimization》在来源已被检索到的前提下，"
-            "观察到补充统计、引语和出处等内容侧方法，可以提升在生成式引擎回答中的可见度。"
-            "OpenAI 只写到排名会用多项因素帮助用户找到「相关、可靠的信息」，且位置不保证——"
-            "不能据此写成 OpenAI 也认为内容权重大于技术。"
+            "内容分占综合分的 60%，看内容是否清楚、可信，能否回答买家的问题。"
+            "网站能被访问之后，内容更能决定 AI 会不会采用这些信息，所以内容权重大一些。"
         ),
-        "layer3_lead": "第三层：40/60 是我们据此定下的产品口径，不是任何一家厂商或论文公布的比例。",
+        "layer3_lead": "分数怎么读",
         "layer3_body": (
-            "不选 50/50，是避免把「能否被考虑」与「被考虑之后凭什么胜出」等量齐观，"
-            "这与 Google「内容影响可能更大」的表述不一致。"
-            "不选 30/70，是因为我们的技术 100 分里已包含 SEO 可发现性、正文吸收和页面质量；"
-            "技术权重再压低，会轻视 JavaScript 站点上真实存在的可抽取障碍。"
-            "各家官方陈述只适用于其自身产品。"
-            "论文里「可见度提升至多 40%」是内容侧实验观察，与本报告 40% 的技术权重不是同一回事，"
-            "也不是对客户引用结果的承诺。"
+            "技术分和内容分都会单独显示。综合分按技术 40%、内容 60% 计算，再按 0.5 分一档取值。"
+            "这是本报告的计算方式。报告最后附有相关的官方说明和论文，供查阅。"
         ),
         "max": "满分",
         "grade": "等级",
@@ -539,15 +484,15 @@ STRINGS = {
         "shared_kicker": "05 共通问题",
         "shared_h2": "同一根因、同时影响两侧的问题",
         "shared_note": (
-            "同一根因在此只写一次，并注明同时影响哪一侧。"
-            "技术吸收维与内容写作维都可能打到「可抽取正文不足」；综合分披露这一重叠，但不做去重折算。"
+            "同一问题在这里只写一次，并注明同时影响技术还是内容。"
+            "例如“能抽出的正文偏少”会同时影响两项分数，综合分不再另外扣一次。"
         ),
         "timeline_kicker": "06 统一优先行动与工期",
         "timeline_h2": "两侧合并的下一步与按工作量估算的时间表",
         "timeline_intro": (
-            "工期来自本轮发现与优先行动，不是拉长的多周日历。"
-            "HTTPS/抓取恢复按天计；内容建设更长。可按产能调整负责人与并行；收尾用同一批抽样 URL 复测。"
-            "下表只写改善方向，不承诺「做完综合分可到某一分数」。"
+            "工期根据本轮发现估算，可按实际情况调整。"
+            "先处理访问和页面结构问题，内容建设需要更长时间。改完后，建议用同一批抽样页面再测一次。"
+            "下表说明改进方向，不承诺综合分会到某个数字。"
         ),
         "actions_h3": "来自两侧的优先行动",
         "priority": "优先级",
@@ -557,43 +502,41 @@ STRINGS = {
         "outcome": "验收口径 / 预期结果",
         "days_unit": "天",
         "scope_kicker": "07 范围与披露",
-        "scope_h2": "本次评测覆盖范围",
+        "scope_h2": "本次检查范围",
         "scope_overlap": (
-            "综合分是两侧已有头条总分的加权复合，不是第三套独立打分。"
-            "技术吸收维与内容写作维、实体与权威之间的重叠已披露，不做去重折算。"
+            "综合分按已有的技术分和内容分计算。"
+            "“能抽出的正文偏少”会同时影响这两项分数，综合分不再另外扣一次。"
         ),
         "scope_excluded": (
-            "明确不计入综合公式：提及率、引用率、声量；llms.txt 与其他实验性约定；站外品牌监测。"
-            "训练爬虫被拦截不触发访问门槛、不进入综合公式，但仍建议开放，以便内容进入模型训练语料。"
+            "综合分不包含 AI 提到或引用本站的次数，也不计入 llms.txt 等文件。"
+            "训练爬虫被挡住不会降低综合分，但仍建议开放，好让内容进入模型的学习材料。"
         ),
-        "scope_absent": "范围内未见，不等于该类型在全站不存在。",
+        "scope_absent": "抽查范围内没看到某一类页面，不表示全站一定没有。",
         "unevaluated": "未评估或范围内未见的类型",
-        "fetch_disclosure": "抓取披露",
+        "fetch_disclosure": "抓取说明",
         "closing_kicker": "08 结语",
         "closing_h2": "结语",
         "closing_template": (
-            "综合判定为{label} {score} 分（{grade} 级）。{gate}"
-            "首要动作：{first}"
-            "建议用同一批抽样 URL 复测。"
-            "本分不代表排名、流量或保证被 AI 引用。"
+            "综合分为{label} {score} 分（{grade} 级）。{gate}"
+            "建议先做：{first}"
+            "改完后，建议用同一批抽样页面再测一次。"
+            "本分数不是搜索排名，也不保证 AI 会引用本站。"
         ),
         "refs_kicker": "09 参考来源",
         "refs_h2": "参考来源",
         "refs_disclaimer": (
-            "下列资料用于说明评分原则，并不表示这些机构发布或认可本报告的具体分数与权重；"
-            "各家陈述只适用于其自身产品；除 Google 外，下列厂商文档主要说明访问与展示前提，"
-            "没有公布内容与技术的占比；学术结论是实验观察，不是引用率承诺。"
+            "以下资料用于说明评分原则，并不表示这些机构发布或认可本报告的具体分数和权重。"
+            "各家说明只适用于其自身产品。40/60 的比例是本报告的计算方法，不是厂商公布的数字。"
         ),
         "none": "—",
         "problem": "问题",
         "impact": "影响",
         "fix": "整改",
-        "footer": "GEO Checker · 综合包",
+        "footer": "GEO Checker · 综合报告",
         "docfoot": (
-            "Beansmile · GEO Checker 综合包。"
-            "技术 /100 与内容 GEO /100 仍独立呈现；综合 /100 为第三个头条数"
-            "（内容 60%、技术 40%，另设访问门槛）。"
-            "不代表排名、流量或保证被 AI 引用。"
+            "Beansmile · GEO Checker 综合报告。"
+            "技术分和内容分单独呈现，综合分按技术 40%、内容 60% 计算。"
+            "这不是搜索排名或访问量预测。"
         ),
         "alt_link": "预印本",
     },
@@ -1192,7 +1135,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
 
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(brand)} {esc(S['doc_title'])} · {esc(domain)}</title>
+<title>{esc(domain)} {esc(S['doc_title'])}</title>
 <meta name="description" content="{esc(meta_desc)}">
 <style>{style_css}
 /* Combined report extras on shared technical stylesheet */
@@ -1231,7 +1174,7 @@ ol.refs li{{margin:0 0 14px}}
 </style></head><body>
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><b>GEO Checker</b></span>
-  <span class="doc">{esc(brand)} · {esc(S['doc_title'])} · {esc(domain)}</span>
+  <span class="doc">{esc(domain)} {esc(S['doc_title'])}</span>
   <span class="right"><span class="now mono">{esc(date)}</span>
   {nav_topbar}</span>
 </div><div class="progress"><i></i></div></div>
@@ -1243,7 +1186,7 @@ ol.refs li{{margin:0 0 14px}}
     <span class="cover-no mono">Beansmile · GEO Checker</span></div>
   <div class="cover-mid">
     <div class="pkicker light">{esc(S['cover_kicker'])}</div>
-    <h1>{esc(brand)}<br>{esc(S['cover_h1'])}</h1>
+    <h1>{esc(domain)}<br>{esc(S['cover_h1'])}</h1>
     <p class="cover-sub">{esc(S['cover_sub'])}</p>
     <div class="cover-score">
       <div class="cbig">{esc(combined_disp)}<small>/100</small><em>{esc(combined_label)} {esc(str(combined_grade))}</em></div>

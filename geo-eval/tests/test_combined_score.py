@@ -210,8 +210,8 @@ class CombinedHtmlTests(unittest.TestCase):
             _content(58.5, domain="example.com", overall_summary="这是抽样页得分。"),
             lang="zh",
         )
-        self.assertIn("下列资料用于说明评分原则", html)
-        self.assertIn("并不表示这些机构发布或认可本报告的具体分数与权重", html)
+        self.assertIn("以下资料用于说明评分原则", html)
+        self.assertIn("并不表示这些机构发布或认可本报告的具体分数和权重", html)
         for url in (
             "https://developers.google.com/search/docs/appearance/ai-features",
             "https://developers.google.com/search/blog/2025/05/succeeding-in-ai-search",
@@ -245,8 +245,10 @@ class CombinedHtmlTests(unittest.TestCase):
             self.assertNotIn(token, low)
         self.assertNotIn("按 Google / OpenAI 官方权重", html)
         self.assertNotIn("按 Google 或 OpenAI 官方权重", html)
-        self.assertIn("不是任何一家厂商或论文公布的比例", html)
-        self.assertIn("与本报告 40% 的技术权重不是同一回事", html)
+        self.assertIn("40/60 的比例是本报告的计算方法，不是厂商公布的数字", html)
+        self.assertNotIn("不是任何一家厂商或论文公布的比例", html)
+        self.assertNotIn("与本报告 40% 的技术权重不是同一回事", html)
+        self.assertNotIn("不选 50/50", html)
         self.assertIn("抽样页综合分", html)
         self.assertIn("54.5", html)
         self.assertNotIn("54.3", html)
@@ -281,7 +283,7 @@ class CombinedHtmlTests(unittest.TestCase):
         self.assertIn(">0<", html)
         self.assertNotIn("13.0", html)
         self.assertNotIn("15.0", html)
-        self.assertIn("访问门槛未生效", html)
+        self.assertIn("搜索爬虫可以访问，综合分没有设上限。", html)
 
 
 class CombinedNanxingIntegrationTests(unittest.TestCase):
@@ -310,8 +312,8 @@ class CombinedNanxingIntegrationTests(unittest.TestCase):
         self.assertIn("54.5", html)
         self.assertIn(">48<", html)
         self.assertIn("58.5", html)
-        self.assertIn("访问门槛未生效", html)
-        self.assertIn("约 15 个抽样页", html)
+        self.assertIn("搜索爬虫可以访问，综合分没有设上限。", html)
+        self.assertIn("约 15 个抽查页面", html)
         for bad in ("7.3", "15.1", "54.3", "55.1", "58.3", "52.6"):
             # Allow CSS widths like 52.5%; forbid these as standalone score tokens.
             self.assertIsNone(
@@ -346,14 +348,14 @@ class CombinedNanxingIntegrationTests(unittest.TestCase):
         self.assertIn(">55<", html)
         self.assertNotIn("55.0", html)
         self.assertNotIn("55.1", html)
-        self.assertIn("访问门槛未生效", html)
+        self.assertIn("搜索爬虫可以访问，综合分没有设上限。", html)
         # Training blocks on this site must not be described as a combined-score gate.
         self.assertNotIn("访问门槛已生效", html)
         # SEO-URL-02 stays English in report.json; the zh combined report must
         # use the already-translated finding and not show the English duplicate.
         self.assertNotIn("Canonical tags missing on most sampled pages", html)
         self.assertNotIn("Add self-referencing canonical on every indexable URL", html)
-        self.assertIn("抽样页缺少自引用 canonical", html)
+        self.assertIn("抽查页面缺少指向自身的规范网址", html)
         self.assertNotIn(">content<", html)
 
 

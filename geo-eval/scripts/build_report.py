@@ -128,7 +128,7 @@ STRINGS = {
         "no_dim_findings": "本维度未单独检出问题；详见「关键发现」章节。",
         "adj_note_none": "<p>本页无加分/扣分条目，总分＝十维基础合计。</p>",
         "advisory_label": "建议项",
-        "advisory_hint": "只提示，不计分",
+        "advisory_hint": "只提示，不计入分数",
         "scope_warning_fmt": "必检页面未找到：{items}。相关维度可能因缺页被低估，改进建议中已相应标注。",
         "scope_warning_sep": "、",
         "required_page_name": {"faq": "FAQ 页", "about": "About 页", "contact": "Contact 页", "privacy": "隐私政策页"},
@@ -139,7 +139,7 @@ STRINGS = {
         "idx_overall": "总体评价",
         "idx_strengths": "表现良好的部分",
         "idx_score_preview": "维度得分速览",
-        "idx_method": "评分方法（可复现）",
+        "idx_method": "评分方法",
         "idx_findings": "关键发现",
         "idx_dims": "分维度评估",
         "idx_dim": "维度",
@@ -150,9 +150,9 @@ STRINGS = {
         "idx_glossary": "术语人话对照表",
         "step_labels": ["第一步", "第二步", "第三步"],
         "default_next_steps": [
-            {"title": "确认主体口径", "body": "由贵司书面确认品牌标准写法、主用邮箱与实体关系。"},
+            {"title": "确认对外公司信息", "body": "由贵司书面确认品牌标准写法、主用邮箱与公司关系。"},
             {"title": "按清单逐项修复", "body": "以「优先改进建议」为准，逐项修复并标注完成。"},
-            {"title": "复测核验", "body": "修复后复测本报告口径，看分数与问题是否改善。"},
+            {"title": "再次检测", "body": "改完后可以再测一次，查看分数和问题是否改善。"},
         ],
         "scope_fmt": (
             "sitemap {sitemap} 个 URL，抽样 {sampled} 个重点页（角色分布：{roles}）；"
@@ -166,8 +166,8 @@ STRINGS = {
             "blocked_robots": "被 robots.txt 屏蔽",
             "unknown": "未做实测",
         },
-        "scope_llms_yes": "有（实验项，不计入核心分）",
-        "scope_llms_no": "无（实验项，不计入核心分）",
+        "scope_llms_yes": "有（不计入总分）",
+        "scope_llms_no": "无（不计入总分）",
         "calc_rule": (
             "十维显示值合计 <b>{dim_sum}</b> → 基础分（保留一位小数）<b>{base}</b> → "
             "{adj_clause}"
@@ -226,7 +226,7 @@ STRINGS = {
         "idx_overall": "Overall assessment",
         "idx_strengths": "What's already working",
         "idx_score_preview": "Score snapshot",
-        "idx_method": "Scoring method (reproducible)",
+        "idx_method": "Scoring method",
         "idx_findings": "Key findings",
         "idx_dims": "Dimension assessment",
         "idx_dim": "Dimension",
@@ -786,9 +786,13 @@ def flatten(report, brand, lang="zh", escape_html=False):
     dim_sum = f"{_ds:.2f}".rstrip("0").rstrip(".")
 
     _fallback = "this site" if lang == "en" else "本站"
+    _host = urlparse(report.get("url", "")).hostname or ""
+    if _host.startswith("www."):
+        _host = _host[4:]
+    _domain = (report.get("domain") or "").strip() or _host or _fallback
     data = {
-        "brand": brand or urlparse(report.get("url", "")).hostname or _fallback,
-        "domain": urlparse(report.get("url", "")).hostname or _fallback,
+        "brand": brand or _domain,
+        "domain": _domain,
         "url": report.get("url", ""),
         "date": datetime.now().strftime("%Y-%m-%d"),
         "report_id": f"GEO-{datetime.now().strftime('%Y%m%d')}",

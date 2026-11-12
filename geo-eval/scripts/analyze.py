@@ -1008,13 +1008,13 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "ACC-SEARCH-BLOCKED",
             "root_cause_id": "crawler_search_access",
             "evidence_kind": "observed",
-            "title": "搜索或按需抓取爬虫实测被拦截（robots.txt 放行不等于能取到）",
+            "title": "搜索或按需抓取爬虫实测被拦截",
             "problem": f"用搜索索引/按需抓取 UA 实测首页：{('、'.join(core_live))} 被拦截"
                        f"（返回验证页 / 403 / 429 或超时）。robots.txt 本身可能是放行的，拦截发生在 CDN/WAF 层。"
                        + (" " + "；".join(engine_lines) if engine_lines else ""),
-            "impact": "搜索索引或对话中的按需抓取拿不到页面，会阻碍生成式搜索读取站点。"
-                      "这不等于训练爬虫被拦截。训练爬虫也建议开放（用于模型训练语料），"
-                      "但不能把训练爬虫被挡写成“某搜索引擎看不到本站”。",
+            "impact": "搜索爬虫拿不到页面，AI 搜索就无法读取网站内容。"
+                      "训练爬虫也建议开放，好让内容进入模型的学习材料。"
+                      "挡住训练爬虫，不会让搜索引擎看不到网站。",
             "solution": "在 CDN/WAF 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、"
                         "ChatGPT-User、Googlebot 与 Bingbot 等搜索/按需抓取爬虫；放行后重跑本项复测。"
                         "训练爬虫（GPTBot、ClaudeBot 等）也建议一并放行，以便内容进入模型语料；"
@@ -1045,17 +1045,13 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "ACC-TRAINING-INFO",
             "root_cause_id": "crawler_training_info",
             "evidence_kind": "observed",
-            "title": "训练爬虫被拦截：建议开放以进入模型训练语料（不扣搜索访问分）",
+            "title": "训练爬虫被拦截：建议开放，好让内容进入模型的学习材料",
             "problem": f"训练爬虫 {('、'.join(training_live))} 实测被拦截。"
                        + (" " + "；".join(engine_lines) if engine_lines else ""),
-            "impact": "训练爬虫用于采集模型训练语料。要对 AI 友好，这类爬虫也应开放，否则内容更难进入模型语料。"
-                      "这与搜索访问是两件事：不能据此写成“ChatGPT/Claude 搜索被屏蔽”。"
-                      "若对应的搜索爬虫（OAI-SearchBot / Claude-SearchBot）未实测，相关搜索状态标为未核实。"
-                      "本项不扣核心访问分，也不触发综合报告的访问门槛。",
-            "solution": "建议在 robots.txt 与 WAF 中放行 GPTBot、ClaudeBot 等训练爬虫，以便内容进入模型训练语料。"
-                        "搜索爬虫（OAI-SearchBot、Claude-SearchBot 等）请单独放行，两类官方是分开配置的。"
-                        "Google-Extended 是 robots 训练/生成控制令牌，没有可实测的独立 UA，本项不探测；"
-                        "挡住它不影响 Google 搜索或 AI Overviews，但仍建议放行以允许 Gemini 等使用内容做训练。",
+            "impact": "训练爬虫用于采集模型的学习材料。建议一并开放。"
+                      "挡住训练爬虫，不会让 ChatGPT 或 Claude 搜索看不到网站。本项不扣搜索访问分。",
+            "solution": "建议在 robots.txt 和网站防护中放行 GPTBot、ClaudeBot 等训练爬虫，好让内容进入模型的学习材料。"
+                        "搜索爬虫（如 OAI-SearchBot、Claude-SearchBot）请继续保持开放。",
             "evidence": _ua_evidence(set(training_live)),
         })
 
@@ -1143,15 +1139,13 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "ACC-ROBOTS-TRAINING",
             "root_cause_id": "crawler_training_info",
             "evidence_kind": "observed",
-            "title": "robots.txt 屏蔽了训练爬虫：建议开放以进入模型训练语料（不扣搜索访问分）",
+            "title": "robots.txt 屏蔽了训练爬虫：建议开放，好让内容进入模型的学习材料",
             "problem": f"robots.txt 拦截了训练爬虫：{', '.join(training_robots)}。"
-                       "若 OAI-SearchBot 放行，不能写成 ChatGPT 搜索被屏蔽；"
-                       "若 Claude-SearchBot 未出现在 robots 且未实测，Claude 搜索状态为未核实，而不是失败。",
-            "impact": "训练爬虫用于采集模型训练语料。要对 AI 友好，这类爬虫也应开放。"
-                      "本项不影响搜索索引或按需抓取的核心访问判定，不扣核心访问分，也不触发综合报告的访问门槛。"
-                      "Google-Extended 没有独立 UA，只作为训练/生成控制令牌记录；挡住它不影响 Google 搜索或 AI Overviews。",
-            "solution": "建议移除这些 User-agent 的 Disallow: /，放行训练爬虫以便内容进入模型训练语料。"
-                        "搜索访问请单独检查并放行 OAI-SearchBot / Claude-SearchBot，两类官方是分开配置的。",
+                       "这些是训练爬虫的设置，与搜索爬虫是分开的。",
+            "impact": "建议放行这些训练爬虫，好让内容进入模型的学习材料。本项不扣搜索访问分。"
+                      "挡住 Google-Extended 不影响 Google 搜索或 AI Overviews，但仍建议放行。",
+            "solution": "建议在 robots.txt 中去掉对这些训练爬虫的屏蔽，放行 GPTBot、ClaudeBot、Google-Extended 等。"
+                        "搜索爬虫请继续保持开放。",
             "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(training_robots)}"}],
         })
     # OGP：只评首页（OGP-01/02 的 scope=home）。内页缺标签只作为建议项、
@@ -1176,8 +1170,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "evidence_kind": "observed",
             "title": "首页社交分享标签不完整" if home["ogp"] else "首页缺少 Open Graph 分享标签",
             "problem": f"首页缺少 {', '.join(missing)}（本项只评首页分享标签完整度）。",
-            "impact": "缺少 OG/Twitter 标签主要影响社交平台和部分聊天工具的链接预览（标题、配图）。"
-                      "这不是 AI 理解或信任本站的障碍，也不等于生成式引擎无法引用页面正文。",
+            "impact": "在社交平台或聊天工具里转发时，预览可能不完整。",
             "solution": "如需控制分享预览，为首页补 og:title / og:description / og:image / og:url；twitter:card 为次要辅助项。",
             "code": OGP_EXAMPLE,
             "evidence": [{"url": home["url"], "quote": "缺 " + " / ".join(missing)}],
@@ -1190,7 +1183,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "evidence_kind": "observed",
             "title": "开放图谱分享标签缺失",
             "problem": "抽样页面都没有 og:title/description/image。",
-            "impact": "链接被转发时可能没有稳定的标题与配图。这是分享预览卫生项，不是 AI 理解或信任门槛。",
+            "impact": "链接被转发时，可能没有稳定的标题和配图。",
             "solution": "为首页和重要落地页补 og:title/description/image。",
             "code": OGP_EXAMPLE,
             "evidence": [{"url": pages[0]["url"], "quote": "缺 og:title / og:description / og:image / og:url"}],
@@ -1204,7 +1197,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
                          "evidence_kind": "sample",
                          "title": "内页 Open Graph 标签不完整（建议项，不计分）",
                          "problem": f"{len(inner_missing_ogp)} 个内容页缺少 OGP 标签；OGP 维度只评首页，故不计分。",
-                         "impact": "内页被转发时预览可能不完整。这不是 AI 理解或信任障碍，也不影响本轮核心分。",
+                         "impact": "内页被转发时，预览可能不完整。本项不计入分数。",
                          "solution": "如需控制分享预览，为文章与重点落地页补 og:title/description/image。",
                          "code": OGP_EXAMPLE,
                          "evidence": [{"url": p["url"], "quote": "缺 " + " / ".join(ogp_missing(p))} for p in inner_missing_ogp[:3]]})
@@ -1219,8 +1212,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "evidence_kind": "observed",
             "title": "Organization 结构化属性不完整",
             "problem": f"已有 Organization 节点，但缺少：{'、'.join(missing)}。",
-            "impact": "这是结构化标记完整度问题。若 About/联系页正文已能识别企业，"
-                      "不能因为缺 schema 字段就写成“主体无法确认”。schema 与站内实体信号不重复计同一 sameAs。",
+            "impact": "已有组织信息标记，但字段还不完整。补全与页面文字一致的名称、标志和联系方式，这一项的分数还能提高。",
             "solution": "在 Organization 中按正文已有事实补全字段，并与可见文本保持一致；不要写与正文冲突的值。",
             "code": ORG_JSONLD_EXAMPLE,
             "evidence": [{"url": "", "quote": f"缺 {', '.join(missing)}"}],
@@ -1250,8 +1242,8 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "root_cause_id": "onpage_title_hint",
             "evidence_kind": "observed",
             "title": "部分 title 略长于常见展示长度（提示项）",
-            "problem": f"{len(long_title)}/{len(content_pages)} 个内容页 title 超过 60 个字符。这是展示长度提示，不等于缺标题。",
-            "impact": "过长标题在部分搜索结果里可能被截断，但不等于页面无法被理解或索引。",
+            "problem": f"{len(long_title)}/{len(content_pages)} 个内容页的标题超过 60 个字符。这是展示长度提示，不是缺少标题。",
+            "impact": "过长的标题在部分搜索结果里可能被截断。",
             "solution": "可酌情缩短标题；不必为凑 60 字符阈值而牺牲含义。",
             "evidence": [{"url": p["url"], "quote": (p.get("title") or "")[:80]} for p in long_title[:3]],
         })
@@ -1276,9 +1268,9 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "root_cause_id": "onpage_h1_hint",
             "evidence_kind": "observed",
             "title": "部分页面不是恰好一个 H1（提示项）",
-            "problem": f"{len(not_one_h1)}/{len(content_pages)} 个内容页的 H1 数量不是 1（多为多个 H1）。这不等于缺标题或缺正文。",
+            "problem": f"{len(not_one_h1)}/{len(content_pages)} 个内容页的主标题（H1）数量不是 1，多数是有多个主标题。",
             "impact": "多个 H1 是结构提示，严重程度低于缺 title 或完全没有主标题。",
-            "solution": "可整理标题层级，但不要把它当成与缺主文同等的问题。",
+            "solution": "建议每个页面保留一个与可见主标题一致的 H1。",
             "code": H1_EXAMPLE,
             "evidence": [{"url": p["url"], "quote": f"H1×{len(p.get('h1') or [])}"} for p in not_one_h1[:3]],
         })
@@ -1363,9 +1355,9 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "TEC-CANONICAL-MISSING",
             "root_cause_id": "canonical_hint",
             "evidence_kind": "observed",
-            "title": "部分页面缺少 canonical 标签（辅助项）",
-            "problem": f"{len(no_canonical)}/{len(content_pages)} 个内容页缺自引用 canonical。缺少辅助标签的严重程度低于错误的 canonical 或已证实的索引问题。",
-            "impact": "缺标签本身不等于索引失败。若同一内容有多个 URL 且未做跳转，再优先处理冲突或错误配置。",
+            "title": "部分页面缺少指向自身的规范网址（canonical）",
+            "problem": f"{len(no_canonical)}/{len(content_pages)} 个内容页缺少指向自身的规范网址。",
+            "impact": "缺少这个标签，通常不如错误的规范网址或已确认的收录问题严重。如果同一内容有多个网址且没有跳转，应先处理冲突。",
             "solution": "为重点可索引页补自引用 canonical；若已有冲突的 canonical，应先修正错误配置。",
             "evidence": [{"url": u, "quote": "缺 canonical"} for u in no_canonical[:3]],
         })
@@ -1543,17 +1535,15 @@ def build_findings(cln, ent, schema_info, acc, pages):
     if not (schema_info.get("org")):
         body_clear = bool(kg_detail.get("body_identifiable"))
         if body_clear:
-            title = "缺少 Organization 结构化标记（正文已能识别主体）"
+            title = "缺少组织信息的结构化标记"
             problem = (
-                "抽样页没有可用的 Organization JSON-LD，但关于我们、联系页或页脚已提供可核验的品牌与联系事实。"
-                "这计入结构化数据维，不是主体识别失败，也不把实体维打成 0。"
+                "抽查页面没有组织信息的结构化标记。关于我们、联系页或页脚已经写明了公司和联系方式。"
             )
             fid = "SCH-ABSENT-BODY-CLEAR"
         else:
-            title = "缺少 Organization 结构化标记"
+            title = "缺少组织信息的结构化标记"
             problem = (
-                "抽样页没有可用的 Organization JSON-LD。这计入结构化数据维："
-                "组织节点是该维的基础分项。"
+                "抽查页面没有组织信息的结构化标记。组织标记是这一项的基础分。"
             )
             fid = "SCH-ABSENT"
         findings.append({
@@ -1565,9 +1555,8 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "title": title,
             "problem": problem,
             "impact": (
-                "结构化数据维满分 12。仅补上 Organization 节点（与正文一致）即可先获得 4 分；"
-                "再补名称、logo 或联系方式、官网网址，这一维还能继续提高。"
-                "这评的是机器可理解性，不是 Google 排名因子，也不表示主体无法确认。"
+                "这项满分 12 分。补上与页面文字一致的组织信息标记，可以先提到 4 分；"
+                "再补名称、标志和联系方式，分数还能提高。"
             ),
             "solution": (
                 "在首页与关于我们增加与可见正文一致的 Organization JSON-LD"
@@ -1584,7 +1573,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "title": "结构化数据与可见正文不一致",
             "problem": c.get("note") or f"字段 {c.get('field')} 在 schema 与正文中不一致。",
             "impact": "冲突的标记不能当作完整度加分；应以可见正文为准再改 schema。",
-            "solution": "核对官方口径后，使 schema 与 About/联系页正文一致。",
+            "solution": "以页面上可见的公司信息为准，修改结构化标记，使两者一致。",
             "evidence": [{"url": "", "quote": f"schema={c.get('schema')} body={c.get('body')}"}],
         })
 
@@ -1614,7 +1603,7 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "title": "结构化数据与正文的数值不一致（已核对）",
             "problem": f"schema {rec.get('metric')}={rec.get('schema')}，正文为 {rec.get('body')}。",
             "impact": "同一事实的机器可读值与可见值冲突，完整度不能给高分。",
-            "solution": "以官方口径统一 schema 与正文。",
+            "solution": "以页面上可见的文字为准，统一结构化标记。",
             "evidence": [{"url": rec.get("url") or "", "quote": rec.get("quote") or ""}],
         })
     for rec in (numeric.get("needs_review") or [])[:5]:
@@ -1671,16 +1660,15 @@ def build_findings(cln, ent, schema_info, acc, pages):
         "id": "ACC-07-LLMS",
         "root_cause_id": "llms_experimental",
         "evidence_kind": "observed",
-        "title": "llms.txt 为实验/辅助项（不计入核心 100 分）",
+        "title": "llms.txt（不计入总分）",
         "problem": (
-            ("检测到可用的 llms.txt，质量：" + str(llms.get("quality") or "ok") + "。")
+            ("已找到 llms.txt，质量较好。" if (llms.get("quality") == "high") else
+             "已找到 llms.txt，质量：" + str(llms.get("quality") or "一般") + "。")
             if llms.get("present") else
-            ("未检测到可用的 llms.txt。" + "；".join(llms.get("reasons") or []) )
+            ("未找到 llms.txt。" + (" " + "；".join(llms.get("reasons") or []) if llms.get("reasons") else ""))
         ),
-        "impact": "本项只展示有无与质量，不升也不降核心准备度分数。"
-                  "Google Search 不使用 llms.txt；这一结论只适用于 Google，不推广到所有引擎。"
-                  "有无该文件都不能单独判定站点严重未就绪。",
-        "solution": "如需提供给自愿读取该约定的系统，可发布真实的 text/plain llms.txt，避免用 HTML 软 404 伪装。",
+        "impact": "这项不计入技术总分。这份文件可以帮助部分工具了解网站导航。Google 搜索并不使用它。",
+        "solution": "可以按需维护 llms.txt，并与网站导航保持一致。这项不计入总分，不是必须项。",
         "evidence": [{"url": llms.get("url") or "/llms.txt", "quote": (llms.get("body_preview") or "；".join(llms.get("reasons") or []) or "n/a")[:180]}],
     })
 
@@ -1707,8 +1695,8 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "SCOPE-PRODUCT-UNEVAL",
             "evidence_kind": "sample",
             "title": "产品详情页未评估",
-            "problem": "发现范围内有产品类 URL，但本轮抽样未抓取产品详情页。不能据此断言缺少规格表或参数。",
-            "impact": "内容与覆盖相关分数按抽样页计算，相关类型标为未评估，不按缺失计 0。",
+            "problem": "范围内有产品类网址，但本轮抽查没有打开产品详情页，因此没有评估规格表或参数。",
+            "impact": "相关分数按已抽查的页面计算，未抽到的类型标为未评估，不按缺失计 0 分。",
             "solution": "如需评估规格与参数，请把代表性产品详情页纳入抽样后复测。",
         })
 
@@ -1757,7 +1745,7 @@ def build_strengths(cln, ent, acc, schema_info):
     if org.get("sameAs") and org.get("foundingDate"):
         strengths.append("Organization 结构化数据完整（sameAs 社交链接 + 成立日期）。")
     if acc.get("has_llms"):
-        strengths.append("提供 llms.txt（实验/辅助项，不计入核心分）。")
+        strengths.append("网站提供了 llms.txt，这项不计入总分。")
     engines = acc.get("engines") or {}
     chatgpt = (engines.get("chatgpt_search") or {}).get("search_status")
     claude = (engines.get("claude_search") or {}).get("search_status")
@@ -1772,14 +1760,12 @@ def build_strengths(cln, ent, acc, schema_info):
             if training_ok and not training_blocked:
                 train_list = "、".join(training_ok)
                 strengths.append(
-                    f"搜索/按需抓取爬虫可访问（{core_list}），训练爬虫也可访问（{train_list}）。"
-                    "前者是出现在 AI 搜索中的前提，后者用于模型训练语料；要对 AI 友好，两类都应开放。"
+                    f"搜索爬虫可以访问（{core_list}），训练爬虫也可以访问（{train_list}）。"
                 )
             else:
                 strengths.append(
-                    f"搜索/按需抓取爬虫可访问（{core_list}）。"
-                    "要对 AI 友好，训练爬虫（如 GPTBot、ClaudeBot）也应开放，以便内容进入模型训练语料；"
-                    "训练爬虫被挡不等于搜索引擎看不到本站。"
+                    f"搜索爬虫可以访问（{core_list}）。"
+                    "训练爬虫（如 GPTBot、ClaudeBot）建议一并开放，好让内容进入模型的学习材料。"
                 )
         elif not acc.get("blocked_core"):
             strengths.append("robots.txt 未屏蔽搜索/按需抓取爬虫。建议同时放行训练爬虫，以便内容进入模型训练语料。")
@@ -1787,8 +1773,7 @@ def build_strengths(cln, ent, acc, schema_info):
         gpt_live = (engines.get("chatgpt_search") or {}).get("training_live")
         if gpt_live == "allowed":
             strengths.append(
-                "ChatGPT 搜索爬虫（OAI-SearchBot）与训练爬虫（GPTBot）均可访问，职责不同："
-                "前者决定能否出现在 ChatGPT 搜索，后者用于训练语料，两类都建议保持开放。"
+                "ChatGPT 的搜索爬虫（OAI-SearchBot）和训练爬虫（GPTBot）都可以访问。"
             )
         else:
             strengths.append("ChatGPT 搜索爬虫（OAI-SearchBot）可访问。")
