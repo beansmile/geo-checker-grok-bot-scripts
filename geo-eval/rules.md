@@ -80,7 +80,7 @@
 
 | ID | 规则 | 判定与阈值 | 严重度 | 分值影响 | 方法 | 范围 |
 |---|---|---|---|---|---|---|
-| ACC-01 | AI 检索爬虫放行 | 内置 14 UA。**critical 检索类**：OAI-SearchBot、GPTBot、ChatGPT-User、ClaudeBot、anthropic-ai、PerplexityBot、Google-Extended/GoogleExtendedCrawler、Bingbot；**非 critical**：YouBot、Diffbot；**训练类**：CCBot、Bytespider、FacebookBot、cohere-ai、ImagesiftBot。屏蔽判定：① 专属段 `Allow: /` → 放行；② 专属段 `Disallow: /` → 屏蔽；③ 专属段有任意 Disallow 且无 `Allow: /` → 视为屏蔽；④ 无专属段且通配 `*` 有 `Disallow: /` → 屏蔽；⑤ 有专属段时不继承通配屏蔽。任一 critical 命中 → S1；仅非 critical/训练类命中 → S4 提示 | S1/S4 | 总分 -15；issue impact 40 | R | site |
+| ACC-01 | 访问爬虫与训练爬虫均建议开放 | **搜索/按需抓取（核心访问，critical）**：OAI-SearchBot、ChatGPT-User、Claude-SearchBot、PerplexityBot、Googlebot、Bingbot、Applebot 等。**训练类（建议开放，不扣核心分）**：GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、anthropic-ai、CCBot 等。两类官方分开配置，都建议开放：访问爬虫是出现在 AI 搜索中的前提，训练爬虫用于模型训练语料。屏蔽判定：① 专属段 `Allow: /` → 放行；② 专属段 `Disallow: /` → 屏蔽；③ 专属段有任意 Disallow 且无 `Allow: /` → 视为屏蔽；④ 无专属段且通配 `*` 有 `Disallow: /` → 屏蔽；⑤ 有专属段时不继承通配屏蔽。任一核心访问爬虫被挡 → S1 且总分 -15（只计一次）；仅训练类被挡 → 改进建议（不扣核心分，不写成“搜索看不到本站”）。Google-Extended 无独立 UA，只解析 robots 令牌，不实测。 | S1/建议 | 核心访问 -15；训练拦截不计核心分 | R | site |
 | ACC-02 | AI UA 可达性 | 用 OAI-SearchBot/GPTBot/ClaudeBot/PerplexityBot 四个 UA 实抓首页 + 2 个正文页；命中挑战页（cloudflare/captcha/challenge/verify）、403/429、超时 → 每个 UA 记一条 | S2 | 4/UA 起，累计 ≤12 | R | home+content |
 | ACC-03 | WAF/挑战拦截迹象 | 普通 UA 抓取返回挑战页/429/403 或 HTML 含验证脚本 → S2 提示 | S2 | 5 | R | site |
 | ACC-04 | sitemap 有效性 | 存在 `sitemap(.xml|_index.xml)` 且可解析；robots 声明一致；content 页占比 <50% → S3 | S3 | 3 | R | site |

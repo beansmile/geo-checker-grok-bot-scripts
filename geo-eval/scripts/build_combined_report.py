@@ -304,7 +304,9 @@ STRINGS = {
             "each vendor’s search crawler is described as a prerequisite for appearing in that vendor’s "
             "search results or being cited. Training-crawler blocks (for example GPTBot, ClaudeBot, "
             "or KimiBot) do not trigger this gate, which is consistent with those vendors’ practice of "
-            "keeping training and search settings independent."
+            "keeping training and search settings independent. Training crawlers should still be "
+            "allowed if the site wants to be AI-friendly, so the content can enter model-training "
+            "corpora; that is a recommendation, not a trigger for this gate."
         ),
         "layer2_lead": "Layer 2 — Once a site is accessible, differentiation is in the content.",
         "layer2_body": (
@@ -377,7 +379,10 @@ STRINGS = {
         ),
         "scope_excluded": (
             "Not included in the combined score: mention rate, citation rate, share of voice; "
-            "llms.txt and other experimental conventions; training-crawler status; off-site brand monitoring."
+            "llms.txt and other experimental conventions; off-site brand monitoring. "
+            "A training-crawler block does not trigger the access gate and is not entered into the "
+            "combined formula, but allowing those crawlers is still recommended so content can enter "
+            "model-training corpora."
         ),
         "scope_absent": "“Not seen in scope” does not mean the type is absent from the entire site.",
         "unevaluated": "Types unevaluated or not seen in scope",
@@ -492,6 +497,7 @@ STRINGS = {
             "写成出现在该产品搜索结果或被引用的前提，用于支撑这一访问资格层。"
             "训练爬虫（如 GPTBot、ClaudeBot、KimiBot）被拦截不触发本门槛，"
             "这与各家把训练和搜索分开设置的官方做法一致。"
+            "但要对 AI 友好，训练爬虫也应开放，以便内容进入模型训练语料；这是建议，不是本门槛的触发条件。"
         ),
         "layer2_lead": "第二层：一旦可被访问，差异化在内容。",
         "layer2_body": (
@@ -557,7 +563,8 @@ STRINGS = {
             "技术吸收维与内容写作维、实体与权威之间的重叠已披露，不做去重折算。"
         ),
         "scope_excluded": (
-            "明确不计入综合分：提及率、引用率、声量；llms.txt 与其他实验性约定；训练爬虫状态；站外品牌监测。"
+            "明确不计入综合公式：提及率、引用率、声量；llms.txt 与其他实验性约定；站外品牌监测。"
+            "训练爬虫被拦截不触发访问门槛、不进入综合公式，但仍建议开放，以便内容进入模型训练语料。"
         ),
         "scope_absent": "范围内未见，不等于该类型在全站不存在。",
         "unevaluated": "未评估或范围内未见的类型",

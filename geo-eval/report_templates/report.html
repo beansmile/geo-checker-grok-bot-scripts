@@ -16,7 +16,7 @@
   <div class="cover-top"><span class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#fff"/><rect x="7" y="15.4" width="3.4" height="5.6" rx="1" fill="#312E81"/><rect x="12.3" y="11.4" width="3.4" height="9.6" rx="1" fill="#312E81" opacity=".82"/><rect x="17.6" y="7.4" width="3.4" height="13.6" rx="1" fill="#312E81" opacity=".62"/></svg><b>GEO Checker</b></span>
     <span class="cover-no mono">Beansmile · GEO Checker</span></div>
   <div class="cover-mid">
-    <div class="pkicker light">生成式引擎优化 · 技术与内容准备度评测报告</div>
+    <div class="pkicker light">生成式引擎优化 · 技术准备度评测报告</div>
     <h1>{{brand}}<br>GEO 评测报告</h1>
     <p class="cover-sub">检查官网有没有把「我们是谁、卖什么、数字从哪来」写清楚——这是 AI 能否读懂、信任并推荐你的基础。</p>
     <div class="cover-score"><div class="cbig">{{overall_score}}<small>/100</small><em>站内准备度 {{grade}}</em></div><div>{{cover_meter}}<p class="cover-score-note">60 分以下＝准备不足；它不是搜索排名，也不代表 AI 实际提到你的次数。</p></div></div>
@@ -138,9 +138,10 @@
   <p class="note">等级映射：A+ 90 分以上 · A 80–89 · B 70–79 · C 60–69 · D 60 分以下。分数用于定位短板与排序修复优先级，不用于横向比较其它站点。</p>
   <div class="sublab">口径边界与阈值来源</div>
   <ul class="plain">
-    <li>本分数是<b>站内 GEO 准备度（技术与内容准备度）</b>：衡量站点被生成式搜索正确理解、信任与引用的准备情况。</li>
+    <li>本分数是<b>技术准备度</b>（满分 100），衡量站点在技术上能否被生成式引擎抓取、理解与核验。内容 GEO 是另一份独立的 100 分，不并入本分。</li>
+    <li>要对 AI 友好，<b>访问爬虫</b>（搜索索引与按需抓取，如 Googlebot、OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User）和<b>训练爬虫</b>（如 GPTBot、ClaudeBot、Google-Extended）都建议开放，但职责不同、计分也不同。访问爬虫是内容被 AI 搜索考虑的前提，被拦截会扣核心访问分（−15，只计一次）。训练爬虫用于采集模型训练语料，被拦截会作为改进建议写出，但不扣同一笔核心访问分，也不能写成“某搜索引擎看不到本站”。各家官方把两类分开配置：挡住 GPTBot 不等于 ChatGPT 搜索被屏蔽；挡住 Google-Extended 不影响 Google 搜索或 AI Overviews，但仍建议放行以允许将内容用于训练。</li>
     <li>标题/元描述长度、每页标题数量等为<b>卫生项</b>，用作统一检查口径，不是搜索引擎硬性要求；内容是否“能整块被引用、且带可核验事实”才是关键。</li>
-    <li>官方口径核对：Google 说明元描述无固定长度限制（超出仅在展示时截断）；结构化数据不是通用排名因子；FAQ 富媒体结果已于 2026-05-07 停止展示（Search Console 报告 2026-06 退役、API 2026-08 移除），HowTo 富媒体结果已于 2023 年退役；组织信息的官方账号（sameAs）/ 联系方式（contactPoint）属“适用时推荐”而非必填。</li>
+    <li>官方口径核对：Google 说明元描述无固定长度限制（超出仅在展示时截断）；结构化数据不是通用排名因子（本报告仍给结构化数据打分，评的是机器可理解性，不是 Google 排名）；FAQ 富媒体结果已于 2026-05-07 停止展示（Search Console 报告 2026-06 退役、API 2026-08 移除），HowTo 富媒体结果已于 2023 年退役；组织信息的官方账号（sameAs）/ 联系方式（contactPoint）属“适用时推荐”而非必填。</li>
   </ul><footer class="pf"><span>GEO Checker · 评测报告</span><span class="mono">Beansmile</span></footer></section>
 
 <!-- 8 关键发现总览 -->

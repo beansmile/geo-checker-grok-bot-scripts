@@ -165,6 +165,42 @@ class CrawlerSplitTests(unittest.TestCase):
             self.assertFalse(any(
                 f.get("id") in ("ACC-SEARCH-BLOCKED", "ACC-ROBOTS-SEARCH") for f in report["findings"]
             ))
+            train = next(f for f in report["findings"] if "训练爬虫" in (f.get("title") or ""))
+            self.assertIs(train.get("scored"), False)
+            self.assertIn("建议开放", train["title"] + (train.get("solution") or ""))
+            self.assertIn("训练语料", (train.get("impact") or "") + (train.get("solution") or "") + (train.get("title") or ""))
+            self.assertNotIn("信息项，不计入核心访问分", train.get("title") or "")
+            strengths = " ".join(report.get("strengths") or [])
+            self.assertNotIn("不作为搜索访问结论", strengths)
+
+
+
+    def test_strengths_when_both_crawler_types_open(self):
+        with tempfile.TemporaryDirectory() as td:
+            write_run(
+                td,
+                pages=[("https://acme-tools.com/", HOME), ("https://acme-tools.com/about", ABOUT)],
+                robots="User-agent: *\nAllow: /\n",
+                crawler={
+                    "url": "https://acme-tools.com/",
+                    "ua_results": [
+                        {"ua": "OAI-SearchBot", "status": 200, "challenge": False, "size": 1000},
+                        {"ua": "ChatGPT-User", "status": 200, "challenge": False, "size": 1000},
+                        {"ua": "GPTBot", "status": 200, "challenge": False, "size": 1000},
+                        {"ua": "browser", "status": 200, "challenge": False, "size": 1000},
+                    ],
+                    "ai_blocked": [],
+                    "waf_challenge": False,
+                },
+            )
+            report = analyze.analyze(td)
+            self.assertEqual(report["penalty"], 0)
+            text = " ".join(report.get("strengths") or [])
+            self.assertIn("训练爬虫也可访问", text)
+            self.assertIn("两类都应开放", text)
+            self.assertIn("GPTBot", text)
+            self.assertNotIn("不作为搜索访问结论", text)
+            self.assertNotIn("GPTBot 训练状态不改变这一判定", text)
 
 
 class UnsampledTests(unittest.TestCase):

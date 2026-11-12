@@ -5,8 +5,9 @@
 Training crawlers, search-index crawlers, and on-demand/user fetchers are
 classified separately. Only blocked *search-index* or *user-access* crawlers
 may reduce the core access/readiness score. Training-bot blocks are
-informational and must not be worded as "the AI search engine cannot see
-this site."
+recommended to be opened (model-training corpora) but do not take the
+same core penalty, and must not be worded as "the AI search engine cannot
+see this site."
 
 Google-Extended is a robots training/generation token with no independent
 User-Agent — never invent a UA to probe it, and never treat it as a
@@ -64,7 +65,7 @@ CORE_UA_PROBES = {
     "ChatGPT-User": "Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)",
 }
 
-# Training probes are evidence-only (do not drive the core penalty).
+# Training probes are recommended-open evidence (do not drive the core penalty).
 TRAINING_UA_PROBES = {
     "GPTBot": "Mozilla/5.0 (compatible; GPTBot/1.0; +https://openai.com/gptbot)",
     "ClaudeBot": "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
@@ -291,6 +292,7 @@ def core_penalty_decision(robots_blocked, ua_results, waf_challenge=False) -> di
         "core_ok": core_ok,
         "training_robots_blocked": list(robots["training_blocked"]),
         "training_live_blocked": list(live["training_blocked"]),
+        "training_ok": list(live["training_ok"]),
         "browser_waf": browser_waf,
         "engines": engine_access_status(ua_results, robots_blocked),
     }
@@ -334,7 +336,7 @@ def engine_status_lines_zh(engines: dict) -> list[str]:
         train_live = spec.get("training_live")
         extra = []
         if train_tok and train_live == "blocked":
-            extra.append(f"训练爬虫 {train_tok} 被拦截（不影响搜索判定）")
+            extra.append(f"训练爬虫 {train_tok} 被拦截，建议开放以进入训练语料（不影响搜索判定）")
         if search_live == "untested":
             extra.append(f"{search_tok} 本次未实测，故搜索状态为未核实")
         suffix = "；".join(extra)

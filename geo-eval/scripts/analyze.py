@@ -1013,10 +1013,12 @@ def build_findings(cln, ent, schema_info, acc, pages):
                        f"（返回验证页 / 403 / 429 或超时）。robots.txt 本身可能是放行的，拦截发生在 CDN/WAF 层。"
                        + (" " + "；".join(engine_lines) if engine_lines else ""),
             "impact": "搜索索引或对话中的按需抓取拿不到页面，会阻碍生成式搜索读取站点。"
-                      "这不等于训练爬虫被拦截。训练爬虫状态单独记录，不作为“某搜索引擎看不到本站”的依据。",
+                      "这不等于训练爬虫被拦截。训练爬虫也建议开放（用于模型训练语料），"
+                      "但不能把训练爬虫被挡写成“某搜索引擎看不到本站”。",
             "solution": "在 CDN/WAF 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、"
                         "ChatGPT-User、Googlebot 与 Bingbot 等搜索/按需抓取爬虫；放行后重跑本项复测。"
-                        "不要用 GPTBot 或 ClaudeBot 的拦截来推断 ChatGPT/Claude 搜索被屏蔽。",
+                        "训练爬虫（GPTBot、ClaudeBot 等）也建议一并放行，以便内容进入模型语料；"
+                        "不要用它们的拦截来推断 ChatGPT/Claude 搜索被屏蔽。",
             "evidence": _ua_evidence(set(core_live)),
         })
     elif acc.get("waf_challenge") and not (decision.get("core_ok") or []):
@@ -1043,13 +1045,17 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "ACC-TRAINING-INFO",
             "root_cause_id": "crawler_training_info",
             "evidence_kind": "observed",
-            "title": "训练爬虫被拦截（信息项，不计入核心访问分）",
+            "title": "训练爬虫被拦截：建议开放以进入模型训练语料（不扣搜索访问分）",
             "problem": f"训练爬虫 {('、'.join(training_live))} 实测被拦截。"
                        + (" " + "；".join(engine_lines) if engine_lines else ""),
-            "impact": "这只影响模型训练抓取，不能据此写成“ChatGPT/Claude 搜索被屏蔽”。"
-                      "若对应的搜索爬虫（OAI-SearchBot / Claude-SearchBot）未实测，相关搜索状态标为未核实。",
-            "solution": "如需允许训练抓取，可在 robots.txt 或 WAF 中放行 GPTBot、ClaudeBot 等；"
-                        "Google-Extended 是 robots 训练/生成控制令牌，没有可实测的独立 UA，本项不探测、不计入搜索访问核心分。",
+            "impact": "训练爬虫用于采集模型训练语料。要对 AI 友好，这类爬虫也应开放，否则内容更难进入模型语料。"
+                      "这与搜索访问是两件事：不能据此写成“ChatGPT/Claude 搜索被屏蔽”。"
+                      "若对应的搜索爬虫（OAI-SearchBot / Claude-SearchBot）未实测，相关搜索状态标为未核实。"
+                      "本项不扣核心访问分，也不触发综合报告的访问门槛。",
+            "solution": "建议在 robots.txt 与 WAF 中放行 GPTBot、ClaudeBot 等训练爬虫，以便内容进入模型训练语料。"
+                        "搜索爬虫（OAI-SearchBot、Claude-SearchBot 等）请单独放行，两类官方是分开配置的。"
+                        "Google-Extended 是 robots 训练/生成控制令牌，没有可实测的独立 UA，本项不探测；"
+                        "挡住它不影响 Google 搜索或 AI Overviews，但仍建议放行以允许 Gemini 等使用内容做训练。",
             "evidence": _ua_evidence(set(training_live)),
         })
 
@@ -1124,8 +1130,10 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "evidence_kind": "observed",
             "title": "搜索或按需抓取爬虫被 robots.txt 屏蔽",
             "problem": f"robots.txt 拦截了搜索/按需抓取爬虫：{', '.join(core_robots)}。",
-            "impact": "自愿遵守 robots.txt 的搜索或按需抓取爬虫不会抓取本站。训练爬虫（如 GPTBot、ClaudeBot、Google-Extended）的屏蔽不在本条范围内。",
-            "solution": "在 robots.txt 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User、Googlebot、Bingbot 等搜索/按需抓取爬虫。",
+            "impact": "自愿遵守 robots.txt 的搜索或按需抓取爬虫不会抓取本站，这是内容出现在 AI 搜索中的前提。"
+                      "训练爬虫（如 GPTBot、ClaudeBot、Google-Extended）的屏蔽不在本条扣分范围内，但它们也应开放，以便内容进入模型训练语料。",
+            "solution": "在 robots.txt 中放行 OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User、Googlebot、Bingbot 等搜索/按需抓取爬虫。"
+                        "训练爬虫也建议一并放行。",
             "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(core_robots)}"}],
         })
     if training_robots and not core_robots:
@@ -1135,12 +1143,15 @@ def build_findings(cln, ent, schema_info, acc, pages):
             "id": "ACC-ROBOTS-TRAINING",
             "root_cause_id": "crawler_training_info",
             "evidence_kind": "observed",
-            "title": "robots.txt 屏蔽了训练爬虫（信息项，不计入核心访问分）",
+            "title": "robots.txt 屏蔽了训练爬虫：建议开放以进入模型训练语料（不扣搜索访问分）",
             "problem": f"robots.txt 拦截了训练爬虫：{', '.join(training_robots)}。"
                        "若 OAI-SearchBot 放行，不能写成 ChatGPT 搜索被屏蔽；"
                        "若 Claude-SearchBot 未出现在 robots 且未实测，Claude 搜索状态为未核实，而不是失败。",
-            "impact": "不影响搜索索引或按需抓取的核心访问判定。Google-Extended 没有独立 UA，只作为训练/生成控制令牌记录。",
-            "solution": "如需开放训练抓取，可移除这些 User-agent 的 Disallow: /；搜索访问请单独检查 OAI-SearchBot / Claude-SearchBot。",
+            "impact": "训练爬虫用于采集模型训练语料。要对 AI 友好，这类爬虫也应开放。"
+                      "本项不影响搜索索引或按需抓取的核心访问判定，不扣核心访问分，也不触发综合报告的访问门槛。"
+                      "Google-Extended 没有独立 UA，只作为训练/生成控制令牌记录；挡住它不影响 Google 搜索或 AI Overviews。",
+            "solution": "建议移除这些 User-agent 的 Disallow: /，放行训练爬虫以便内容进入模型训练语料。"
+                        "搜索访问请单独检查并放行 OAI-SearchBot / Claude-SearchBot，两类官方是分开配置的。",
             "evidence": [{"url": "/robots.txt", "quote": f"Disallow 命中 {', '.join(training_robots)}"}],
         })
     # OGP：只评首页（OGP-01/02 的 scope=home）。内页缺标签只作为建议项、
@@ -1726,17 +1737,36 @@ def build_strengths(cln, ent, acc, schema_info):
     chatgpt = (engines.get("chatgpt_search") or {}).get("search_status")
     claude = (engines.get("claude_search") or {}).get("search_status")
     decision = acc.get("crawler_decision") or {}
+    training_ok = list(decision.get("training_ok") or [])
+    training_blocked = list(decision.get("training_live_blocked") or []) + list(
+        decision.get("training_robots_blocked") or acc.get("blocked_training") or []
+    )
     if not (acc.get("blocked_core") or decision.get("core_live_blocked") or decision.get("core_robots_blocked")):
         if decision.get("core_ok"):
-            strengths.append(
-                "搜索/按需抓取爬虫可访问（"
-                + "、".join(decision.get("core_ok") or [])
-                + "）。训练爬虫状态单独记录，不作为搜索访问结论。"
-            )
+            core_list = "、".join(decision.get("core_ok") or [])
+            if training_ok and not training_blocked:
+                train_list = "、".join(training_ok)
+                strengths.append(
+                    f"搜索/按需抓取爬虫可访问（{core_list}），训练爬虫也可访问（{train_list}）。"
+                    "前者是出现在 AI 搜索中的前提，后者用于模型训练语料；要对 AI 友好，两类都应开放。"
+                )
+            else:
+                strengths.append(
+                    f"搜索/按需抓取爬虫可访问（{core_list}）。"
+                    "要对 AI 友好，训练爬虫（如 GPTBot、ClaudeBot）也应开放，以便内容进入模型训练语料；"
+                    "训练爬虫被挡不等于搜索引擎看不到本站。"
+                )
         elif not acc.get("blocked_core"):
-            strengths.append("robots.txt 未屏蔽搜索/按需抓取爬虫。")
+            strengths.append("robots.txt 未屏蔽搜索/按需抓取爬虫。建议同时放行训练爬虫，以便内容进入模型训练语料。")
     if chatgpt == "allowed":
-        strengths.append("ChatGPT 搜索爬虫（OAI-SearchBot）可访问；GPTBot 训练状态不改变这一判定。")
+        gpt_live = (engines.get("chatgpt_search") or {}).get("training_live")
+        if gpt_live == "allowed":
+            strengths.append(
+                "ChatGPT 搜索爬虫（OAI-SearchBot）与训练爬虫（GPTBot）均可访问，职责不同："
+                "前者决定能否出现在 ChatGPT 搜索，后者用于训练语料，两类都建议保持开放。"
+            )
+        else:
+            strengths.append("ChatGPT 搜索爬虫（OAI-SearchBot）可访问。")
     if claude == "unverified":
         pass  # do not list as a strength
     return strengths or ["本次未发现明显亮点。"]

@@ -57,7 +57,7 @@
 
 | 项 | 规则 | 调整 |
 |---|---|---|
-| 搜索索引或按需抓取爬虫被屏蔽/实测不可达 | ACC-01/02/03 | -15（只计一次）。训练爬虫（GPTBot、ClaudeBot、Google-Extended）拦截只作信息项，不扣核心分。不得由 GPTBot 推断 ChatGPT 搜索被屏蔽；Claude-SearchBot 未测时 Claude 搜索为未核实。 |
+| 搜索索引或按需抓取爬虫被屏蔽/实测不可达 | ACC-01/02/03 | -15（只计一次）。要对 AI 友好，访问爬虫与训练爬虫都建议开放：前者是出现在 AI 搜索中的前提，后者用于模型训练语料。训练爬虫（GPTBot、ClaudeBot、Google-Extended）被拦截作为改进建议写出，不扣核心访问分，也不触发综合访问门槛。不得由 GPTBot 推断 ChatGPT 搜索被屏蔽；挡住 Google-Extended 不影响 Google 搜索或 AI Overviews；Claude-SearchBot 未测时 Claude 搜索为未核实。 |
 | 严重实体不一致（品牌冲突 / ≥2 个邮箱域） | ENT-01 / ENT-02 | 不走加减分，走 Trust Ceiling 与实体维扣分 |
 | 单一邮箱域 ≠ 站点域（含免费邮箱） | ENT-02（W 警告项） | 0（列出不计分） |
 | lorem/占位主体内容 | CLN-03 | 不走加减分，走质量维 + 总分上限 ≤75 |

@@ -102,7 +102,7 @@
 
 | 检测项 | 输入 | 判定与阈值草案 | 输出 | LLM |
 |---|---|---|---|---|
-| AI 检索爬虫放行 | robots.txt（解析 UA 段与 allow/disallow，区分检索/训练，参考 OpenAI A3 语义） | 任一流检索爬虫（OAI-SearchBot、GPTBot、ChatGPT-User、ClaudeBot、anthropic-ai、PerplexityBot、Google-Extended/GoogleExtendedCrawler、Bingbot 等）被 `Disallow:/` 或专属段限制 → critical；仅训练爬虫（CCBot/Bytespider…）被挡不 critical | issue+惩罚/提示；区分“搜索可见性”与“训练”两类说明 | 否 |
+| AI 检索与训练爬虫放行 | robots.txt（解析 UA 段与 allow/disallow，区分检索/训练，参考 OpenAI A3 语义） | 搜索/按需抓取爬虫（OAI-SearchBot、ChatGPT-User、Claude-SearchBot、PerplexityBot、Googlebot、Bingbot 等）被 `Disallow:/` 或专属段限制 → critical（核心访问 -15）。训练爬虫（GPTBot、ClaudeBot、Google-Extended、CCBot…）被挡不 critical、不扣核心分，但作为改进建议：要对 AI 友好也应开放，以便进入模型训练语料。不得把训练拦截写成搜索失败。 | 核心访问惩罚 / 训练建议；两类说明分开 | 否 |
 | 可访问性探测 | 首页与关键页 GET | WAF/CAPTCHA/challenge 页（HTML 里含 cloudflare/captcha/challenge/verify）→ 提示“真实爬虫可能被挡”；429/403 记录 | 警告+URL | 否 |
 | AI 爬虫 UA 可达性 | 用主流 AI 检索爬虫 UA 实抓关键页 | 以 OAI-SearchBot、GPTBot、ClaudeBot、PerplexityBot 等 UA 抓取首页/About/代表性内容页；被 WAF/挑战页/403/429 拦截 → 可达性问题（区别于 robots 文本放行） | 每 UA 的可达结果与证据 | 否 |
 | 无 JS 内容可读性 | 禁用 JS 的 HTML | 关键内容（正文主体、可索引文本、结构化数据）是否存在于服务端 HTML；纯 CSR 空壳 → 可读性问题 | issue + 页面证据 | 否 |
