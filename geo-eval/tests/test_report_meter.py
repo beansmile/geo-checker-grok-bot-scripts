@@ -21,11 +21,13 @@ class MeterBandTests(unittest.TestCase):
         self.assertEqual(rm.meter_band(54.5), "is-low")
         self.assertEqual(rm.meter_band(59.5), "is-low")
 
-    def test_60_to_below_80_is_mid(self):
+    def test_60_to_below_75_is_mid(self):
         self.assertEqual(rm.meter_band(60), "is-mid")
-        self.assertEqual(rm.meter_band(79.5), "is-mid")
+        self.assertEqual(rm.meter_band(74.5), "is-mid")
 
-    def test_80_and_up_is_high(self):
+    def test_75_and_up_is_high(self):
+        self.assertEqual(rm.meter_band(75), "is-high")
+        self.assertEqual(rm.meter_band(79.5), "is-high")
         self.assertEqual(rm.meter_band(80), "is-high")
         self.assertEqual(rm.meter_band(100), "is-high")
 
@@ -95,6 +97,95 @@ class SharedCssTests(unittest.TestCase):
         fallback_at = print_block.find(".cm-fill{background:#0F172A}")
         self.assertGreater(low_at, 0)
         self.assertGreater(fallback_at, low_at)
+
+
+
+
+class IndexChromeTests(unittest.TestCase):
+    def test_overlay_and_topbar(self):
+        import report_chrome as rc
+        html = rc.index_overlay([("cover", "封面"), ("scores", "分数构成")], lang="zh")
+        self.assertIn('id="index"', html)
+        self.assertIn('href="#cover"', html)
+        self.assertIn("报告索引", html)
+        self.assertIn("关闭 (ESC)", html)
+        self.assertIn("封面", html)
+        bar = rc.topbar_index(10, lang="zh")
+        self.assertIn("索引", bar)
+        self.assertIn("01 / 10", bar)
+        self.assertIn('id="now-page"', bar)
+        en = rc.index_overlay([("cover", "Cover")], lang="en")
+        self.assertIn("Report index", en)
+        self.assertIn("Close (ESC)", en)
+
+    def test_strip_section_number(self):
+        import report_chrome as rc
+        self.assertEqual(rc.strip_section_number("01 综合结论"), "综合结论")
+        self.assertEqual(rc.strip_section_number("03 Technical summary"), "Technical summary")
+        self.assertEqual(rc.strip_section_number("信息架构"), "信息架构")
+
+
+
+class BuiltReportIndexTests(unittest.TestCase):
+    """Content and combined HTML include the technical-report index chrome."""
+
+    ZH = Path("/workspace/skills/geo-eval/runs/nanxing.com/2026-11-12_run01")
+
+    def test_content_index_chrome(self):
+        import json, sys
+        sys.path.insert(0, str(Path("/workspace/skills/geo-eval/scripts")))
+        from build_content_report import render_html
+        data = json.loads((self.ZH / "content_report.json").read_text(encoding="utf-8"))
+        html = render_html(data, "", lang="zh")
+        self.assertIn('id="index"', html)
+        self.assertIn(">索引</button>", html)
+        self.assertIn('id="now-page"', html)
+        self.assertIn("报告索引", html)
+        self.assertIn("function go(i)", html)
+        self.assertIn("Escape", html)
+        self.assertIn("keydown", html)
+        for a in ("cover", "overall", "method", "strengths", "dim1", "ia",
+                  "questions", "actions", "followup", "scope"):
+            self.assertIn(f'href="#{a}"', html)
+        self.assertIn("信息架构", html)
+        self.assertIn("分类与缺口", html)
+        self.assertIn("写作质量", html)
+        self.assertIn("权威与证据", html)
+        self.assertIn("采购问题覆盖", html)
+        self.assertNotIn("Information architecture", html)
+        self.assertIn('class="cm-fill is-low"', html)
+        # progress width is driven by deck.js, not a fixed inline style
+        self.assertNotIn('class="progress"><i style="width:', html)
+        self.assertIn('history.replaceState(null,\'\',\'#\'+id)', html.replace(" ", ""))
+
+    def test_combined_index_chrome(self):
+        import json, sys
+        sys.path.insert(0, str(Path("/workspace/skills/geo-eval/scripts")))
+        from build_combined_report import render_html, find_tech_report, find_content_report
+        tech = find_tech_report(str(self.ZH))
+        content = find_content_report(str(self.ZH), "zh")
+        html = render_html(tech, content, "", lang="zh", brand="南兴装备中文站")
+        self.assertIn('id="index"', html)
+        self.assertIn(">索引</button>", html)
+        self.assertIn("报告索引", html)
+        self.assertIn("function go(i)", html)
+        for a in ("cover", "conclusion", "scores", "tech", "content",
+                  "shared", "timeline", "scope", "closing", "sources"):
+            self.assertIn(f'href="#{a}"', html)
+        self.assertIn("综合结论", html)
+        self.assertIn("参考来源", html)
+        self.assertIn('class="cm-fill is-low"', html)
+
+    def test_english_labels(self):
+        import json, sys
+        sys.path.insert(0, str(Path("/workspace/skills/geo-eval/scripts")))
+        from build_content_report import render_html
+        data = json.loads((self.ZH / "content_report.json").read_text(encoding="utf-8"))
+        html = render_html(data, "", lang="en")
+        self.assertIn(">Index</button>", html)
+        self.assertIn("Report index", html)
+        self.assertIn("Close (ESC)", html)
+        self.assertIn("Cover", html)
 
 
 if __name__ == "__main__":

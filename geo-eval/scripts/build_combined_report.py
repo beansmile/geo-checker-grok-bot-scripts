@@ -33,10 +33,12 @@ from urllib.parse import urlparse
 try:
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from report_chrome import index_overlay, index_ui, load_deck_js, strip_section_number, topbar_index, content_dim_name
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from report_chrome import index_overlay, index_ui, load_deck_js, strip_section_number, topbar_index, content_dim_name
 
 from combined_score import (
     CONTENT_WEIGHT,
@@ -117,34 +119,6 @@ def apply_zh_fields(data: dict) -> dict:
     return data
 
 
-CONTENT_DIM_NAMES = {
-    "en": {
-        "information_architecture": "Information architecture",
-        "taxonomy_gaps": "Content taxonomy & gaps",
-        "writing_quality": "Writing quality",
-        "authority_evidence": "Authority & evidence publishing",
-        "query_coverage": "Target query coverage",
-    },
-    "zh": {
-        "information_architecture": "信息架构",
-        "taxonomy_gaps": "分类与缺口",
-        "writing_quality": "写作质量",
-        "authority_evidence": "权威与证据",
-        "query_coverage": "采购问题覆盖",
-    },
-}
-
-
-def content_dim_name(dim: dict, lang: str) -> str:
-    key = dim.get("key") or ""
-    if lang == "zh":
-        if dim.get("name_zh"):
-            return dim["name_zh"]
-        if key in CONTENT_DIM_NAMES["zh"]:
-            return CONTENT_DIM_NAMES["zh"][key]
-    if key in CONTENT_DIM_NAMES.get(lang, {}):
-        return CONTENT_DIM_NAMES[lang][key]
-    return dim.get("name") or key or "—"
 
 
 SOURCES = [
@@ -1185,12 +1159,29 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
         gate_banner = f"<p class='gate-banner'>{esc(gate_text)}</p>"
 
     sources_html = render_sources(lang, S)
+
     meta_desc = (
         f"{combined_label} {combined_disp}/100 ({combined_grade}); "
         f"{S['tech_label']} {tech_disp}/100 ({tech_grade}); "
         f"{S['content_label']} {content_disp}/100 ({content_grade})."
         if not missing else f"{S['tech_label']} {tech_disp}/100; {S['content_label']} {content_disp}/100."
     )
+
+    index_entries = [
+        ("cover", index_ui(lang)["cover"]),
+        ("conclusion", strip_section_number(S["intro_kicker"])),
+        ("scores", strip_section_number(S["scores_kicker"])),
+        ("tech", strip_section_number(S["tech_kicker"])),
+        ("content", strip_section_number(S["content_kicker"])),
+        ("shared", strip_section_number(S["shared_kicker"])),
+        ("timeline", strip_section_number(S["timeline_kicker"])),
+        ("scope", strip_section_number(S["scope_kicker"])),
+        ("closing", strip_section_number(S["closing_kicker"])),
+        ("sources", strip_section_number(S["refs_kicker"])),
+    ]
+    nav_index = index_overlay(index_entries, lang)
+    nav_topbar = topbar_index(len(index_entries), lang)
+    deck_js = load_deck_js(lang)
 
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1234,8 +1225,9 @@ ol.refs li{{margin:0 0 14px}}
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><b>GEO Checker</b></span>
   <span class="doc">{esc(brand)} · {esc(S['doc_title'])} · {esc(domain)}</span>
-  <span class="right"><span class="now mono">{esc(date)}</span></span>
-</div><div class="progress"><i style="width:{pct_disp}%"></i></div></div>
+  <span class="right"><span class="now mono">{esc(date)}</span>
+  {nav_topbar}</span>
+</div><div class="progress"><i></i></div></div>
 
 <div class="deck">
 
@@ -1428,6 +1420,8 @@ ol.refs li{{margin:0 0 14px}}
 
 </div>
 <p class="docfoot">{esc(S['docfoot'])}</p>
+{nav_index}
+<script>{deck_js}</script>
 </body></html>
 """
 

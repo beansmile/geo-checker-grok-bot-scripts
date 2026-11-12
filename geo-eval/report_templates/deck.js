@@ -16,7 +16,7 @@
   function go(i){
     i=Math.max(0,Math.min(pages.length-1,i));
     pages[i].scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
-    history.replaceState(null,'','#p'+(i+1));
+    var id=pages[i].id; if(id) history.replaceState(null,'','#'+id);
   }
   function sync(){
     var i=cur();

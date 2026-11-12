@@ -30,11 +30,13 @@ from datetime import datetime
 try:
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from report_chrome import index_overlay, index_ui, load_deck_js, strip_section_number, topbar_index, content_dim_name
 except ImportError:
     import os as _os, sys as _sys
     _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from report_chrome import index_overlay, index_ui, load_deck_js, strip_section_number, topbar_index, content_dim_name
 
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
@@ -546,7 +548,7 @@ def render_md(data: dict, lang: str = "en") -> str:
     lines.append("|---|---|---|---|")
     for d in data.get("dimensions") or []:
         lines.append(
-            f"| {d.get('name')} | {format_score(d.get('score'))} | /{d.get('max')} | {d.get('grade')} |"
+            f"| {content_dim_name(d, lang)} | {format_score(d.get('score'))} | /{d.get('max')} | {d.get('grade')} |"
         )
     if score is not None:
         lines.append(f"| **{S['md_total']}** | **{format_score(score)}** | **/100** | {grade} |")
@@ -569,7 +571,7 @@ def render_md(data: dict, lang: str = "en") -> str:
     lines.append(S["md_h_dims"])
     lines.append("")
     for i, d in enumerate(data.get("dimensions") or [], 1):
-        lines.append(f"### {i} · {d.get('name')} ({format_score(d.get('score'))} / {d.get('max')} · {d.get('grade')})")
+        lines.append(f"### {i} · {content_dim_name(d, lang)} ({format_score(d.get('score'))} / {d.get('max')} · {d.get('grade')})")
         lines.append("")
         lines.append(d.get("narr") or " ".join(d.get("notes") or []) or S["none"])
         lines.append("")
@@ -847,7 +849,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
 
     dims = data.get("dimensions") or []
     dim_rows = "".join(
-        f"<tr><td>{esc(d.get('name'))}</td><td class=\"num mono\">{esc(format_score(d.get('score')))}</td>"
+        f"<tr><td>{esc(content_dim_name(d, lang))}</td><td class=\"num mono\">{esc(format_score(d.get('score')))}</td>"
         f"<td class=\"dim mono\">/{esc(str(d.get('max')))}</td>"
         f"<td class=\"dim mono r\">{esc(str(d.get('grade')))}</td></tr>"
         for d in dims
@@ -871,7 +873,7 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     <span class="ph-url mono">{esc(domain)}</span><span class="ph-sec">{esc(S['dim_sec'].format(n=i))}</span>
     <span class="ph-right"><span class="mono">{esc(date)}</span></span></header>
   <div class="ptitle"><div><div class="pkicker">{esc(S['dim_kicker'].format(n=i))}</div>
-    <h2>{esc(d.get('name'))}</h2></div>
+    <h2>{esc(content_dim_name(d, lang))}</h2></div>
     <div class="pmeta"><span class="scorechip {dc}"><b>{esc(format_score(d.get('score')))}</b>
     <span>/{esc(str(d.get('max')))}</span><em class="g {dg}">{esc(str(d.get('grade')))}</em></span></div></div>
   <div class="mini"><i style="width:{dp}%;background:{dbar}"></i></div>
@@ -998,8 +1000,31 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
         limit=10,
     )
 
+
     sample = "".join(f"<li class='mono'>{esc(u)}</li>" for u in (data.get("sample_urls") or [])[:24])
     none_li = f"<li>{esc(S['none'])}</li>"
+
+    index_entries = [
+        ("cover", index_ui(lang)["cover"]),
+        ("overall", strip_section_number(S["kicker_overall"])),
+        ("method", strip_section_number(S["kicker_method"])),
+        ("strengths", strip_section_number(S["kicker_strengths"])),
+    ]
+    for i, d in enumerate(dims, 1):
+        index_entries.append((f"dim{i}", content_dim_name(d, lang)))
+    index_entries += [
+        ("ia", strip_section_number(S["kicker_ia"])),
+        ("questions", strip_section_number(S["kicker_questions"])),
+        ("ai", strip_section_number(S["kicker_ai"])),
+        ("evidence", strip_section_number(S["kicker_authority"])),
+        ("findings", strip_section_number(S["kicker_findings"])),
+        ("actions", strip_section_number(S["kicker_actions"])),
+        ("followup", strip_section_number(S["kicker_timeline"])),
+        ("scope", strip_section_number(S["kicker_scope"])),
+    ]
+    nav_index = index_overlay(index_entries, lang)
+    nav_topbar = topbar_index(len(index_entries), lang)
+    deck_js = load_deck_js(lang)
 
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1018,8 +1043,9 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><b>GEO Checker</b></span>
   <span class="doc">{esc(S['topbar_doc'].format(brand=brand, domain=domain))}</span>
-  <span class="right"><span class="now mono">{esc(date)}</span></span>
-</div><div class="progress"><i style="width:{pct}%"></i></div></div>
+  <span class="right"><span class="now mono">{esc(date)}</span>
+  {nav_topbar}</span>
+</div><div class="progress"><i></i></div></div>
 
 <div class="deck">
 
@@ -1171,6 +1197,8 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
 
 </div>
 <p class="docfoot">{esc(S['docfoot'])}</p>
+{nav_index}
+<script>{deck_js}</script>
 </body></html>
 """
 

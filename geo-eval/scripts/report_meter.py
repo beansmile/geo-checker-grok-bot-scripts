@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """Cover-page score meter: 0.5-aligned width, band colors, and exact scale marks.
 
-Bands (customer-facing, same thresholds as 及格 60 / 良好 80):
+Color bands (scale ticks stay at 及格 60 / 良好 80):
   < 60  → is-low  (red)
-  < 80  → is-mid  (yellow)
-  >= 80 → is-high (green)
+  < 75  → is-mid  (yellow)
+  >= 75 → is-high (green)
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ def meter_band(score) -> str:
         s = 0.0
     if s < 60:
         return "is-low"
-    if s < 80:
+    if s < 75:
         return "is-mid"
     return "is-high"
 
