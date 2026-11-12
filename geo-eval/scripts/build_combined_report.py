@@ -835,41 +835,102 @@ def unevaluated_types(tech: dict, content: dict) -> list[str]:
     return items
 
 
-def collect_actions(tech: dict, content: dict) -> list:
+def _action_blob(item) -> str:
+    if isinstance(item, dict):
+        return " ".join(
+            str(item.get(k) or "")
+            for k in ("action", "title", "title_zh", "detail", "solution", "solution_zh", "body", "problem")
+        ).lower()
+    return str(item).lower()
+
+
+# Same-issue tokens used to drop translated duplicates (e.g. English SEO
+# "Canonical tags missing…" vs already-translated TEC-CANONICAL-MISSING).
+_THEME_TOKENS = ("canonical",)
+
+_OWNER_ZH = {
+    "content": "内容",
+    "eng/ops": "工程 / 运维",
+    "eng": "工程",
+    "engineering": "工程",
+    "ops": "运维",
+}
+
+
+def _already_covered(title: str, existing: str) -> bool:
+    t = (title or "").strip().lower()
+    if not t:
+        return False
+    blob = (existing or "").lower()
+    if t in blob:
+        return True
+    for tok in _THEME_TOKENS:
+        if tok in t and tok in blob:
+            return True
+    return False
+
+
+def _owner_label(owner: str, lang: str) -> str:
+    raw = (owner or "").strip()
+    if lang == "zh":
+        return _OWNER_ZH.get(raw.lower(), raw)
+    return raw
+
+
+def _localized_title(item: dict, lang: str) -> str:
+    if lang == "zh":
+        return (item.get("title_zh") or item.get("title") or item.get("action") or item.get("solution") or "").strip()
+    return (item.get("title") or item.get("title_zh") or item.get("action") or item.get("solution") or "").strip()
+
+
+def _localized_detail(item: dict, lang: str) -> str:
+    if lang == "zh":
+        return (item.get("solution_zh") or item.get("solution") or item.get("detail") or item.get("body") or "").strip()
+    return (item.get("solution") or item.get("solution_zh") or item.get("detail") or item.get("body") or "").strip()
+
+
+def collect_actions(tech: dict, content: dict, lang: str = "en") -> list:
     actions = list(content.get("priority_actions") or [])
     seo = tech.get("seo_discoverability") or {}
-    existing = " ".join(
-        (a.get("action") if isinstance(a, dict) else str(a)) for a in actions
-    ).lower()
+    existing = " ".join(_action_blob(a) for a in actions)
+    # Tech findings / next steps are later merged into the timeline; treat them
+    # as already covered so an untranslated SEO copy is not added beside them.
+    existing += " " + " ".join(_action_blob(f) for f in (tech.get("findings") or []))
+    existing += " " + " ".join(_action_blob(s) for s in (tech.get("next_steps") or []))
     for f in seo.get("findings") or []:
-        if not isinstance(f, dict) or not f.get("solution"):
+        if not isinstance(f, dict) or not (f.get("solution") or f.get("solution_zh")):
             continue
-        title = f.get("title") or f.get("solution")
-        if title and title.lower() in existing:
+        title = _localized_title(f, lang)
+        detail = _localized_detail(f, lang)
+        if not title or _already_covered(title, existing):
             continue
+        owner = "eng/ops" if any(
+            k in _finding_blob(f) for k in ("crawl", "抓取", "爬虫", "robots")
+        ) else "content"
         actions.append(
             {
                 "sev": "P0" if (f.get("severity") or "") in ("critical", "高") else "P1",
                 "action": title,
-                "detail": f.get("solution") or "",
-                "owner": "eng/ops" if any(k in _finding_blob(f) for k in ("crawl", "http", "抓取", "爬虫")) else "content",
+                "detail": detail,
+                "owner": _owner_label(owner, lang),
             }
         )
-    # Fold tech next_steps that are not already covered
+        existing += " " + title.lower() + " " + detail.lower()
     for step in tech.get("next_steps") or []:
         if not isinstance(step, dict):
             continue
-        title = step.get("title") or ""
-        if title and title.lower() not in existing:
-            actions.append(
-                {
-                    "sev": "P1",
-                    "action": title,
-                    "detail": step.get("body") or "",
-                    "owner": "",
-                }
-            )
-            existing += " " + title.lower()
+        title = _localized_title(step, lang)
+        if not title or _already_covered(title, existing):
+            continue
+        actions.append(
+            {
+                "sev": "P1",
+                "action": title,
+                "detail": step.get("body") or "",
+                "owner": _owner_label(step.get("owner") or "", lang),
+            }
+        )
+        existing += " " + title.lower()
     return actions
 
 
@@ -1052,7 +1113,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     shared = collect_shared_findings(tech, content)
     shared_html = render_finding_blocks(shared, S, limit=6)
 
-    actions = collect_actions(tech, content)
+    actions = collect_actions(tech, content, lang)
     _tl_sources = list(actions)
     for f in (content_findings + tech_findings):
         if isinstance(f, dict):

@@ -349,6 +349,12 @@ class CombinedNanxingIntegrationTests(unittest.TestCase):
         self.assertIn("访问门槛未生效", html)
         # Training blocks on this site must not be described as a combined-score gate.
         self.assertNotIn("访问门槛已生效", html)
+        # SEO-URL-02 stays English in report.json; the zh combined report must
+        # use the already-translated finding and not show the English duplicate.
+        self.assertNotIn("Canonical tags missing on most sampled pages", html)
+        self.assertNotIn("Add self-referencing canonical on every indexable URL", html)
+        self.assertIn("抽样页缺少自引用 canonical", html)
+        self.assertNotIn(">content<", html)
 
 
 class CombinedCliTests(unittest.TestCase):
