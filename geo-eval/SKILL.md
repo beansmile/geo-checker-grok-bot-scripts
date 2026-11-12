@@ -113,7 +113,7 @@ Standalone content-only (no prior tech run): `python3 scripts/content_eval.py <U
 
 **Placement:** SEO discoverability lives in the **technical** report as a **15-point dimension** of the 100 (`seo_scoring.md`). Content GEO (`content_scoring.md`) covers IA, taxonomy, writing, authority evidence, and query coverage only — no SEO dim there.
 
-Rules: Content GEO score is **separate** from the technical 100; never merge into one total. Combined HTML keeps **two** headline scores + an effort-based remediation timeline (checklist + day-scale schedule). GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
+Rules: The technical /100 and Content GEO /100 remain **independent and visible**. A third combined /100 may be shown as technical 40% + content 60%, then an access gate (Googlebot or all verified search crawlers blocked caps the combined score at 30; a core search-access penalty caps it at 50; training-crawler blocks do not trigger the gate). Never replace the two component scores with the combined number, and do not emit a combined score if either side is missing. 40/60 is our product contract, not a percentage any vendor published. Published combined scores use 0 / 0.5 increments. Combined HTML also keeps an effort-based remediation timeline (checklist + day-scale schedule). Never show scoring/rules/rubric version numbers in customer HTML or user-facing chat. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
 
 ## Boundaries
 

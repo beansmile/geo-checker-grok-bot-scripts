@@ -92,6 +92,9 @@ yes:  content_eval.py --from-run <tech_run>   # 复用同一次抓取，禁止�
 
 Never re-fetch for content when a successful technical run exists. A separate content run dir is fine **only if** it reused the tech crawl (`--from-run`).
 
+Combined HTML keeps the two component scores visible and may add a third combined /100 (technical 40% + content 60%, plus an access gate). Do not replace the component scores, do not emit a combined score if either side is missing, and do not show rubric/rules versions in customer HTML. 40/60 is our product contract, not a vendor-published split.
+
+
 Optional inputs: `evidence/ai_checks.json`, `evidence/offsite.json`.
 
 Technical scoring: 10-dim /100 (SEO discoverability = 15 pts inside that total). Content GEO: separate 5-dim /100. Keep version labels in engineer docs / JSON; do not parrot them to customers.

@@ -82,11 +82,12 @@ python3 scripts/build_combined_report.py runs/<domain>/<tech_run> \
   --content-run runs/<domain>/<content_or_same_run>
 ```
 
-Emits `report/Combined_Report.html` (ZH: `综合报告.html`). Keeps technical /100 (incl. SEO dim) and Content GEO /100 separate; includes an **effort-based** remediation timeline (checklist + schedule; HTTPS/crawl ≤1 day — not a padded W0–W16 calendar).
+Emits `report/Combined_Report.html` (ZH: `综合报告.html`) plus a sidecar JSON. Keeps technical /100 (incl. SEO dim) and Content GEO /100 independent and visible, and adds a third combined /100 (technical 40% + content 60%, then an access gate; published score snapped to 0 / 0.5). Includes an **effort-based** remediation timeline (checklist + schedule; HTTPS/crawl ≤1 day — not a padded W0–W16 calendar), a 口径说明 for the 40/60 contract, and a customer 参考来源 footer. Do not show scoring/rules/rubric version numbers in the customer HTML.
 
 ## Scoring (internal; do not quote versions to customers)
 
 - Technical: **10 dimensions /100** (SEO discoverability = 15).
 - Content GEO: separate /100 (IA20 · TAX15 · WRITE20 · AUTH20 · QUERY25).
+- Combined (optional third headline): 0.40 × technical + 0.60 × content, then an access gate; snap to 0 / 0.5. The two component scores stay visible. 40/60 is a product contract, not a vendor-published split.
 - GEO = Generative Engine Optimization only — never geography / local-pack framing.
 - Client deliverables: **HTML only**. Keep version ids in JSON / `scoring.md` for engineers; never in customer HTML or chat copy.
