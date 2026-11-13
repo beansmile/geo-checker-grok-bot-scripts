@@ -60,6 +60,7 @@
 | 项 | 规则 | 调整 |
 |---|---|---|
 | 搜索索引或按需抓取爬虫被屏蔽/实测不可达 | ACC-01/02/03 | -15（只计一次）。要对 AI 友好，访问爬虫与训练爬虫都建议开放：前者是出现在 AI 搜索中的前提，后者用于模型训练语料。训练爬虫（GPTBot、ClaudeBot、Google-Extended）被拦截作为改进建议写出，不扣核心访问分，也不触发综合访问门槛。不得由 GPTBot 推断 ChatGPT 搜索被屏蔽；挡住 Google-Extended 不影响 Google 搜索或 AI Overviews；Claude-SearchBot 未测时 Claude 搜索为未核实。 |
+| 非 HTTPS / HTTP 不跳转 / 重定向过长 | ACC-05 | -10 / -3 / -3。写入 `score_adjustments` 并计入技术总分。非 HTTPS（评分入口不是可用的 HTTPS，含证书校验失败、不能把失败的 HTTPS 当成官网）只扣 10 分，不再叠加上面两档；已是可用 HTTPS 时，HTTP 未跳转与主 URL 跳转超过 2 次可同时各扣 3 分。证书/主机名不一致本身仍按 TEC-04 仅警告、不另扣分。不把本项再计入 SEO 维。 |
 | 严重实体不一致（品牌冲突 / ≥2 个邮箱域） | ENT-01 / ENT-02 | 不走加减分，走 Trust Ceiling 与实体维扣分 |
 | 单一邮箱域 ≠ 站点域（含免费邮箱） | ENT-02（W 警告项） | 0（列出不计分） |
 | lorem/占位主体内容 | CLN-03 | 不走加减分，走质量维 + 总分上限 ≤75 |
@@ -68,7 +69,7 @@
 | ItemList Schema | SCH-01 | +3 |
 | 加分上限 | — | bonus ≤ +10，不抵消真实性问题 |
 
-引擎**当前未把 ACC-05 HTTPS 罚分写入 `score_adjustments`**（文档曾列 −10/−3/−3）。Checker 不以该项作为本轮新的核心罚分；如需复测 HTTPS，见 Access 观察/建议项。`lastmod` 目前不单独计分，本轮不新增政策。
+ACC-05 HTTPS 罚分写入 `score_adjustments` 并计入技术总分（−10 / −3 / −3，叠加上限见上表）。`lastmod` 目前不单独计分。
 
 > CSR/纯前端渲染不设固定罚分：由 ACC-06/TEC-02 以高优先级 issue + 架构警告呈现，避免重复扣分。
 >

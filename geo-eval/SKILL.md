@@ -131,6 +131,19 @@ Rules: The technical /100 and Content GEO /100 remain **independent and visible*
 - Training vs access crawlers: recommend opening both. Search/on-demand access blocks: −15 once on the technical score, and may cap the combined score (Googlebot or all verified search crawlers blocked → 30; a core search-access penalty → 50). Training-crawler blocks are recommendations only — no core −15, no combined gate.
 - Combined /100 is technical 40% + content 60%, then the access gate. Keep both component scores visible; do not emit a combined score if either side is missing.
 
+## HTTPS access penalties (required)
+
+ACC-05 is a **live core penalty** on the technical overall score via `score_adjustments`. Do not skip it, and do not treat it as advisory.
+
+- No usable HTTPS (the scoring entry is not usable HTTPS, including a failed TLS handshake) → −10. Do not also apply the next two tiers. Never disable certificate verification to treat a broken HTTPS URL as the official site.
+- Usable HTTPS, but HTTP does not redirect to HTTPS → −3.
+- Main URL redirect hops > 2 → −3. When HTTPS is usable, the last two tiers may both apply.
+- Official HTTP URLs remain valid scoring entries. If the official URL is HTTP but `https://` on the same host works with TLS verify, score the HTTP-not-redirected tier (−3), not the no-HTTPS tier (−10).
+- Certificate or hostname mismatch alone is TEC-04, warning only (0). A failed TLS handshake means HTTPS is not usable (−10).
+- Do not also count this penalty in the SEO dimension.
+- After `site.json`, probe and save `evidence/https.json` (`https_access.py`). If the probe fails, infer from the official URL scheme only: HTTP → −10; official HTTPS → do not invent the −3 / −3 tiers without hop or redirect evidence.
+- Finding ids: `ACC-05`, `ACC-05-REDIRECT`, `ACC-05-HOPS`.
+
 ## Crawl policy
 
 - `--max-pages` has a hard cap of 100.

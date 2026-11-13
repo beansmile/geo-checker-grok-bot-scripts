@@ -84,7 +84,7 @@
 | ACC-02 | AI UA 可达性 | 用 OAI-SearchBot/GPTBot/ClaudeBot/PerplexityBot 四个 UA 实抓首页 + 2 个正文页；命中挑战页（cloudflare/captcha/challenge/verify）、403/429、超时 → 每个 UA 记一条 | S2 | 4/UA 起，累计 ≤12 | R | home+content |
 | ACC-03 | WAF/挑战拦截迹象 | 普通 UA 抓取返回挑战页/429/403 或 HTML 含验证脚本 → S2 提示 | S2 | 5 | R | site |
 | ACC-04 | sitemap 有效性 | 存在 `sitemap(.xml|_index.xml)` 且可解析；robots 声明一致；content 页占比 <50% → S3 | S3 | 3 | R | site |
-| ACC-05 | HTTPS 与重定向 | 非 HTTPS → S1（-10）；HTTPS 但 http 不跳转 → S2（-3）；主 URL 跳数 >2 → S3（-3） | S1/S2/S3 | -10/-3/-3 | R | site |
+| ACC-05 | HTTPS 与重定向 | 非 HTTPS（评分入口不是可用的 HTTPS，含 TLS 校验失败；不得关闭证书校验把失败的 HTTPS 当成官网）→ S1（-10），此时不再叠加 S2/S3；可用 HTTPS 但 http 不跳转 → S2（-3）；主 URL 跳数 >2 → S3（-3），S2 与 S3 可同时计。证书/主机名不一致本身见 TEC-04（通常仅警告）。 | S1/S2/S3 | -10/-3/-3 | R | site |
 | ACC-06 | 无 JS 内容可读性 | 服务端 HTML 的 body 文本 <300 字符或关键内容缺失（H1/正文/schema 均在 JS 注入）→ S1；CSR 启发式命中 → issue + 架构警告 | S1 | 6 | R | home+content |
 | ACC-07 | llms.txt（可选） | `/llms.txt`、`/llms-full.txt`：200 且 body >10 字符、非 HTML、非软 404（不含 `404`/`not found`/`页面不存在`）→ 存在给可选加分；缺失不扣分（Google 官方不读取该文件）。Checker 核心 100 分不再加减此项，仅作实验/辅助展示 | S4（可选） | 0（不计核心分） | R | site |
 
@@ -261,7 +261,7 @@
 | 项 | 规则 | 调整 |
 |---|---|---|
 | AI 检索爬虫被挡 | ACC-01 | -15 |
-| 非 HTTPS / 不跳转 / 重定向过长 | ACC-05 | -10 / -3 / -3 |
+| 非 HTTPS / 不跳转 / 重定向过长 | ACC-05 | -10 / -3 / -3（非 HTTPS 只扣 10，不叠加后两档；可用 HTTPS 时后两档可同时扣） |
 | 严重实体不一致 | ENT-01 / ENT-02（≥2 个邮箱域） | -8~-12 / -5~-10 |
 | 单一邮箱域 ≠ 站点域（含免费邮箱） | ENT-02（W） | 0（列出不计分） |
 | lorem/占位主体内容 | CLN-03 | 按占比 -3~-10 |

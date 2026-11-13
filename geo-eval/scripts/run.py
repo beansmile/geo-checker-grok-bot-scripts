@@ -31,6 +31,7 @@ import page_coverage
 from urllib.parse import urljoin, urlparse
 
 import crawler_roles
+import https_access
 from net_policy import (
     FIRST_PARTY_HEADERS,
     FIRST_PARTY_UA,
@@ -541,6 +542,22 @@ def main():
     }
     save(os.path.join(run_dir, "site.json"), json.dumps(site, ensure_ascii=False, indent=2))
     save(os.path.join(run_dir, "scope.json"), json.dumps({"pages": pages, "pages_total": len(urls)}, ensure_ascii=False, indent=2))
+
+    # ACC-05: HTTPS usability, HTTP→HTTPS redirect, and hop count.
+    print("[3b/5] 探测 HTTPS 与跳转（ACC-05）")
+    try:
+        https_info = https_access.probe_https_access(site["url"], allowed_site=base)
+        https_access.save_to_run(run_dir, https_info)
+        acc05 = https_access.evaluate_acc05(https_info)
+        print(
+            f"      https={https_info.get('https')} "
+            f"http→https={https_info.get('http_redirects_to_https')} "
+            f"hops={https_info.get('redirect_hops')} "
+            f"penalty={acc05.get('penalty') or 0}"
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"      [https] 探测失败，将按官网地址协议计分：{e}")
+        https_access.save_to_run(run_dir, https_access.infer_from_official_url(site["url"]))
 
     # ACC-02 / ACC-03: limited homepage reachability probes with third-party
     # crawler UAs. These probes do not honor robots.txt; sampling fetches above do.

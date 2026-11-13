@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 import citability
 import crawler_roles
 import entity_signals
+import https_access
 import llms_detect
 import page_coverage
 from content_analyze import snap_half
@@ -706,6 +707,8 @@ def detect_acc(run_dir, base_url):
     # Core live blocks only (training bots excluded). Keep ai_blocked as core list
     # so older report code that reads it does not treat GPTBot as search failure.
     core_live = list(decision.get("core_live_blocked") or [])
+    https_info = https_access.load_from_run(run_dir, base_url)
+    acc05 = https_access.evaluate_acc05(https_info)
     return {
         "blocked": blocked,
         "blocked_core": list(robots_split.get("core_blocked") or []),
@@ -721,6 +724,8 @@ def detect_acc(run_dir, base_url):
         "crawler_decision": decision,
         "engines": engines,
         "observation_mode": "raw_http_html",
+        "https": https_info,
+        "acc05": acc05,
     }
 
 
@@ -1015,6 +1020,9 @@ def build_findings(cln, ent, schema_info, acc, pages):
     core_live = list(decision.get("core_live_blocked") or _ai_blocked)
     training_live = list(decision.get("training_live_blocked") or acc.get("training_blocked_live") or [])
     engine_lines = crawler_roles.engine_status_lines_zh(engines)
+
+    for f in (acc.get("acc05") or {}).get("findings") or []:
+        findings.append(f)
 
     if core_live:
         findings.append({
@@ -2102,6 +2110,10 @@ def analyze(run_dir):
         penalty += 15
         reason = crawler_roles.penalty_reason_zh(decision) or "搜索/按需抓取爬虫不可达"
         adjustments.append({"type": "penalty", "points": -15, "reason": reason})
+    acc05 = acc.get("acc05") or https_access.evaluate_acc05(acc.get("https"))
+    for adj in acc05.get("adjustments") or []:
+        penalty += abs(int(adj.get("points") or 0))
+        adjustments.append(adj)
     has_itemlist = any(
         re.search(r"ItemList", str(s.get("@type", "")))
         for p in pages for s in (p.get("schemas") or []) if isinstance(s, dict)
