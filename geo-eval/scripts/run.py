@@ -46,8 +46,9 @@ from net_policy import (
 from public_suffix import registrable_domain as _registrable_domain
 from run_paths import skill_root as _skill_root
 
-# Sampling / content / discovery fetches use a first-party GEO Checker UA and
-# honor robots.txt Disallow. Third-party crawler UAs (Googlebot, etc.) are
+# Sampling / content / discovery fetches use the desktop Chrome UA in
+# net_policy.FIRST_PARTY_UA (same string as geo_ready) and honor
+# robots.txt Disallow. Third-party crawler UAs (Googlebot, etc.) are
 # used only for limited, read-only homepage reachability probes below.
 UA = FIRST_PARTY_HEADERS
 
@@ -171,8 +172,7 @@ def fetch_with_meta(url, timeout=15, headers=None, honor_robots=True):
 # Claude 搜索状态看 Claude-SearchBot，不看 ClaudeBot。
 AI_UA_PROBES = dict(crawler_roles.AI_UA_PROBES)
 SEARCH_UA_PROBES = dict(crawler_roles.SEARCH_UA_PROBES)
-BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-              "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
+BROWSER_UA = FIRST_PARTY_UA
 # Strong challenge-page signals only. The bare words "captcha" / "challenge"
 # appear in ordinary CMS config (e.g. page._captcha_domain_prefix) and must
 # not flag a 200 OK HTML document as a WAF wall.

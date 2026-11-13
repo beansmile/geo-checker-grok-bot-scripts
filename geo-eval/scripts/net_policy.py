@@ -7,9 +7,10 @@
 - Reject loopback, private, link-local, reserved, and cloud-metadata addresses.
 - Sample / page URLs must stay on the target site (same registrable domain).
 - Stored URLs have userinfo stripped.
-- Sampling and content fetches use a first-party GEO Checker UA and honor
-  robots.txt Disallow. Third-party crawler UAs are reserved for limited,
-  read-only homepage reachability probes (see run.py test_crawler_access).
+- Sampling and content fetches use the same desktop Chrome UA as the
+  geo_ready website fetcher, and honor robots.txt Disallow. Third-party
+  crawler UAs are reserved for limited, read-only homepage reachability
+  probes (see run.py test_crawler_access).
 """
 
 from __future__ import annotations
@@ -22,12 +23,15 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 from public_suffix import registrable_domain
 
-# First-party UA for robots, sitemaps, llms.txt, and page sampling/content.
-# Third-party identities (Googlebot, OAI-SearchBot, …) stay in crawler_roles
-# and are used only for homepage reachability probes.
+# Sampling UA for robots, sitemaps, llms.txt, and page/content fetches.
+# Same desktop Chrome string as geo_ready HttpFetcher::USER_AGENT. A
+# GEO-Checker / GeoEval token in the UA has caused 403 / WAF challenges
+# on some hosts (e.g. SiteGround), so sampling does not advertise a bot
+# token. Third-party identities (Googlebot, OAI-SearchBot, …) stay in
+# crawler_roles and are used only for homepage reachability probes.
 FIRST_PARTY_UA = (
-    "GEO-Checker/1.0 (+https://github.com/beansmile/geo-checker-grok-bot-scripts) "
-    "Mozilla/5.0 (compatible; GEO-Checker/1.0)"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
 )
 FIRST_PARTY_HEADERS = {
     "User-Agent": FIRST_PARTY_UA,

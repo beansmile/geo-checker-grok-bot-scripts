@@ -134,7 +134,7 @@ Rules: The technical /100 and Content GEO /100 remain **independent and visible*
 ## Crawl policy
 
 - `--max-pages` has a hard cap of 100.
-- Page sampling and content fetches use a first-party GEO Checker user-agent and honor `robots.txt` Disallow.
+- Page sampling and content fetches use a desktop Chrome user-agent (same string as the geo_ready website fetcher) and honor `robots.txt` Disallow.
 - Third-party crawler UAs (Googlebot, OAI-SearchBot, and similar) are used only for limited, read-only homepage reachability probes — a scored product feature. Those probes do not honor Disallow; document the distinction if asked, and do not change access-gate scoring rules.
 
 ## Boundaries

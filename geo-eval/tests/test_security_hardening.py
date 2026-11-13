@@ -135,9 +135,15 @@ Disallow: /hidden
         self.assertFalse(net_policy.robots_allowed("https://example.com/private/secret", body, star))
         self.assertTrue(net_policy.robots_allowed("https://example.com/private/ok", body, star))
         self.assertFalse(net_policy.robots_allowed("https://example.com/tmp/a", body, star))
-        # GEO-Checker group is more specific than * and does not inherit * rules
-        self.assertFalse(net_policy.robots_allowed("https://example.com/hidden", body, net_policy.FIRST_PARTY_UA))
-        self.assertTrue(net_policy.robots_allowed("https://example.com/private/secret", body, net_policy.FIRST_PARTY_UA))
+        # A named GEO-Checker group is more specific than * and does not inherit * rules
+        bot = "GEO-Checker/1.0"
+        self.assertFalse(net_policy.robots_allowed("https://example.com/hidden", body, bot))
+        self.assertTrue(net_policy.robots_allowed("https://example.com/private/secret", body, bot))
+        # Sampling uses desktop Chrome, so it follows the * group
+        self.assertTrue(net_policy.robots_allowed("https://example.com/hidden", body, net_policy.FIRST_PARTY_UA))
+        self.assertFalse(net_policy.robots_allowed("https://example.com/private/secret", body, net_policy.FIRST_PARTY_UA))
+        self.assertIn("Chrome/141.0.0.0", net_policy.FIRST_PARTY_UA)
+        self.assertNotIn("GEO-Checker", net_policy.FIRST_PARTY_UA)
 
 
 class RunPathTests(unittest.TestCase):
