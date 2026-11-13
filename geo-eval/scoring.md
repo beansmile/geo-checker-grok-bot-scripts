@@ -29,16 +29,18 @@
 
 | 维度 | 计分方式 | 满分可达 |
 |---|---|---|
-| schema | 内部仍按 v1.1 满分 15 口径累计，再 ×12/15（保留 1 位）。Organization 节点存在计 5（展示约 4/12）；缺节点是计分项（SCH-ABSENT / SCH-ABSENT-BODY-CLEAR），不是建议项。正文已能识别主体时，不把实体/KG 维打成 0。 | 12 |
-| entity | 内部 15 − 实体扣分，再 ×12/15 | 12 |
+| schema | 内部仍按 v1.1 满分 15 口径累计，再 ×12/15；**发布的维度分按 0 或 0.5 取整**。Organization 节点存在计 5（展示 4/12）；缺节点是计分项（SCH-ABSENT / SCH-ABSENT-BODY-CLEAR），不是建议项。正文已能识别主体时，不把实体/KG 维打成 0。 | 12 |
+| entity | 内部 15 − 实体扣分，再 ×12/15；发布值按 0 或 0.5 取整 | 12 |
 | ogp | 只评**首页分享预览卫生**：`og:title/description/image` 各 1.25 + `og:url` 0.75 + `twitter:card` 0.5。不是 AI 理解或信任门槛；内页缺标签只作建议项 | 5 |
-| richness | FAQ / 文章 / 正文体量三项内部满分 15，再 ×12/15；`llms.txt` 不计入本维 | 12 |
+| richness | FAQ / 文章 / 正文体量三项内部满分 15，再 ×12/15；发布值按 0 或 0.5 取整；`llms.txt` 不计入本维 | 12 |
 | kg | 正文与 schema **去重后**计：社交/档案（含页脚与 sameAs 并集）上限 4；主题 3；成立信息 1；地址/联系 2。缺 schema 不把本维打成 0 | 10 |
-| absorption | **Citability 五子项（20 分制，×0.6 折算）**：可引用块率 7 + 证据块覆盖 7 + 直接回答 3 + 结构化答案资产 2 + 对题度 1；v1.3 对图片化/不可抽取样本软降 raw（最多 −2/20） | 12 |
-| trust | About / Contact / 合规 / 作者 / 正文体量内部满分 15，再 ×12/15 | 12 |
+| absorption | **Citability 五子项（20 分制，×0.6 折算）**：可引用块率 7 + 证据块覆盖 7 + 直接回答 3 + 结构化答案资产 2 + 对题度 1；v1.3 对图片化/不可抽取样本软降 raw（最多 −2/20）；发布值按 0 或 0.5 取整 | 12 |
+| trust | About / Contact / 合规 / 作者 / 正文体量内部满分 15，再 ×12/15；发布值按 0 或 0.5 取整 | 12 |
 | on_page | 以是否有 title / meta / H1 为主。title 略长于 60 字、并非恰好一个 H1，只作提示，不等于缺标题或缺正文 | 5 |
 | quality | 5 − 清洁度扣分（不变） | 5 |
-| **seo** | 启发式先打 `/25`（`seo_analyze.py`），再 `dim = round(raw×15/25, 1)` 封顶 15；子信号见 `seo_scoring.md`（含 URL 卫生、图片化薄页） | 15 |
+| **seo** | 启发式先打 `/25`（`seo_analyze.py`），再 `dim = snap_half(raw×15/25)` 封顶 15；子信号见 `seo_scoring.md`（含 URL 卫生、图片化薄页） | 15 |
+
+**分数粒度：** 十维**发布的维度分**只使用 0 或 0.5 步进（0、0.5、1、…）。内部启发式与折算可保留更细精度，但写入 `dimensions` / `category_scores` 以及用于相加的值，按最接近的 0 或 0.5 取整（恰好在两档中间时远离 0，例如 5.4→5.5、8.1→8.0、1.25→1.5）。**总分 `overall_score` 取整数**，不再按 0.5 取整。
 
 ### v1.3 新增 / 加厚（不改权重表）
 
@@ -79,7 +81,7 @@
 | 约束 | 值 |
 |---|---|
 | trust 维度 | ≤ 50%（=6/12） |
-| entity 维度 | ≤ 30%（=3.6/12） |
+| entity 维度 | ≤ 30%（内部 3.6/12；发布值按 0/0.5 取整后为 3.5） |
 | 总分 | ≤ 70 |
 
 命中 S1 占位/模板问题（CLN-03 lorem 主体内容）时：总分 ≤ 75。
@@ -131,8 +133,9 @@
 ### 总分计算
 
 ```
-base_score = sum(dim_scores)          # 十维，封顶逻辑见 Trust Ceiling
-overall_score = clamp(0, 100, int(base_score - penalty + bonus))
+published_dim = snap_half(scaled_dim)                 # 仅 0 / 0.5
+base_score = sum(published_dim scores)                # 十维；Trust Ceiling 可再封顶
+overall_score = clamp(0, 100, int(base_score - penalty + bonus))  # 整数
 ```
 
 `bonus` 合计 ≤ +10。加减分条目列出在 `adjustments`，不改变维度满分表。

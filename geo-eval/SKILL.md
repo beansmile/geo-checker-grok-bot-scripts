@@ -115,6 +115,15 @@ Standalone content-only (no prior tech run): `python3 scripts/content_eval.py <U
 
 Rules: The technical /100 and Content GEO /100 remain **independent and visible**. A third combined /100 may be shown as technical 40% + content 60%, then an access gate (Googlebot or all verified search crawlers blocked caps the combined score at 30; a core search-access penalty caps it at 50; training-crawler blocks do not trigger the gate, but training crawlers should still be allowed so content can enter model-training corpora). Never replace the two component scores with the combined number, and do not emit a combined score if either side is missing. 40/60 is our product contract, not a percentage any vendor published. Published combined scores use 0 / 0.5 increments. Combined HTML also keeps an effort-based remediation timeline (checklist + day-scale schedule). Never show scoring/rules/rubric version numbers in customer HTML or user-facing chat. GEO ≠ geography. Brand GEO Checker / Beansmile. If homepage body cannot be obtained, mark unevaluable or provisional.
 
+## Customer scores and chrome
+
+- Published **dimension** scores (technical 10 dims and Content GEO dims) and the **combined /100** use **0 / 0.5 increments only**. Technical **overall** is an integer: `clamp(0, 100, int(base_score − penalty + bonus))`. Do not show 5.4 or 8.1.
+- Cover titles stay `{domain} GEO Technical/Content/Combined Report` (ZH: `{domain} GEO 技术/内容/综合报告`). Use the registrable domain, no `www`. Do not revive「GEO 评测报告」. Keep the existing short cover subtitles.
+- Customer HTML and chat stay plain and site-specific. Do not narrate internal scoring debates, unconfirmed policy, or scoring/rules/rubric version numbers.
+- A missing Organization node is **scored** (SCH-ABSENT / SCH-ABSENT-BODY-CLEAR), not advisory. If body copy already identifies the business, do not zero entity / KG.
+- Training vs access crawlers: recommend opening both. Search/on-demand access blocks: −15 once on the technical score, and may cap the combined score (Googlebot or all verified search crawlers blocked → 30; a core search-access penalty → 50). Training-crawler blocks are recommendations only — no core −15, no combined gate.
+- Combined /100 is technical 40% + content 60%, then the access gate. Keep both component scores visible; do not emit a combined score if either side is missing.
+
 ## Boundaries
 
 - Technical 10-dim score = readiness of on-site signals to be understood / trusted / cited by AI—not rankings or traffic. SEO discoverability is one 15-pt dim inside that 100; bonuses/penalties are listed separately.

@@ -401,7 +401,10 @@ class FormulaTests(unittest.TestCase):
             # Dimension sum (after ceiling on base, base may be clamped)
             dim_sum = sum(d["score"] for d in report["dimensions"])
             if not report.get("ceiling"):
-                self.assertAlmostEqual(dim_sum, base, places=1)
+                self.assertAlmostEqual(dim_sum, base, places=9)
+            for d in report["dimensions"]:
+                self.assertEqual(d["score"], analyze.snap_half(d["score"]), d)
+            self.assertIsInstance(report["overall_score"], int)
 
     def test_itemlist_bonus_capped_and_llms_not_added(self):
         html = HOME.replace("</head>", '''<script type="application/ld+json">
@@ -588,4 +591,50 @@ class ContentScoreGranularityTests(unittest.TestCase):
             tenth = int(round(val * 10)) % 10
             self.assertIn(tenth, (0, 5), f"{val} has a 0.1 remainder")
 
+class TechnicalScoreGranularityTests(unittest.TestCase):
+    def test_snap_published_dims_examples(self):
+        # Values that used to leak 0.1 precision must land on the 0 / 0.5 grid.
+        snapped = analyze.snap_published_dims({
+            "seo": 5.4,
+            "schema": 8.1,
+            "entity": 4.0,
+            "ogp": 1.25,
+            "trust": 6.0,
+            "entity_cap": 3.6,
+        })
+        self.assertEqual(snapped["seo"], 5.5)
+        self.assertEqual(snapped["schema"], 8.0)
+        self.assertEqual(snapped["entity"], 4.0)
+        self.assertEqual(snapped["ogp"], 1.5)  # halfway (1.25) moves away from zero
+        self.assertEqual(snapped["trust"], 6.0)
+        self.assertEqual(snapped["entity_cap"], 3.5)
 
+    def test_analyze_published_dims_are_half_increments(self):
+        with tempfile.TemporaryDirectory() as td:
+            write_run(
+                td,
+                pages=[("https://acme-tools.com/", HOME), ("https://acme-tools.com/about", ABOUT)],
+            )
+            report = analyze.analyze(td)
+            for d in report["dimensions"]:
+                score = d["score"]
+                self.assertEqual(score, analyze.snap_half(score), f"{d['key']}={score}")
+                tenth = int(round(score * 10)) % 10
+                self.assertIn(tenth, (0, 5), f"{d['key']}={score} has a 0.1 remainder")
+                cat = report["category_scores"][d["key"]]["score"]
+                self.assertEqual(cat, score)
+            if not report.get("ceiling"):
+                self.assertAlmostEqual(
+                    sum(d["score"] for d in report["dimensions"]),
+                    report["base_score"],
+                    places=9,
+                )
+            self.assertIsInstance(report["overall_score"], int)
+            self.assertEqual(
+                report["overall_score"],
+                int(max(0, min(100, report["base_score"] - report["penalty"] + report["bonus"]))),
+            )
+            seo = report.get("seo_discoverability") or {}
+            if seo.get("dim_score") is not None:
+                self.assertEqual(seo["dim_score"], analyze.snap_half(seo["dim_score"]))
+                self.assertEqual(seo["score"], seo["dim_score"])

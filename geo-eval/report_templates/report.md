@@ -21,12 +21,12 @@
 | 维度 | 得分 | 满分 | 等级 |
 |---|---|---|---|
 {{#dim_pages}}| {{name}} | {{score}} | /{{max}} | {{grade}} |
-{{/dim_pages}}| **九维合计** | **{{dim_sum}}** | **/100** | {{grade}} |
+{{/dim_pages}}| **十维合计** | **{{dim_sum}}** | **/100** | {{grade}} |
 
 {{#adj_rows}}- {{type}} {{points}}：{{reason}}
 {{/adj_rows}}
 
-计算口径：九维显示值合计 {{dim_sum}} → 基础分（保留一位小数）{{base_score}} → 最终总分 {{overall_score}} / 100（{{grade}}）。最终总分＝基础分向下取整，再叠加加减分项。
+计算口径：十维显示值合计 {{dim_sum}} → 基础分（各维按 0 或 0.5 计）{{base_score}} → 最终总分 {{overall_score}} / 100（{{grade}}）。总分 = clamp(0, 100, int(基础分 − 罚分 + 加分))，取整数。
 
 等级映射：A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D < 60。
 

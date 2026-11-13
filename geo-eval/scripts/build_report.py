@@ -29,10 +29,12 @@ from urllib.parse import urlparse
 try:
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from combined_score import format_score
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from timeline_ui import render_timeline_block
     from report_meter import meter_html
+    from combined_score import format_score
 
 # Internal JSON fallback only (not printed in client HTML chrome)
 VERSION_FALLBACK = "v1.3"
@@ -169,10 +171,10 @@ STRINGS = {
         "scope_llms_yes": "有（不计入总分）",
         "scope_llms_no": "无（不计入总分）",
         "calc_rule": (
-            "十维显示值合计 <b>{dim_sum}</b> → 基础分（保留一位小数）<b>{base}</b> → "
+            "十维显示值合计 <b>{dim_sum}</b> → 基础分（各维按 0 或 0.5 计）<b>{base}</b> → "
             "{adj_clause}"
             "最终总分 <b>{overall}</b> / 100（{grade}）。"
-            "计算式为 overall = clamp(0, 100, int(base − penalty + bonus))。"
+            "计算式为 overall = clamp(0, 100, int(base − penalty + bonus))；总分取整数。"
         ),
     },
     "en": {
@@ -256,10 +258,10 @@ STRINGS = {
         "scope_llms_yes": "present (experimental, not in the core score)",
         "scope_llms_no": "absent (experimental, not in the core score)",
         "calc_rule": (
-            "Displayed dimension scores total <b>{dim_sum}</b> → base score (1 decimal place) "
-            "<b>{base}</b> → {adj_clause}"
+            "Displayed dimension scores total <b>{dim_sum}</b> → base score "
+            "(0 / 0.5 increments) <b>{base}</b> → {adj_clause}"
             "final score <b>{overall}</b> / 100 ({grade}). "
-            "Formula: overall = clamp(0, 100, int(base − penalty + bonus))."
+            "Formula: overall = clamp(0, 100, int(base − penalty + bonus)); the overall score is an integer."
         ),
     },
 }
@@ -499,8 +501,8 @@ def flatten(report, brand, lang="zh", escape_html=False):
     dim_pages = []
     for j, (key, name) in enumerate(DIM_ORDER):
         d = dims.get(key, {})
-        # 显示值统一保留 2 位（6.7149… → 6.71），pct 用同一数值计算，保证报告内部自洽
-        score = round(float(d.get("score", 0) or 0), 2)
+        # Published dim scores are already 0 / 0.5 increments; format hides .0
+        score = float(d.get("score", 0) or 0)
         maxv = d.get("max", 0)
         grade = d.get("grade", "D") or "D"
         pct = round(score / maxv * 100, 1) if maxv else 0
@@ -532,7 +534,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
             "idx": f"{j + 1:02d} / {M:02d}",
             "key": key,
             "name": name,
-            "score": f"{score:g}",
+            "score": format_score(score),
             "max": maxv,
             "grade": grade,
             "pct": pct,
@@ -754,7 +756,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         seo_pct = 0
         seo_c_class, seo_g_class, seo_bar = "c-d", "g-d", "var(--danger)"
     else:
-        seo_score_disp = f"{float(seo_score):g}"
+        seo_score_disp = format_score(seo_score)
         seo_pct = round(float(seo_score) / max(1, float(seo_max)) * 100, 1)
         _sg = seo_grade if seo_grade in ("A+", "A", "B", "C", "D", "F") else "D"
         _, seo_c_class, seo_g_class, seo_bar = grade_meta(_sg)
@@ -781,9 +783,9 @@ def flatten(report, brand, lang="zh", escape_html=False):
     seo_narr = E(seo.get("narr") or seo_default_narr)
     seo_callout = E(seo.get("callout") or seo_default_callout)
 
-    # 十维显示值的精确合计（去尾零：62.34 / 62.0 -> 62）
+    # Sum of displayed (already snapped) dimension scores; hide trailing .0
     _ds = sum(float(d.get("score", 0) or 0) for d in report.get("dimensions", []))
-    dim_sum = f"{_ds:.2f}".rstrip("0").rstrip(".")
+    dim_sum = format_score(_ds)
 
     _fallback = "this site" if lang == "en" else "本站"
     _host = urlparse(report.get("url", "")).hostname or ""
@@ -804,7 +806,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         "grade_label": S["grade_label"].get(report.get("grade", "D"), ""),
         "overall_c_class": overall_c_class,
         "overall_g_class": overall_g_class,
-        "base_score": report.get("base_score", 0),
+        "base_score": format_score(report.get("base_score", 0)),
         # 十维「显示值」的精确合计：让评分方法页的表格能自洽（列加起来 = 打印出来的合计）
         "dim_sum": dim_sum,
         # 总分/基础分的整数显示（避免 62.3 之类小数进入面向客户的表头）
@@ -815,7 +817,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
                           if report.get("ceiling_note") else ""),
         "calc_rule": S["calc_rule"].format(
             dim_sum=dim_sum,
-            base=report.get("base_score", 0),
+            base=format_score(report.get("base_score", 0)),
             overall=report.get("overall_score", 0),
             grade=report.get("grade", "D"),
             adj_clause=(

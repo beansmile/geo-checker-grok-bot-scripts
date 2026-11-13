@@ -26,7 +26,7 @@ Nine dimension scores (capped at each maximum) sum to the base score; adjustment
 {{#adj_rows}}- {{type}} {{points}}: {{reason}}
 {{/adj_rows}}
 
-Calculation: displayed dimension scores total {{dim_sum}} → base score (1 decimal place) {{base_score}} → final score {{overall_score}} / 100 ({{grade}}). The final score is the base score rounded down to a whole number, after any bonus or penalty.
+Calculation: displayed dimension scores total {{dim_sum}} → base score (0 / 0.5 increments) {{base_score}} → final score {{overall_score}} / 100 ({{grade}}). The overall score is clamp(0, 100, int(base − penalty + bonus)), an integer.
 
 Grade scale: A+ ≥ 90 · A ≥ 80 · B ≥ 70 · C ≥ 60 · D < 60.
 

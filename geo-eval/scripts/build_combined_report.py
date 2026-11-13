@@ -45,6 +45,7 @@ from combined_score import (
     TECH_WEIGHT,
     format_score,
     score_from_reports,
+    snap_half,
 )
 
 
@@ -983,7 +984,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
         raw = seo.get("score")
         mx = seo.get("max") or 15
         if raw is not None and float(mx) == 25:
-            seo_score = round(float(raw) * 15 / 25, 1)
+            seo_score = snap_half(min(15.0, max(0.0, float(raw) * 15 / 25)))
         else:
             seo_score = seo.get("dim_score", raw)
         seo_grade = seo.get("grade") or "—"

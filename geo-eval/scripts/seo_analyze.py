@@ -3,7 +3,7 @@
 """SEO content discoverability scoring (technical dimension, scoring v1.3).
 
 Heuristic raw score is /25; scaled into the technical 100 as a 15-point dim:
-  dim_score = min(15, round(raw_25 * 15 / 25, 1))
+  dim_score = snap_half(min(15, max(0, raw_25 * 15 / 25)))  # published /15, 0 / 0.5 increments
 Weights unchanged from v1.2; v1.3 adds richer sub-heuristics (image-locked thin,
 URL hygiene notes/findings). Shared by analyze.py and content pipelines.
 Rubric: seo_scoring.md
@@ -16,6 +16,14 @@ import os
 import re
 from html.parser import HTMLParser
 from typing import Any
+
+try:
+    from content_analyze import snap_half
+except ImportError:  # pragma: no cover
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from content_analyze import snap_half
 
 
 def clamp(n, lo, hi):
@@ -426,8 +434,8 @@ def build_seo_block(
 
     raw_25, notes, hy_findings = score_seo(pages or [], crawl_ok, robots_ok, sitemap_ok)
     merged_findings = list(findings or []) + list(hy_findings or [])
-    dim_score = round(float(raw_25) * 15 / 25, 1)
-    dim_score = min(15.0, max(0.0, dim_score))
+    dim_score = min(15.0, max(0.0, float(raw_25) * 15 / 25))
+    dim_score = snap_half(dim_score)
     confidence = "high" if crawl_ok and pages else ("provisional" if pages else "none")
     pct = (100.0 * dim_score / 15.0) if pages else 0
     return {

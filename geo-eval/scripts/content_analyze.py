@@ -51,8 +51,10 @@ def clamp(n, lo, hi):
 def snap_half(n) -> float:
     """Nearest 0.5; halfway cases move away from zero.
 
-    Content GEO customer scores only use 0 / 0.5 increments (e.g. 7.5, 15),
-    never 0.1-level precision such as 7.3 or 15.1.
+    Shared helper for published customer scores: technical dimension scores,
+    Content GEO dimension and overall scores, and the combined /100.
+    They only use 0 / 0.5 increments (e.g. 7.5, 15), never 0.1-level
+    precision such as 7.3, 5.4, or 15.1. Technical overall stays an integer.
     """
     x = float(n)
     if x >= 0:

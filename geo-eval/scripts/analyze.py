@@ -28,6 +28,7 @@ import crawler_roles
 import entity_signals
 import llms_detect
 import page_coverage
+from content_analyze import snap_half
 
 # ── 指纹/正则 ──────────────────────────────────────────────
 LOREM_PATTERNS = [
@@ -723,6 +724,18 @@ def detect_acc(run_dir, base_url):
 
 
 # ── 10 维评分（SEO 在 analyze() 中并入）──────────────────
+def snap_published_dims(dims):
+    """Snap each published technical dimension score to a 0 / 0.5 increment.
+
+    Call this after internal scaling (and after Trust Ceiling caps on those
+    published-scale values) and before summing base_score. Intermediate raw
+    scores used only inside a dimension's own math are not snapped here.
+    """
+    for key, value in list(dims.items()):
+        dims[key] = snap_half(value)
+    return dims
+
+
 def score_dimensions(pages, site, cln, ent, schema_info, acc):
     domain = site.get("registrable_domain") or registrable_domain(pages[0]["url"] if pages else "")
     content_pages = [p for p in pages if p["role"] == "content" or p["role"] == "home"]
@@ -2055,14 +2068,22 @@ def analyze(run_dir):
     ceiling_note = ""
     if ent["trust_ceiling"]:
         ceiling = 70
-        ceiling_note = "品牌写法/邮箱域名冲突 → 信任度≤6/12、品牌与实体≤3.6/12、总分≤70"
+        ceiling_note = "品牌写法/邮箱域名冲突 → 信任度≤6/12、品牌与实体≤3.5/12、总分≤70"
         dims["trust"] = min(dims["trust"], 6.0)
         dims["entity"] = min(dims["entity"], 3.6)
     if cln["lorem"]:
         ceiling = 75 if ceiling is None else min(ceiling, 75)
         ceiling_note = (ceiling_note + "；" if ceiling_note else "") + "残留 lorem 占位 → 总分≤75"
 
-    base = round(sum(dims.values()), 1)
+    # Published dimension scores only use 0 / 0.5 increments.
+    snap_published_dims(dims)
+    if seo_block is not None:
+        seo_block["dim_score"] = dims["seo"]
+        seo_block["score"] = dims["seo"]
+        seo_max = float(seo_block.get("max") or 15) or 15
+        seo_block["grade"] = grade_for(round(dims["seo"] / seo_max * 100, 1)) if seo_max else seo_block.get("grade")
+
+    base = sum(dims.values())
     if ceiling:
         base = min(base, ceiling)
 

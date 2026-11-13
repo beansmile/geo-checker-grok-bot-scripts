@@ -28,8 +28,10 @@ Cross-reference Access findings when crawl fails; **do not double-count** the AC
 Engine still computes a heuristic **raw /25**, then scales into the dimension:
 
 ```
-dim_score = min(15, round(raw_score_25 * 15 / 25, 1))
+dim_score = snap_half(min(15, max(0, raw_score_25 * 15 / 25)))
 ```
+
+The published dimension score uses **0 / 0.5 increments only** (same `snap_half` as other technical dims: nearest 0 or 0.5, halfway away from zero). Intermediate raw /25 may keep finer precision. Example: raw 9 → 5.4 → published **5.5 / 15**.
 
 | Band (dim /15) | Approx raw /25 | Signals |
 |---|---|---|
@@ -66,11 +68,11 @@ Used by `scripts/seo_analyze.py`:
 
 ```json
 "seo_discoverability": {
-  "score": 4.4,
+  "score": 4.5,
   "max": 15,
   "score_raw_25": 7.3,
   "max_raw_25": 25,
-  "dim_score": 4.4,
+  "dim_score": 4.5,
   "grade": "D",
   "confidence": "provisional",
   "notes": [],
