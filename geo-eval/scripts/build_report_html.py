@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 5b: 由 run.json 生成离线正式报告（Markdown + 单文件 HTML，风格参考产品结果页）。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 5b: 由 run.json 生成离线正式报告（Markdown + 单文件 HTML，风格参考产品结果页）。
 输出 report/report_v1.0.md、report/report_v1.0.html（含内嵌 evaluation JSON）。"""
 import json, os, html, datetime
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,7 +22,7 @@ bysev={s:[i for i in issues if i["severity"]==s] for s in ("S1","S2","S3","S4")}
 advisories=run.get("advisory_issues",[])
 roadmap=[
  ("立即（1–2 周）","清理 lorem/拉丁占位与 0 值计数器；补 Meta Description / Title / H1；OGP 标题与描述改写；统一邮箱","CLN-03/04/06、ONP-01/02/03、OGP-01/02、ENT-02"),
- ("基础（1–2 月）","统一品牌与公司名（Sofeyia 或 Suofeiya）；补 Organization sameAs/description/contactPoint；FAQPage schema；清理演示/系统页与 sitemap；About/Team 去占位","ENT-01/04/06、SCH-01/02/07、CLN-02/05/09、RCH-01、TRU-05"),
+ ("基础（1–2 月）","统一品牌与公司名（Acme 或 Akme）；补 Organization sameAs/description/contactPoint；FAQPage schema；清理演示/系统页与 sitemap；About/Team 去占位","ENT-01/04/06、SCH-01/02/07、CLN-02/05/09、RCH-01、TRU-05"),
  ("长期（2–3 月+）","重做内容架构：证据块（定义/数据/对比/步骤）、可引用段落、数据来源标注、真实作者与资质页；明确上市主体与官网关系","ABS-01/02、QLT-01/02、CIT-02/03、TRU-02/04、RCH-02/03"),
 ]
 def issue_card(i,compact=False):
@@ -114,7 +116,7 @@ footer{{margin-top:34px;color:var(--ink3);font-size:12px;text-align:center}}
 </div>
 
 <section><h2>1. 执行摘要</h2><div class="card">
-<p>本站 GEO 基础分为 <b>{sc["overall_score"]}/{E(sc["grade"])}</b>。最突出的问题不是常规 SEO 项，而是<b>内容可信与治理</b>：正文/标题残留模板占位文案（Template Residue Score <b>{sc["template_residue"]["score"]}/100</b>）、品牌写法与邮箱域名混用（Sofeyia / Suofeiya；sales@sofeyiahome.com / sales@suofeiyahome.com）、历史与实体关系表述矛盾；已触发 <b>Trust Ceiling</b>（trust ≤50%、entity ≤30%、总分上限 70）。</p>
+<p>本站 GEO 基础分为 <b>{sc["overall_score"]}/{E(sc["grade"])}</b>。最突出的问题不是常规 SEO 项，而是<b>内容可信与治理</b>：正文/标题残留模板占位文案（Template Residue Score <b>{sc["template_residue"]["score"]}/100</b>）、品牌写法与邮箱域名混用（Acme / Akme；sales@acme-tools.com / hello@acme-tools.co）、历史与实体关系表述矛盾；已触发 <b>Trust Ceiling</b>（trust ≤50%、entity ≤30%、总分上限 70）。</p>
 <p><b>S1 级发现：</b></p><ul>{"".join(f"<li><b>{E(i['title']['zh-CN'])}</b>（{E(i['rule_id'])}）</li>" for i in s1)}</ul>
 </div></section>
 
@@ -130,7 +132,7 @@ footer{{margin-top:34px;color:var(--ink3);font-size:12px;text-align:center}}
 <section><h2>6. 修复路线图</h2><table><thead><tr><th>阶段</th><th>动作</th><th>关联规则</th></tr></thead><tbody>{roadmap_rows}</tbody></table></section>
 
 <section><h2>7. 证据、方法与边界</h2><div class="card">
-<p>证据包：<span class="mono">storage/evaluations/sofeyiahome/2026-09-10_run01/</span>（24 页原始 HTML、SiteProfile、PageEvidence、77 条规则结果、LLM 检查、评分映射）。</p>
+<p>证据包：<span class="mono">storage/evaluations/acme-tools/2026-09-10_run01/</span>（24 页原始 HTML、SiteProfile、PageEvidence、77 条规则结果、LLM 检查、评分映射）。</p>
 <p>证据与方法说明见本次评测包；署名 GEO Checker · Beansmile。本报告不承诺排名、引用或流量结果。</p>
 <p>边界：评分口径为校准草案，需专家签核；截图证据待补；本报告不承诺排名、引用或流量结果。</p>
 <div class="sign"><div>专家签核：__________________ 日期：__________</div><div>客户确认：__________________ 日期：__________</div></div>

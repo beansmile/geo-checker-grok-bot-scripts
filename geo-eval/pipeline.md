@@ -4,7 +4,7 @@
 > **技术**：`run.py`（抓站）→ `analyze.py` → Agent enrich（`prompts.md`）→ `build_report.py`（HTML）→ **询问是否要 Content GEO**。
 > **若用户同意**：`content_eval.py --from-run <tech_run>`（复用同一次抓取）→ enrich（`content_prompts.md`）→ `build_content_report.py` → `build_combined_report.py`（同 turn 出综合包）。
 >
-> 下文为参考版「分步流水线」（源自索菲亚金样例的 17 个脚本），用于说明各检测阶段的产物与职责，不替代上面这条执行链。
+> 下文为参考版「分步流水线」（源自示例金样例的 17 个脚本），用于说明各检测阶段的产物与职责，不替代上面这条执行链。
 
 > 从输入网址到输出报告，共 5 步。每步产出物作为下一步输入，全部落在 run 目录下。
 

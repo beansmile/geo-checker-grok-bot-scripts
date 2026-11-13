@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 3c: 跑完剩余 20 条规则。新规则结果作为“补充发现”（supplemental，不计分），
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 3c: 跑完剩余 20 条规则。新规则结果作为“补充发现”（supplemental，不计分），
 待专家确认后再并入评分。"""
 import json, os, re, glob
 from html.parser import HTMLParser
@@ -9,7 +11,7 @@ L=lambda n: json.load(open(os.path.join(ROOT,n),encoding="utf-8"))
 W=lambda n,o: json.dump(o, open(os.path.join(ROOT,n),"w",encoding="utf-8"), ensure_ascii=False, indent=2)
 run=L("run.json"); site=L("site.json"); scope=L("scope.json")
 pages={os.path.basename(f)[:-5]: json.load(open(f,encoding="utf-8")) for f in glob.glob(os.path.join(ROOT,"pages","*.json"))}
-U="https://www.sofeyiahome.com"
+U="https://www.acme-tools.com"
 def ev(url,locator,quote): return {"type":"quote","url":url,"locator":locator,"quote":quote[:300]}
 def R(rid,verdict,sev,conf,method,evidence,zh,en,metrics=None):
     return {"rule_id":rid,"rule_domain":rid.split("-")[0],"page_id":None,"applicable":True,"verdict":verdict,
@@ -49,7 +51,7 @@ new.append(R("CLN-08",_cln08,"S2","medium","R",
   _cln08_zh,"Cross-page body similarity check (boilerplate removed)",{"max_jaccard":round(best[2],3),"pair":[best[0],best[1]],"tier":_cln08}))
 # ENT-03 电话/地址真实性
 phones=set(re.findall(r"\+?\d[\d\s\-()]{8,}\d", text("contact")))
-addr="Xinggang East Road" in text("contact")
+addr="Pine Street" in text("contact")
 new.append(R("ENT-03","pass","S3","high","R",[ev(U+"/contact-us/","body",f"phones={sorted(phones)[:2]}; address_present={addr}")],
   "电话/地址为真实信息（无占位）","Phone/address appear real (no placeholders)",{"address_present":addr}))
 # KG-03 foundingDate / KG-05 内链 / KG-06 location
@@ -125,13 +127,13 @@ author_ok=False
 for p,v in pages.items():
     if "person" in v["schema_types"]: author_ok=True
 new.append(R("SCH-10","fail" if not author_ok else "fail","S3","medium","R",
-  [ev(U+"/company-news/company-news-sofeyia-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","schema author","Person= ehaitech；页面无对应 byline")],
+  [ev(U+"/company-news/company-news-acme-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","schema author","Person= ehaitech；页面无对应 byline")],
   "作者/发布者与页面署名不一致","Author/publisher inconsistent with byline",{}))
 # TEC-02 CSR / TRU-07 信任上限
 new.append(R("TEC-02","pass","S1","high","R",[ev(U,"body",f"server HTML text length {pages['home']['body_text_len']}")],
   "首页服务端渲染可读","Homepage SSR readable",{"render_mode":"ssr"}))
 new.append(R("TRU-07","fail","S1","high","R",
-  [ev(U+"/about-us/","h1","About Suofeiya"),ev(U+"/contact-us/","mailto","sales@suofeiyahome.com vs sales@sofeyiahome.com")],
+  [ev(U+"/about-us/","h1","About Akme"),ev(U+"/contact-us/","mailto","hello@acme-tools.co vs sales@acme-tools.com")],
   "信任上限已触发：需先声明实体映射（统一品牌与邮箱口径）","Trust ceiling applied: declare entity mapping first",
   {"caps":run["scores"]["trust_ceiling"]["caps"],"triggers":["ENT-01","ENT-02"]}))
 

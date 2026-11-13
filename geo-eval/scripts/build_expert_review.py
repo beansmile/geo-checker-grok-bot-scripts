@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 4a: 生成专家核验工作单与 ExpertReview 骨架（eval-1.1）。"""
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 4a: 生成专家核验工作单与 ExpertReview 骨架（eval-1.1）。"""
 import json, os, datetime
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 L=lambda n: json.load(open(os.path.join(ROOT,n),encoding="utf-8"))
@@ -15,7 +17,7 @@ TITLES={
  "OGP-01":"开放图谱为占位/拼接文本","OGP-02":"Twitter 卡片不完整",
  "SCH-02":"组织信息属性缺失（官方账号/简介/联系方式）","SCH-04":"结构化数据名称与展示品牌不一致",
  "SCH-07":"缺联系方式（contactPoint）且邮箱域名不一致",
- "ENT-01":"品牌写法不一致（Sofeyia / Suofeiya）","ENT-02":"同时公开了两个邮箱域名",
+ "ENT-01":"品牌写法不一致（Acme / Akme）","ENT-02":"同时公开了两个邮箱域名",
  "ENT-04":"公司名多种写法","ENT-05":"社交账号命名不一致","ENT-06":"子品牌/代理关系不清晰",
  "ENT-07":"历史/声明时间线矛盾且主体不明","ENT-08":"信任页内容匹配（pass）",
  "ONP-01":"标题标签超长","ONP-02":"大量页面缺元描述","ONP-03":"H1 缺失/多 H1",
@@ -42,16 +44,16 @@ if os.path.exists(p):
     except Exception: old_reviewer, old_status = None, None
 else: old_reviewer, old_status = None, None
 expert={"reviewer":None,"status":"pending",
- "intake":{"client":"索菲亚 / Sofeyia Home（Sofeyiahome.com）",
+ "intake":{"client":"示例站点 / Acme Tools（Acmehome.com）",
    "goals":["提升官网的 AI 可读性与品牌可信度","清理模板残留与内容治理问题","明确品牌/实体关系"],
-   "concerns":["品牌写法 Sofeyia vs Suofeiya","邮箱域名不一致","模板 Demo 内容残留","上市主体与官网关系表述"],
+   "concerns":["品牌写法 Acme vs Akme","邮箱域名不一致","模板 Demo 内容残留","上市主体与官网关系表述"],
    "authorization":{"scope":"public pages only","sensitive_pages_excluded":[]},
    "questions_for_client":[
-     "品牌标准写法确认为 Sofeyia 还是 Suofeiya？与上市公司主体（索菲亚家居股份有限公司 002572.SZ）的官方关系如何表述？",
-     "统一邮箱应使用哪个域名（sofeyiahome.com / suofeiyahome.com / 官方域名）？",
+     "品牌标准写法确认为 Acme 还是 Akme？与上市公司主体（示例家居股份有限公司 ACME.EX）的官方关系如何表述？",
+     "统一邮箱应使用哪个域名（acme-tools.com / acme-tools.co / 官方域名）？",
      "是否接受在报告中点名“模板残留/演示页上线”这类发现？",
      "项目数量/营收等数字是否可提供可公开引用的来源？",
-     "历史时间线（Sogal 1981 / 引入中国 20 年 / 2001 成立 / 2011 上市）哪一版为准？"]},
+     "历史时间线（Northbrand 1981 / 引入本地 20 年 / 2001 成立 / 2011 上市）哪一版为准？"]},
  "items":[],"custom_sections":[],"signoff":None,
  "machine_passed_rules":[r["rule_id"] for r in run["rule_results"] if r["verdict"]=="pass"],
  "machine_na_rules":[r["rule_id"] for r in run["rule_results"] if r["verdict"]=="na"]}
@@ -69,7 +71,7 @@ run["status"]="expert_review"; run["expert_review"]={"status":"pending","worklis
 run["updated_at"]=datetime.datetime.now().astimezone().isoformat(); W("run.json",run)
 
 # ---- 工作单 markdown ----
-md=["# 索菲亚评测 · Step 4 专家核验工作单\n",
+md=["# 示例站点评测 · Step 4 专家核验工作单\n",
  f"- run：`{run['run_id']}`；机器结论 {len(issues)} 条；总分草案 **{run['scores']['overall_score']}/{run['scores']['grade']}**（待核准）",
  "- 核验方式：对每条 issue 勾选 **Accept / Edit / Reject**；Edit 请填写修订结论与理由；可补充截图/链接证据。",
  "- 机器证据均可在 `evidence/` 与 `pages/` 中回溯；引用为页面原文。\n",
@@ -98,7 +100,7 @@ md.append(f"- N/A：{', '.join(expert['machine_na_rules']) or '—'}")
 open(os.path.join(ROOT,"report","expert_review_worklist.md"),"w",encoding="utf-8").write("\n".join(md))
 
 # ---- 评分校准表 ----
-cal=["# 索菲亚评测 · 评分校准表（Step 4b）\n",
+cal=["# 示例站点评测 · 评分校准表（Step 4b）\n",
  f"- 当前草案：Base **{smap['base_score']}** − 惩罚 **{abs(sum(p['points'] for p in smap['penalties']))}** = **{smap['overall_score']}/{smap['grade']}**（`draft_needs_expert_review`）",
  "- 请逐项确认扣分力度；如需调整，修改 `scoring_map.json` 的 deduction 或脚本 `merge_llm.py` 的 DEDUCT 表后重跑。\n",
  "## 1. 维度扣分明细\n","| 规则 | 维度 | 扣分 |","|---|---|---|"]

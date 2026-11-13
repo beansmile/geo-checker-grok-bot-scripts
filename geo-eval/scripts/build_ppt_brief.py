@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""客户面谈用 GEO 简报（主报告同款卡片式，每节一页，8 页，15–20 分钟）。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+客户面谈用 GEO 简报（主报告同款卡片式，每节一页，8 页，15–20 分钟）。
 叙事：先让客户看到低分惊讶 → 一句“大部分是模板遗留”把心放回。
-输出 report/sofeyia_geo_ppt_brief.html + report/sofeyia_geo_ppt_outline.md。
+输出 report/sample_geo_ppt_brief.html + report/sample_geo_ppt_outline.md。
 """
 import os, json, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +21,7 @@ P = [
  ("cover", None, None, f"""<div class="cover-top"><span class="brand"><span>{MARK.replace('var(--mark-bg)','#fff').replace('var(--mark-fg)','#312E81')}</span><b>GEO SCORING</b></span><span class="cover-no mono">客户面谈材料</span></div>
    <div class="cover-mid">
      <div class="pkicker light">AI 搜索可见性（GEO）· 约 15–20 分钟</div>
-     <h1>索菲亚官网<br>AI 搜索可见性简报</h1>
+     <h1>示例站点官网<br>AI 搜索可见性简报</h1>
      <div class="cover-score"><div class="cbig">{score}<small>/100</small><em>站内准备度 · {grade}</em></div><div class="csub">分数看着低——但先说结论：<b>大部分是“建站模板没清干净”的一次性遗留问题，集中清理一轮就能解决大半。</b></div></div>
    </div>
    <div class="cover-sign"><span>站点：{E(DOMAIN)}</span><span>报告日期：{date}</span><span>共 8 页</span></div>"""),
@@ -35,8 +37,8 @@ P = [
  ("normal", "03 · 一眼能对上的问题", "打开网站就能看到的三个问题",
    """<ol class="items">
      <li><b>乱码假文字</b>：首页 / 关于 / FAQ 还残留 “Lorem ipsum” 占位文字——模板没拆干净。客户和 AI 看到都会觉得“这网站还没做完”。</li>
-     <li><b>两个英文名</b>：Sofeyia / Suofeiya 混用——AI 会当成两家公司，多年积累的品牌认知被分流。</li>
-     <li><b>两个邮箱</b>：sales@sofeyiahome.com 与 sales@suofeiyahome.com——像名片印错，客户会怕是钓鱼。</li>
+     <li><b>两个英文名</b>：Acme / Akme 混用——AI 会当成两家公司，多年积累的品牌认知被分流。</li>
+     <li><b>两个邮箱</b>：sales@acme-tools.com 与 hello@acme-tools.co——像名片印错，客户会怕是钓鱼。</li>
    </ol>
    <p class="note">这三条，打开官网就能对上，不需要任何技术背景。</p>"""),
  ("normal", "04 · 还有几处", "还有几处，客户和 AI 都会看到",
@@ -58,9 +60,9 @@ P = [
    <p class="expect">预期：完成前两步约 <b>60 分以上</b>，全部完成约 <b>80 分左右</b>（方向性预估，不代表 AI 实际引用增加）。</p>"""),
  ("normal", "07 · 需要拍板", "这几件事，需要贵司拍板",
    """<ol class="items">
-     <li><b>对外英文名</b>：建议用 Sofeyia（与域名一致），Suofeiya 作拼音别名保留。</li>
+     <li><b>对外英文名</b>：建议用 Acme（与域名一致），Akme 作拼音别名保留。</li>
      <li><b>主用邮箱</b>：统一用哪一个？</li>
-     <li><b>与上市主体（002572.SZ）的关系</b>：能否在官网上对外写明？</li>
+     <li><b>与上市主体（ACME.EX）的关系</b>：能否在官网上对外写明？</li>
      <li><b>关键数字</b>：营收 / 认证 / 年限，能否提供出处？</li>
    </ol>
    <div class="box">接下来：<b>第 1 周</b> 清理收尾 → <b>第 2–3 周</b> 补结构与内容 → 之后可复测看分数变化。大部分收尾由建站商执行，只需贵司先拍板上面这几个口径。</div>"""),
@@ -152,14 +154,14 @@ for n, (style, section, title, content) in enumerate(P, start=1):
 
 OUT = f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>索菲亚官网 · AI 搜索可见性简报</title>
+<title>示例站点官网 · AI 搜索可见性简报</title>
 <style>{CSS}</style></head><body>
 <div class="deck">{chr(10).join(body)}</div>
 <p class="docfoot">说明：本报告为站内评测，衡量网站能否被 AI 正确读懂、信任与引用；不涉及搜索排名与网站流量，也不包含 AI 实际引用情况（是否被提到）的实测。</p>
 </body></html>"""
-open(os.path.join(ROOT, "report", "sofeyia_geo_ppt_brief.html"), "w", encoding="utf-8").write(OUT)
+open(os.path.join(ROOT, "report", "sample_geo_ppt_brief.html"), "w", encoding="utf-8").write(OUT)
 
-md = f"""# 索菲亚官网 · AI 搜索可见性（GEO）简报（面谈版）
+md = f"""# 示例站点官网 · AI 搜索可见性（GEO）简报（面谈版）
 > 供工作人员转成 PPT · GEO 部分约 15–20 分钟 · 8 页 · 强调“低分源于模板遗留”
 
 ## 封面
@@ -178,8 +180,8 @@ md = f"""# 索菲亚官网 · AI 搜索可见性（GEO）简报（面谈版）
 
 ## 03 一眼能对上的三个问题
 1. 乱码假文字：首页/关于/FAQ 残留 Lorem ipsum（模板没拆干净）。
-2. 两个英文名：Sofeyia / Suofeiya 混用（AI 当两家公司）。
-3. 两个邮箱：sales@sofeyiahome.com 与 sales@suofeiyahome.com（像名片印错）。
+2. 两个英文名：Acme / Akme 混用（AI 当两家公司）。
+3. 两个邮箱：sales@acme-tools.com 与 hello@acme-tools.co（像名片印错）。
 
 ## 04 还有几处
 1. 首页“0 年经验”：滚动动画，AI 读到 0 而非真实值。
@@ -198,12 +200,12 @@ md = f"""# 索菲亚官网 · AI 搜索可见性（GEO）简报（面谈版）
 - 预期：前两步约 60 分以上，全部完成约 80 分左右（方向性预估）。
 
 ## 07 需要拍板 + 接下来
-1. 英文名建议 Sofeyia（Suofeiya 作拼音别名）；2. 主邮箱；3. 与 002572.SZ 的关系能否写明；4. 关键数字出处。
+1. 英文名建议 Acme（Akme 作拼音别名）；2. 主邮箱；3. 与 ACME.EX 的关系能否写明；4. 关键数字出处。
 - 节奏：第 1 周清理收尾 → 第 2–3 周补结构与内容 → 复测。
 """
-open(os.path.join(ROOT, "report", "sofeyia_geo_ppt_outline.md"), "w", encoding="utf-8").write(md)
+open(os.path.join(ROOT, "report", "sample_geo_ppt_outline.md"), "w", encoding="utf-8").write(md)
 run["report_refs"] = run.get("report_refs", {})
-run["report_refs"]["ppt_brief_html"] = "report/sofeyia_geo_ppt_brief.html"
-run["report_refs"]["ppt_brief_outline"] = "report/sofeyia_geo_ppt_outline.md"
+run["report_refs"]["ppt_brief_html"] = "report/sample_geo_ppt_brief.html"
+run["report_refs"]["ppt_brief_outline"] = "report/sample_geo_ppt_outline.md"
 json.dump(run, open(os.path.join(ROOT, "run.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-print(f"wrote report/sofeyia_geo_ppt_brief.html (deck 卡片式, {N} 页) + outline.md ; score {score}/{grade}")
+print(f"wrote report/sample_geo_ppt_brief.html (deck 卡片式, {N} 页) + outline.md ; score {score}/{grade}")

@@ -13,4 +13,4 @@ Used while designing `content_scoring.md` and the first Content GEO pipeline.
 | OpenAI — Crawlers overview | https://developers.openai.com/api/docs/bots | OAI-SearchBot (search/citation eligibility) independent of GPTBot (training) |
 | Ahrefs / SEL topical authority guides | https://ahrefs.com/blog/topical-authority/ · https://searchengineland.com/guide/topical-authority | Breadth + depth + internal linking for topic coverage (informs taxonomy & query coverage) |
 
-Plus ChatGPT prior audit of ltzm.com (user attachment, 2026-11-05): access/discoverability P0; lighting IA recommendation; buyer questions; off-site awards/patents; naming consistency; refuse fake precise score when HTML unread.
+Plus ChatGPT prior audit of example.com (user attachment, 2026-11-05): access/discoverability P0; lighting IA recommendation; buyer questions; off-site awards/patents; naming consistency; refuse fake precise score when HTML unread.

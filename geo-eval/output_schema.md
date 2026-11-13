@@ -1,6 +1,6 @@
-# GEO 评测数据结构基线（eval-1.1，用于索菲亚案例）
+# GEO 评测数据结构基线（eval-1.1，用于示例案例）
 
-> 目的：定义**与最新方法论和检测规则完全对齐**的评测数据结构，供规则引擎（`docs/geo_detection_rules.md`，82 条规则 / 14 个域）、LLM 复核与专家评测（`docs/geo_deep_detection_agent_plans.md`）统一读写，作为索菲亚案例（Step 2 证据包 → Step 3 检测 → Step 4 专家核验 → Step 5 报告）的数据契约。
+> 目的：定义**与最新方法论和检测规则完全对齐**的评测数据结构，供规则引擎（`docs/geo_detection_rules.md`，82 条规则 / 14 个域）、LLM 复核与专家评测（`docs/geo_deep_detection_agent_plans.md`）统一读写，作为示例案例（Step 2 证据包 → Step 3 检测 → Step 4 专家核验 → Step 5 报告）的数据契约。
 > 对齐版本：`methodology_version: v2026.10`（`docs/geo_evaluation_methodology_latest.md`）、`rules_version: v1.1`（`rules.md`）、`scoring_version: v1.1`（9 维权重：schema 15 / entity 15 / ogp 5 / richness 15 / kg 10 / absorption 15 / trust 15 / on_page 5 / quality 5）。**v2026.11 变更（整数化）**：`category_scores[].score` 一律整数、`percentage` 取整；扣分/上限/下限/惩罚全部整数（取消 `weight_scale`/`floors_pct`，改为绝对整数 `floors`）；`trust_ceiling.caps` 增加整数 `trust_max`/`entity_max`。
 > **现行（v1.1）与本节整数化约定的差异**：Trust Ceiling 封顶为 trust ≤7.5、entity ≤4.5；v1.1 起不再使用「维度从宽下限」（entity≥4 / on_page≥2）。本节整数化字段仅用于归档旧版 run.json。
 > 原则：向后兼容线上报告、证据驱动（每条结论可回溯）、评测独立（第三方 agent 报告不混入）。
@@ -8,7 +8,7 @@
 
 ---
 
-## 1. 当前线上报告结构快照（2026-09 实测索菲亚报告）
+## 1. 当前线上报告结构快照（2026-09 实测示例站点报告）
 
 ### 1.1 顶层字段（30）
 
@@ -72,7 +72,7 @@ owner_role                        : {zh-CN, en-US}
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `schema_version` | string | ✔ | `"eval-1.1"` |
-| `run_id` | string | ✔ | 例 `sofeyiahome-2026-09-15-run01` |
+| `run_id` | string | ✔ | 例 `acme-tools-2026-09-15-run01` |
 | `analyze_id` | string/null |  | 与线上报告关联 |
 | `status` | enum | ✔ | `draft / collecting / rules_done / llm_done / expert_review / report_ready / delivered` |
 | `site` | `SiteProfile` | ✔ | §2.2 |
@@ -93,37 +93,37 @@ owner_role                        : {zh-CN, en-US}
 
 ```json
 {
-  "url": "https://www.sofeyiahome.com/",
-  "domain": "sofeyiahome.com",
-  "registrable_domain": "sofeyiahome.com",
+  "url": "https://www.acme-tools.com/",
+  "domain": "acme-tools.com",
+  "registrable_domain": "acme-tools.com",
   "site_type": {"type": "corporate", "source": "auto"},
   "brand_candidates": [
-    {"value": "Sofeyia", "count": 42, "sources": ["copyright", "og:site_name", "footer"]},
-    {"value": "Suofeiya", "count": 37, "sources": ["about_h1", "contact_company_block", "body"]}
+    {"value": "Acme", "count": 42, "sources": ["copyright", "og:site_name", "footer"]},
+    {"value": "Akme", "count": 37, "sources": ["about_h1", "contact_company_block", "body"]}
   ],
-  "company_names": ["Sofeyia Home Collection Co., Ltd", "Suofeiya Home Collection Co., Ltd"],
+  "company_names": ["Acme Tools Collection Co., Ltd", "Akme Tools Collection Co., Ltd"],
   "emails": [
-    {"value": "sales@sofeyiahome.com", "domain": "sofeyiahome.com", "sources": ["contact-us/mailto"]},
-    {"value": "sales@suofeiyahome.com", "domain": "suofeiyahome.com", "sources": ["contact-us/text", "privacy/footer"]}
+    {"value": "sales@acme-tools.com", "domain": "acme-tools.com", "sources": ["contact-us/mailto"]},
+    {"value": "hello@acme-tools.co", "domain": "acme-tools.co", "sources": ["contact-us/text", "privacy/footer"]}
   ],
-  "phones": [{"value": "+86-19966202249", "placeholder": false, "sources": ["contact-us"]}],
-  "addresses": [{"value": "Suofeiya Plaza, No. 87, 89, Xinggang East Road, Haizhu District, Guangzhou", "source": "contact-us"}],
+  "phones": [{"value": "+1-503-555-0199", "placeholder": false, "sources": ["contact-us"]}],
+  "addresses": [{"value": "100 Pine Street, Portland", "source": "contact-us"}],
   "socials": [
-    {"platform": "facebook", "url": "https://www.facebook.com/SofeyiaOfficial"},
-    {"platform": "instagram", "url": "https://www.instagram.com/sofeyiahome"}
+    {"platform": "facebook", "url": "https://www.facebook.com/AcmeOfficial"},
+    {"platform": "instagram", "url": "https://www.instagram.com/acme-tools"}
   ],
   "robots": {
     "has_robots_txt": true,
-    "sitemap": ["https://www.sofeyiahome.com/sitemap_index.xml"],
+    "sitemap": ["https://www.acme-tools.com/sitemap_index.xml"],
     "blocked_critical": [],
     "blocked_noncritical": [],
     "matched_rules": ["ACC-01"]
   },
   "ai_crawler_reachability": [
-    {"ua": "OAI-SearchBot", "url": "https://www.sofeyiahome.com/", "status": 200, "blocked": false},
-    {"ua": "GPTBot", "url": "https://www.sofeyiahome.com/", "status": 200, "blocked": false},
-    {"ua": "ClaudeBot", "url": "https://www.sofeyiahome.com/", "status": 200, "blocked": false},
-    {"ua": "PerplexityBot", "url": "https://www.sofeyiahome.com/", "status": 200, "blocked": false}
+    {"ua": "OAI-SearchBot", "url": "https://www.acme-tools.com/", "status": 200, "blocked": false},
+    {"ua": "GPTBot", "url": "https://www.acme-tools.com/", "status": 200, "blocked": false},
+    {"ua": "ClaudeBot", "url": "https://www.acme-tools.com/", "status": 200, "blocked": false},
+    {"ua": "PerplexityBot", "url": "https://www.acme-tools.com/", "status": 200, "blocked": false}
   ],
   "llms": {"llms_txt": {"present": false, "status": null}, "llms_full": {"present": false, "status": null}},
   "sitemap": {"url_count": 60, "content_ratio": 0.32},
@@ -172,13 +172,13 @@ owner_role                        : {zh-CN, en-US}
   "severity": "S1",
   "confidence": "high",
   "method": "R",
-  "metrics": {"brand_candidates": 2, "distinct_normalized": 2, "occurrences": {"Sofeyia": 42, "Suofeiya": 37}},
+  "metrics": {"brand_candidates": 2, "distinct_normalized": 2, "occurrences": {"Acme": 42, "Akme": 37}},
   "evidence": [
-    {"type": "quote", "url": "https://www.sofeyiahome.com/about-us/", "locator": "h1", "quote": "About Suofeiya"},
-    {"type": "quote", "url": "https://www.sofeyiahome.com/", "locator": "footer.copyright", "quote": "Copyright © 2025 Sofeyia Home Collection Co., Ltd."}
+    {"type": "quote", "url": "https://www.acme-tools.com/about-us/", "locator": "h1", "quote": "About Akme"},
+    {"type": "quote", "url": "https://www.acme-tools.com/", "locator": "footer.copyright", "quote": "Copyright © 2025 Acme Tools Collection Co., Ltd."}
   ],
-  "recommendation": {"zh-CN": "统一品牌写法（Sofeyia / Suofeiya）并同步公司名、邮箱域名与社交账号", "en-US": "Unify brand spelling across name, company, email domains, and social handles"},
-  "suggested_fix": {"type": "text", "content": "选择唯一品牌名并全局替换；邮箱统一使用 @sofeyiahome.com"},
+  "recommendation": {"zh-CN": "统一品牌写法（Acme / Akme）并同步公司名、邮箱域名与社交账号", "en-US": "Unify brand spelling across name, company, email domains, and social handles"},
+  "suggested_fix": {"type": "text", "content": "选择唯一品牌名并全局替换；邮箱统一使用 @acme-tools.com"},
   "run": {"rules_version": "1.0", "model": null, "tokens": null, "latency_ms": 12}
 }
 ```
@@ -274,7 +274,7 @@ owner_role                        : {zh-CN, en-US}
   "prompt_version": "qlt-1.0",
   "rule_results": [
     {"rule_id": "QLT-01", "page_id": "about", "verdict": "fail", "severity": "S2", "confidence": "medium",
-     "evidence": [{"type": "quote", "url": "https://www.sofeyiahome.com/about-us/", "locator": "h1+first_paragraph", "quote": "..."}],
+     "evidence": [{"type": "quote", "url": "https://www.acme-tools.com/about-us/", "locator": "h1+first_paragraph", "quote": "..."}],
      "recommendation": {"zh-CN": "...", "en-US": "..."}}
   ],
   "aggregate": {"helpfulness_score": null, "ai_bulk_ratio": null, "marketing_fluff_ratio": null}
@@ -285,10 +285,10 @@ owner_role                        : {zh-CN, en-US}
 
 ```json
 {
-  "reviewer": "expert@aeofy.ai",
+  "reviewer": "reviewer@example.com",
   "status": "in_progress|done",
   "intake": {
-    "client": "索菲亚 / Sofeyia Home",
+    "client": "示例站点 / Acme Tools",
     "goals": ["提升海外品牌可信度与 AI 可读性"],
     "concerns": ["品牌名混用", "模板残留"],
     "authorization": {"scope": "public pages", "sensitive_pages_excluded": []}
@@ -300,11 +300,11 @@ owner_role                        : {zh-CN, en-US}
       "decision": "accept|edit|reject|pending",
       "edited_conclusion": {"zh-CN": "...", "en-US": "..."},
       "added_evidence": [{"type": "screenshot", "ref": "screenshots/about-h1.png"}],
-      "notes": "客户确认以 Sofeyia 为唯一品牌名"
+      "notes": "客户确认以 Acme 为唯一品牌名"
     }
   ],
   "custom_sections": [{"title": {"zh-CN": "内容架构建议", "en-US": "Content architecture advice"}, "body": {"zh-CN": "...", "en-US": "..."}}],
-  "signoff": {"by": "expert@aeofy.ai", "at": "2026-09-16T10:00:00+08:00"}
+  "signoff": {"by": "reviewer@example.com", "at": "2026-09-16T10:00:00+08:00"}
 }
 ```
 
@@ -398,17 +398,17 @@ owner_role                        : {zh-CN, en-US}
 
 | 方案 | 表 | 适用 |
 |---|---|---|
-| 快速（索菲亚本周） | `evaluation_runs(id, run_id, domain, url, schema_version, status, payload jsonb, created_at, updated_at)`；大文件走 storage | 单案例、迭代快 |
+| 快速（示例站点本周） | `evaluation_runs(id, run_id, domain, url, schema_version, status, payload jsonb, created_at, updated_at)`；大文件走 storage | 单案例、迭代快 |
 | 规范（后续） | `evaluation_runs` + `evaluation_pages` + `rule_results` + `evaluation_issues` + `expert_reviews` + `evaluation_reports` | 多客户、可统计 |
 
 > 线上报告链路继续写 `analyses.report_data`；评测链路独立，通过 `analyze_id` 关联但不互相覆盖。
 
 ---
 
-## 6. 索菲亚案例文件组织（建议）
+## 6. 示例案例文件组织（建议）
 
 ```
-storage/evaluations/sofeyiahome/2026-09-15_run01/
+storage/evaluations/acme-tools/2026-09-15_run01/
 ├── run.json                 # EvaluationRun 根对象
 ├── site.json                # SiteProfile
 ├── scope.json               # 页面清单与角色分布
@@ -449,7 +449,7 @@ storage/evaluations/sofeyiahome/2026-09-15_run01/
 
 | 步骤 | 使用结构 |
 |---|---|
-| Step 2 证据包 | `SiteProfile` + `PageEvidence`（`storage/evaluations/sofeyiahome/...`） |
+| Step 2 证据包 | `SiteProfile` + `PageEvidence`（`storage/evaluations/acme-tools/...`） |
 | Step 3 规则检测 | `RuleResult[]`（82 条规则） |
 | Step 3b LLM 复核 | `QualityReview` + LLM 版 `RuleResult` |
 | Step 4 专家核验 | `ExpertReview.items[]` |
@@ -473,4 +473,4 @@ storage/evaluations/sofeyiahome/2026-09-15_run01/
 
 ---
 
-*本基线为 eval-1.1 草案；与 `docs/geo_evaluation_methodology_latest.md`、`docs/geo_detection_rules.md` 同步演进，索菲亚首轮跑通后升级为 eval-1.2。*
+*本基线为 eval-1.1 草案；与 `docs/geo_evaluation_methodology_latest.md`、`docs/geo_detection_rules.md` 同步演进，示例站点首轮跑通后升级为 eval-1.2。*

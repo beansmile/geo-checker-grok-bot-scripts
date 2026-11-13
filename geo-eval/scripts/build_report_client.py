@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""客户版正式报告 v2：叙事结构 + 问题内容原文清单 + 修复代码示例（仅供参考）。
-输出 report/sofeyia_geo_report_for_client_v3.1_compact.html / .md（精简版）。"""
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+客户版正式报告 v2：叙事结构 + 问题内容原文清单 + 修复代码示例（仅供参考）。
+输出 report/sample_geo_report_for_client_v3.1_compact.html / .md（精简版）。"""
 import json, os, re, html, datetime
 from html import unescape
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,15 +26,15 @@ def paras(pid):
     return [clean(x) for x in re.findall(r"<p[^>]*>(.*?)</p>",raw(pid),re.S|re.I) if len(clean(x).split())>=6]
 # ---------- 问题内容原文清单 ----------
 S={}
-S["ENT-01"]=[(pages["about"]["url"],"About Suofeiya（About 页 H1）"),(pages["home"]["url"],"Copyright © 2025 Sofeyia Home Collection Co., Ltd.（页脚）"),(pages["home"]["url"],"Suofeiya Group boasts strong sales performance…（首页正文）")]
-S["ENT-02"]=[(pages["contact"]["url"],"sales@sofeyiahome.com（mailto，出现在全站页脚）"),(pages["contact"]["url"],"sales@suofeiyahome.com（Contact 页公司块）")]
-S["ENT-04"]=[(pages["contact"]["url"],x) for x in ["Sofeyia Home Collection Co., Ltd.","Suofeiya Home Collection Co., Ltd","Sofeyia Group","Suofeiya Group","Sofeyia Huahe Door Industry Co., Ltd."]]
+S["ENT-01"]=[(pages["about"]["url"],"About Akme（About 页 H1）"),(pages["home"]["url"],"Copyright © 2025 Acme Tools Collection Co., Ltd.（页脚）"),(pages["home"]["url"],"Akme Group boasts strong sales performance…（首页正文）")]
+S["ENT-02"]=[(pages["contact"]["url"],"sales@acme-tools.com（mailto，出现在全站页脚）"),(pages["contact"]["url"],"hello@acme-tools.co（Contact 页公司块）")]
+S["ENT-04"]=[(pages["contact"]["url"],x) for x in ["Acme Tools Collection Co., Ltd.","Akme Tools Collection Co., Ltd","Acme Group","Akme Group","Acme Tools Door Industry Co., Ltd."]]
 S["TRU-02"]=[(pages["article_hq"]["url"],'文章 schema 作者：{"@type":"Person","name":"ehaitech"}（默认/建站方账号）')]
 S["CLN-04"]=[(pages[p]["url"],ph["quote"]) for p,v in pages.items() for ph in v["placeholders"] if ph["kind"]=="zero_counter"]
 S["CLN-05"]=[(pages["privacy"]["url"],"When visitors leave comments on the site we collect the data shown in the comments form…（WordPress 默认隐私模板原文）")]
 S["OGP-01"]=[(pages["home"]["url"],"og:title = \"homepage\""),(pages["home"]["url"],"og:description = \"Create. Enhance. and Sustain. Primis non dignissim hac ac iaculis…\u2026\ufeff\"（模板文案+整页拼接）")]
-S["SCH-02"]=[(pages["home"]["url"],"Organization 现有属性：name=\"sofeyia\"、url、logo；缺失：sameAs、description、contactPoint")]
-S["SCH-04"]=[(pages["home"]["url"],'schema 名称 = "sofeyia"（小写）vs 页面展示品牌 "Sofeyia" / "Suofeiya"')]
+S["SCH-02"]=[(pages["home"]["url"],"Organization 现有属性：name=\"acme\"、url、logo；缺失：sameAs、description、contactPoint")]
+S["SCH-04"]=[(pages["home"]["url"],'schema 名称 = "acme"（小写）vs 页面展示品牌 "Acme" / "Akme"')]
 S["SCH-01"]=[(pages["home"]["url"],"缺失核心类型：FAQPage、ItemList（现有：Organization/WebSite/Article/BreadcrumbList）")]
 S["RCH-01"]=[(pages["faq"]["url"],"FAQ 页 schema 类型："+", ".join(pages["faq"]["schema_types"])+"（无 FAQPage）")]
 S["CLN-08"]=[(pages["news"]["url"],"News 列表页与 Company News 列表页正文高度相似（去模板后相似度 0.578）")]
@@ -51,7 +53,7 @@ S["CLN-03"]=cln
 short=[]
 for pid in ["services","home","about"]:
     for p in paras(pid):
-        if 8<=len(p.split())<=40 and not p.lower().startswith(("kindly","suofeiya home collection","tel/")): short.append((pages[pid]["url"],p))
+        if 8<=len(p.split())<=40 and not p.lower().startswith(("kindly","akme home collection","tel/")): short.append((pages[pid]["url"],p))
 S["ABS-01"]=short[:6]
 S["ONP-02"]=[(pages[p]["url"],pages[p]["title"]["text"]) for p,v in pages.items() if v["role"]=="content" and v["meta_description"]["length"]==0]
 S["ONP-03"]=[(pages[p]["url"],f"H1 数量：{len(pages[p]['h1'])}") for p,v in pages.items() if len(v["h1"])!=1]
@@ -64,28 +66,28 @@ def headskip(pid):
     return n
 S["ONP-04"]=[(pages[p]["url"],f"标题层级跳跃 {headskip(p)} 处") for p,v in pages.items() if v["role"]=="content" and headskip(p)]
 # ---------- 修复代码示例（仅供参考） ----------
-socials=["https://www.facebook.com/SofeyiaOfficial","https://www.instagram.com/sofeyiahome","https://www.youtube.com/@sofeyiahome","https://www.linkedin.com/company/sofeyiahome","http://www.pinterest.com/sofeyiahome"]
+socials=["https://www.facebook.com/AcmeOfficial","https://www.instagram.com/acme-tools","https://www.youtube.com/@acme-tools","https://www.linkedin.com/company/acme-tools","http://www.pinterest.com/acme-tools"]
 CODE={
 "ENT-01":("""<!-- 用结构化数据声明实体关系：让每个名称都指向同一实体（示例；名称与关系请以贵司官方表述为准） -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Sofeyia",
-  "legalName": "[法定主体全称，例：索菲亚家居股份有限公司]",
-  "alternateName": ["Suofeiya", "Sofeyia Home Collection Co., Ltd.", "索菲亚家居"],
-  "url": "https://www.sofeyiahome.com/",
+  "name": "Acme",
+  "legalName": "[法定主体全称，例：示例家居股份有限公司]",
+  "alternateName": ["Akme", "Acme Tools Collection Co., Ltd.", "示例家居"],
+  "url": "https://www.acme-tools.com/",
   "sameAs": [
-    "https://www.facebook.com/SofeyiaOfficial",
-    "https://www.instagram.com/sofeyiahome",
-    "https://www.youtube.com/@sofeyiahome",
-    "https://www.linkedin.com/company/sofeyiahome",
-    "http://www.pinterest.com/sofeyiahome"
+    "https://www.facebook.com/AcmeOfficial",
+    "https://www.instagram.com/acme-tools",
+    "https://www.youtube.com/@acme-tools",
+    "https://www.linkedin.com/company/acme-tools",
+    "http://www.pinterest.com/acme-tools"
   ],
   "parentOrganization": {
     "@type": "Organization",
     "name": "[集团/母公司名称]",
-    "sameAs": "https://www.sfygroup.com/"
+    "sameAs": "https://www.acme-group.example/"
   }
 }
 </script>
@@ -94,23 +96,23 @@ CODE={
 {{
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Sofeyia",
-  "url": "https://www.sofeyiahome.com/",
-  "logo": "https://www.sofeyiahome.com/wp-content/uploads/2023/09/Sofeyia1.png",
+  "name": "Acme",
+  "url": "https://www.acme-tools.com/",
+  "logo": "https://www.acme-tools.com/wp-content/uploads/2023/09/Acme1.png",
   "description": "[请填写公司简介，建议 1–2 句、含行业与业务范围]",
   "foundingDate": "[YYYY-MM-DD，请以官方表述为准]",
   "sameAs": {json.dumps(socials,ensure_ascii=False)},
   "contactPoint": {{
     "@type": "ContactPoint",
     "telephone": "[官方联系电话]",
-    "email": "sales@sofeyiahome.com",
+    "email": "sales@acme-tools.com",
     "contactType": "customer service",
     "areaServed": "[服务市场，如 Worldwide]"
   }},
   "address": {{
     "@type": "PostalAddress",
     "streetAddress": "[公司注册地址，以工商/披露为准]",
-    "addressLocality": "Guangzhou",
+    "addressLocality": "Portland",
     "addressRegion": "Guangdong",
     "addressCountry": "CN"
   }}
@@ -123,7 +125,7 @@ CODE={
   "@type": "FAQPage",
   "mainEntity": [{
     "@type": "Question",
-    "name": "What products does Sofeyia provide?",
+    "name": "What products does Acme provide?",
     "acceptedAnswer": {"@type": "Answer", "text": "[填写权威、可核验的回答]"}
   }]
 }
@@ -135,36 +137,36 @@ CODE={
   "@context": "https://schema.org",
   "@type": "ItemList",
   "itemListElement": [
-    {"@type": "ListItem", "position": 1, "url": "https://www.sofeyiahome.com/category/product-kitchen-cabinet/"},
-    {"@type": "ListItem", "position": 2, "url": "https://www.sofeyiahome.com/category/product-closet-wardrobe/"}
+    {"@type": "ListItem", "position": 1, "url": "https://www.acme-tools.com/category/product-kitchen-cabinet/"},
+    {"@type": "ListItem", "position": 2, "url": "https://www.acme-tools.com/category/product-closet-wardrobe/"}
   ]
 }
 </script>""","html"),
 "RCH-01":("""<!-- FAQ 页优先重写答案（见「答案可吸收性」）；FAQPage 结构化数据为推荐项、不计分，可不加 -->""","html"),
 "ONP-01":("""<!-- 标题标签示例（每页唯一；10–60 字符为我们的评测标准推荐区间，非搜索引擎硬性要求） -->
-<title>Sofeyia | Whole-House Custom Cabinetry & Interior Solutions</title>""","html"),
+<title>Acme | Whole-House Custom Cabinetry & Interior Solutions</title>""","html"),
 "ONP-02":("""<!-- 元描述示例（我们的评测标准推荐 50–155 字符；Google 官方说明：描述无固定长度限制，过长只会在结果展示时被截断） -->
-<meta name="description" content="Sofeyia offers whole-house custom cabinetry and interior solutions, with global project experience and intelligent manufacturing." />""","html"),
+<meta name="description" content="Acme offers whole-house custom cabinetry and interior solutions, with global project experience and intelligent manufacturing." />""","html"),
 "ONP-03":("""<!-- 每页保留唯一 H1，与页面主题一致 -->
 <h1>Whole-House Custom Cabinetry Solutions</h1>""","html"),
 "OGP-01":("""<!-- Open Graph / Twitter 示例（替换占位与拼接文本） -->
-<meta property="og:title" content="Sofeyia | Whole-House Custom Cabinetry" />
+<meta property="og:title" content="Acme | Whole-House Custom Cabinetry" />
 <meta property="og:description" content="Global whole-house customization with French design heritage and intelligent manufacturing." />
-<meta property="og:url" content="https://www.sofeyiahome.com/" />
-<meta property="og:image" content="https://www.sofeyiahome.com/wp-content/uploads/2025/07/home-2.jpg" />
+<meta property="og:url" content="https://www.acme-tools.com/" />
+<meta property="og:image" content="https://www.acme-tools.com/wp-content/uploads/2025/07/home-2.jpg" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Sofeyia | Whole-House Custom Cabinetry" />
+<meta name="twitter:title" content="Acme | Whole-House Custom Cabinetry" />
 <meta name="twitter:description" content="Global whole-house customization with French design heritage and intelligent manufacturing." />""","html"),
 "CLN-03":("""<!-- 把占位文本替换为真实内容（示例；请按贵司实际信息修改并核实出处） -->
 <h2>Whole-House Custom Cabinetry &amp; Interior Solutions</h2>
-<p>Sofeyia 提供橱柜、衣柜与整装定制，覆盖住宅、酒店与公寓等场景；总部位于广州，并已在马来西亚槟城（酒店项目，134 间客房）与伊拉克埃尔比勒（公寓项目，745 套）等市场完成整装交付。</p>
+<p>Acme 提供橱柜、衣柜与整装定制，覆盖住宅、酒店与公寓等场景；总部位于波特兰，并已在河湾市（酒店项目）与林港（公寓项目）等市场完成整装交付。</p>
 <p>[此处补充并核实：成立年份、产能规模、认证编号、交付周期等具体事实，并标注来源]</p>""","html"),
 }
 NARR={
- "schema":"基础结构化数据已具备（组织信息 / 网站 / 文章 / 面包屑），但关键属性不完整：缺列表结构化数据（ItemList），组织信息缺官方账号、简介、联系方式，且结构化数据里的名称为 sofeyia（小写），与页面展示的品牌写法不一致。结构化数据是机器理解实体与主题的辅助信号——Google 明确它不是排名因子，我们的评测据此把它定位为“实体消歧与可理解性”的辅助项；优先顺序应低于实体口径与内容本身。",
- "entity":"网站同时使用 Sofeyia 与 Suofeiya 两种品牌写法、公司名多种拼写、公开邮箱两个域名，且缺少与上市主体（索菲亚家居股份有限公司 002572.SZ）的关联说明。实体不一致会削弱搜索引擎与 AI 建立“同一品牌”的信心，是本次影响最大的问题。注：多种写法可以并存（集团/上市主体/国际品牌），关键是关系要声明清楚，而非强制统一。",
+ "schema":"基础结构化数据已具备（组织信息 / 网站 / 文章 / 面包屑），但关键属性不完整：缺列表结构化数据（ItemList），组织信息缺官方账号、简介、联系方式，且结构化数据里的名称为 acme（小写），与页面展示的品牌写法不一致。结构化数据是机器理解实体与主题的辅助信号——Google 明确它不是排名因子，我们的评测据此把它定位为“实体消歧与可理解性”的辅助项；优先顺序应低于实体口径与内容本身。",
+ "entity":"网站同时使用 Acme 与 Akme 两种品牌写法、公司名多种拼写、公开邮箱两个域名，且缺少与上市主体（示例家居股份有限公司 ACME.EX）的关联说明。实体不一致会削弱搜索引擎与 AI 建立“同一品牌”的信心，是本次影响最大的问题。注：多种写法可以并存（集团/上市主体/国际品牌），关键是关系要声明清楚，而非强制统一。",
  "ogp":"分享标签形式存在，但首页 og:title 为占位值 homepage、og:description 为页面拼接文本并含模板文案，Twitter 卡片缺标题与描述。这类字段主要影响分享与摘要时的呈现，对 AI 引用属次要卫生项，故本维度权重较低。",
- "richness":"内容以 6 篇文章与 1 个 FAQ 页为主，但更缺的是能回答买家问题的页面（交付周期、材料标准、与 Sogal / Schmidt 等品牌的关系、某市场的整装怎么做），而不是单纯“再发几篇新闻”。FAQ 页未用结构化数据；News 与 Company News 两个列表页正文高度相似。",
+ "richness":"内容以 6 篇文章与 1 个 FAQ 页为主，但更缺的是能回答买家问题的页面（交付周期、材料标准、与 Northbrand / Ridge 等品牌的关系、某市场的整装怎么做），而不是单纯“再发几篇新闻”。FAQ 页未用结构化数据；News 与 Company News 两个列表页正文高度相似。",
  "knowledge_graph":"本维度实为“站内实体信号”（原名“实体权威与知识图谱”，改名以明确范围）：组织信息缺官方账号、业务范围、成立日期等声明，正文也缺指向权威来源的引用。需要说明：实体权威的更主要证据在站外（集团官网互链、交易所披露、行业名录、媒体提及），本报告为站内检测，站外部分不在计分范围。",
  "absorption":"正文普遍是短句与占位，缺少“离开页面也能独立成立、且带可核验事实”的自包含答案块；定义、数据、对比、步骤四类证据块覆盖不足；首页主标题仍是模板文案。AI 引用的是能整块抽取的事实与回答，这决定内容能否进入 AI 答案。",
  "trust":"具备关于、项目案例、条款与联系页，项目案例含房间数等细节（数字需有出处，暂不作加分项）；但文章署名使用默认账号 ehaitech、团队页存在占位内容、资质表述缺少可验证出处。综合一致性问题，本维度已触达评分上限。",
@@ -191,10 +193,10 @@ CLIENT_FIX={
  "CLN-09":"将购物车、结算、我的账户等系统页设为禁止索引（noindex），并从站点地图移除。",
  "CLN-08":"合并或差异化 News 与 Company News 两个列表页的内容，减少重复。",
  "CLN-10":"集中清理模板残留（占位文案、0 值数据、默认模板），这是当前最影响可信度的问题。",
- "ENT-01":"建立实体映射（法定主体→集团→品牌→国际品牌→域名→社交/邮箱），用「关于我们」页与组织信息结构化数据声明各名称同属一个实体。建议：域名是 sofeyiahome.com，对外主名用 Sofeyia；Suofeiya 为中文名拼音，保留为别名即可。若存在历史主体英文名改动，请以官方口径为准。",
- "ENT-02":"统一企业邮箱域名（建议使用与官网一致的 @sofeyiahome.com），并在结构化数据的联系方式中列明主用邮箱；如确有历史域名，应在实体映射中说明其归属。",
- "ENT-04":"用实体映射表固定各层级名称的写法与关系，明确与上市主体（索菲亚家居股份有限公司 002572.SZ）的关联，而不是只做文本替换。",
- "ENT-06":"在「关于我们」页说明 Sofeyia 与 Suofeiya / Sogal / Schmidt / Milanna 的关系，并在结构化数据中用别名、母公司属性声明。",
+ "ENT-01":"建立实体映射（法定主体→集团→品牌→国际品牌→域名→社交/邮箱），用「关于我们」页与组织信息结构化数据声明各名称同属一个实体。建议：域名是 acme-tools.com，对外主名用 Acme；Akme 为中文名拼音，保留为别名即可。若存在历史主体英文名改动，请以官方口径为准。",
+ "ENT-02":"统一企业邮箱域名（建议使用与官网一致的 @acme-tools.com），并在结构化数据的联系方式中列明主用邮箱；如确有历史域名，应在实体映射中说明其归属。",
+ "ENT-04":"用实体映射表固定各层级名称的写法与关系，明确与上市主体（示例家居股份有限公司 ACME.EX）的关联，而不是只做文本替换。",
+ "ENT-06":"在「关于我们」页说明 Acme 与 Akme / Northbrand / Ridge / Millane 的关系，并在结构化数据中用别名、母公司属性声明。",
  "ENT-07":"核对成立/引入/上市时间线，以官方披露口径统一表述，删除互相冲突的数字与年份。",
  "ONP-01":"将超长标题精简到我们的评测标准推荐区间内，把核心关键词前置。",
  "ONP-02":"为缺失元描述的页面逐页撰写描述，突出页面价值；Google 官方并未规定固定长度。",
@@ -227,12 +229,12 @@ CLIENT_FIX={
 def dim_issues(d): return [i for i in issues if i["dimension"]==d and i["rule_id"] not in ADV]
 # ---------- 附加说明块（按规则挂载，客户版不做“强制统一拼写”，改为实体映射） ----------
 ENTITY_MAP=[
- ("法定主体","索菲亚家居股份有限公司（002572.SZ，深交所）—— 在「关于我们」/「联系我们」页面明确其为品牌所属上市主体，并链接公告"),
- ("集团 / 母公司","Suofeiya Group / Sofeyia Group（站内两种写法）—— 用组织信息（Organization）的母公司属性（parentOrganization）关联，名称二选一并登记在映射表"),
- ("品牌（中文）","索菲亚 —— 保持现有表述"),
- ("品牌（英文 / 国际）","Sofeyia / Suofeiya / Sogal / Schmidt / Milanna —— 确定主名称，其余写入组织信息的别名（alternateName），并说明相互关系"),
- ("官网域名","sofeyiahome.com（本站）；sfygroup.com、suofeiya.com（集团）—— 在组织信息的官方账号（sameAs）中关联，并说明域名归属"),
- ("企业邮箱","sales@sofeyiahome.com / sales@suofeiyahome.com —— 确定主用域名，并在联系方式（contactPoint）中列明"),
+ ("法定主体","示例家居股份有限公司（ACME.EX，深交所）—— 在「关于我们」/「联系我们」页面明确其为品牌所属上市主体，并链接公告"),
+ ("集团 / 母公司","Akme Group / Acme Group（站内两种写法）—— 用组织信息（Organization）的母公司属性（parentOrganization）关联，名称二选一并登记在映射表"),
+ ("品牌（中文）","示例站点 —— 保持现有表述"),
+ ("品牌（英文 / 国际）","Acme / Akme / Northbrand / Ridge / Millane —— 确定主名称，其余写入组织信息的别名（alternateName），并说明相互关系"),
+ ("官网域名","acme-tools.com（本站）；acme-group.example、acme-parent.example（集团）—— 在组织信息的官方账号（sameAs）中关联，并说明域名归属"),
+ ("企业邮箱","sales@acme-tools.com / hello@acme-tools.co —— 确定主用域名，并在联系方式（contactPoint）中列明"),
  ("社交账号","Facebook / Instagram / YouTube / LinkedIn / Pinterest（命名不一）—— 全部写入组织信息的官方账号（sameAs）"),
 ]
 EXTRA={"ENT-01":'<ul class="plain">'+"".join(f"<li><b>{E(k)}</b>：{E(v)}</li>" for k,v in ENTITY_MAP)+
@@ -267,7 +269,7 @@ actions=[("清理模板与占位内容","删除占位段落，让计数器数字
 act_rows="".join(f"<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)} · {E(d)}</td><td>{E(e)}</td></tr>" for a,b,c,d,e in actions)
 dash=2*3.14159*54*(1-sc["overall_score"]/100)
 HTML=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>索菲亚官网 GEO 评测报告</title><style>
+<title>示例站点官网 GEO 评测报告</title><style>
 :root{{--ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;--line:#e6ebf2;--bg:#f7f9fc;--accent:#4f46e5}}
 *{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 -apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif}}
 .wrap{{max-width:960px;margin:0 auto;padding:34px 22px 90px}}
@@ -298,7 +300,7 @@ table{{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(
 .gain{{color:#16a34a;font-weight:700;white-space:nowrap}}footer{{margin-top:40px;text-align:center;color:var(--ink3);font-size:12.5px}}
 @media print{{body{{background:#fff}}.cover{{border-radius:0}}.chap,section,.find{{break-inside:avoid}}pre{{white-space:pre-wrap}}}}
 </style></head><body><div class="wrap">
-<div class="cover"><div class="kicker">生成式引擎优化 · 专家评测报告</div><h1>索菲亚官网 GEO 评测报告</h1>
+<div class="cover"><div class="kicker">生成式引擎优化 · 专家评测报告</div><h1>示例站点官网 GEO 评测报告</h1>
 <div class="row"><div class="ring"><svg width="150" height="150"><circle cx="75" cy="75" r="54" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="13"/>
 <circle cx="75" cy="75" r="54" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="{dash:.1f}"/></svg>
 <div class="val"><b>{sc["overall_score"]}</b><span>{E(sc["grade"])} · 站内准备度</span></div></div>
@@ -308,7 +310,7 @@ table{{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(
 
 <section><div class="card"><h2>一、总体评价</h2>
 <p class="lead">本站 <b>GEO 站内准备度为 {sc["overall_score"]} 分（{E(sc["grade"])}）</b>。网站在技术基础与信息架构上具备良好起点，但在<b>品牌与实体一致性、内容可信度、结构化数据完整性</b>三方面存在明显短板，是当前影响 AI 搜索表现的主要因素。</p>
-<p class="narr">本次高优先级问题共 {sevc["S1"]} 项，集中在两处：品牌写法与邮箱域名混用（Sofeyia / Suofeiya、两个邮箱域名），以及页面中残留的模板占位文案与演示内容。这两类问题会直接影响 AI 与搜索引擎对“品牌是谁、内容是否可信”的判断。</p>
+<p class="narr">本次高优先级问题共 {sevc["S1"]} 项，集中在两处：品牌写法与邮箱域名混用（Acme / Akme、两个邮箱域名），以及页面中残留的模板占位文案与演示内容。这两类问题会直接影响 AI 与搜索引擎对“品牌是谁、内容是否可信”的判断。</p>
 <p class="narr">本报告采用新版检测口径（在“信号是否存在”的基础上增加“内容是否正确、建议是否可用”），分数与旧版报告不可直接比较；分数衡量的是被生成式搜索正确理解、信任与引用的准备度，而非排名或流量结果。</p></div></section>
 
 <section><div class="card"><h2>二、表现良好的部分</h2><ul class="plain">{"".join(f"<li>{E(s)}</li>" for s in strengths)}</ul></div></section>
@@ -322,9 +324,9 @@ table{{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(
 
 <section><div class="card"><h2>六、检测范围</h2><p class="narr">域名：{E(site["domain"])}；sitemap：{scope["pages_total"]} 个 URL；深度检测 {len(scope["sampled_pages"])} 页，覆盖首页、关于、联系、FAQ、新闻/文章、产品、项目、条款以及演示/系统页。</p>
 <p class="narr">另有 {len(run.get("advisory_issues",[]))} 项“需确认或补充的信息”（如数据来源、资质出处、社交账号策略等）已单独整理，供贵司核对。</p></div></section>
-<footer>索菲亚官网 GEO 评测报告 · {date} · run {E(run["run_id"])}<br>如需进一步解读或定制改进方案，欢迎与我们联系。</footer>
+<footer>示例站点官网 GEO 评测报告 · {date} · run {E(run["run_id"])}<br>如需进一步解读或定制改进方案，欢迎与我们联系。</footer>
 </div></body></html>'''
-open(os.path.join(ROOT,"report","sofeyia_geo_report_for_client_v3.1_compact.html"),"w",encoding="utf-8").write(HTML)
+open(os.path.join(ROOT,"report","sample_geo_report_for_client_v3.1_compact.html"),"w",encoding="utf-8").write(HTML)
 # Markdown 版
 def md_block(i):
     smp=S.get(i["rule_id"]) or []
@@ -338,7 +340,7 @@ def md_block(i):
         lines.append("  - 建议的实体映射：")
         for k,v in ENTITY_MAP: lines.append(f"    - **{k}**：{v}")
     return "\n".join(lines)
-MD=f"""# 索菲亚官网 GEO 评测报告
+MD=f"""# 示例站点官网 GEO 评测报告
 
 - 站点：{site['url']}
 - 报告日期：{date}　|　检测范围：sitemap {scope['pages_total']} 个 URL，深检 {len(scope['sampled_pages'])} 页
@@ -359,5 +361,5 @@ MD=f"""# 索菲亚官网 GEO 评测报告
 - 域名：{site['domain']}；sitemap {scope['pages_total']} 个 URL；深检 {len(scope['sampled_pages'])} 页
 - 另有 {len(run.get('advisory_issues',[]))} 项“需确认或补充的信息”另行整理
 """
-open(os.path.join(ROOT,"report","sofeyia_geo_report_for_client_v3.1_compact.md"),"w",encoding="utf-8").write(MD)
-print("wrote sofeyia_geo_report_for_client_v3.1_compact.html/.md ; samples:",{k:len(v) for k,v in S.items() if v},"; code:",sorted(CODE))
+open(os.path.join(ROOT,"report","sample_geo_report_for_client_v3.1_compact.md"),"w",encoding="utf-8").write(MD)
+print("wrote sample_geo_report_for_client_v3.1_compact.html/.md ; samples:",{k:len(v) for k,v in S.items() if v},"; code:",sorted(CODE))

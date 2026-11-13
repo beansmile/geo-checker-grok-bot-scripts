@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 3a: 基于 evidence（pages/*.json + site.json）跑确定性规则（R），
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 3a: 基于 evidence（pages/*.json + site.json）跑确定性规则（R），
 输出 rule_results.json / issues / run.json（scores 留空待 Step 3b 评分）。"""
 import json, os, re, glob, datetime
 
@@ -21,19 +23,19 @@ def ev(url, locator, quote): return {"type":"quote","url":url,"locator":locator,
 def pages_with(pred): return [pid for pid,p in pages.items() if pred(p)]
 
 # ---- ACC ----
-add("ACC-01","pass","S1","high","R",[ev("https://www.sofeyiahome.com/robots.txt","robots.txt","User-agent: * / Disallow:")],
+add("ACC-01","pass","S1","high","R",[ev("https://www.acme-tools.com/robots.txt","robots.txt","User-agent: * / Disallow:")],
     "robots.txt 未屏蔽 AI 检索爬虫","AI retrieval crawlers are not blocked",{"blocked_critical":0})
-add("ACC-02","pass","S2","high","R",[ev("https://www.sofeyiahome.com/","header","OAI-SearchBot/GPTBot/ClaudeBot/PerplexityBot -> HTTP 200")],
+add("ACC-02","pass","S2","high","R",[ev("https://www.acme-tools.com/","header","OAI-SearchBot/GPTBot/ClaudeBot/PerplexityBot -> HTTP 200")],
     "四个 AI 检索 UA 均可达","All four AI retrieval UAs reachable",{"uas":4,"blocked":0})
-add("ACC-03","pass","S2","high","R",[ev("https://www.sofeyiahome.com/","body","no captcha/challenge markers")],
+add("ACC-03","pass","S2","high","R",[ev("https://www.acme-tools.com/","body","no captcha/challenge markers")],
     "未见 WAF/挑战页拦截迹象","No WAF/challenge interception observed")
-add("ACC-04","pass","S3","high","R",[ev("https://www.sofeyiahome.com/sitemap_index.xml","sitemap","6 sub-sitemaps, 117 URLs")],
+add("ACC-04","pass","S3","high","R",[ev("https://www.acme-tools.com/sitemap_index.xml","sitemap","6 sub-sitemaps, 117 URLs")],
     "站点地图存在且可解析","Sitemap present and parseable",{"urls":117,"content_ratio":site["sitemap"]["content_ratio"]})
-add("ACC-05","pass","S1","high","R",[ev("http://www.sofeyiahome.com/","header","301 -> https://www.sofeyiahome.com/")],
+add("ACC-05","pass","S1","high","R",[ev("http://www.acme-tools.com/","header","301 -> https://www.acme-tools.com/")],
     "HTTPS 与 HTTP→HTTPS 正常","HTTPS and HTTP redirect OK",{"hops":0})
-add("ACC-06","pass","S1","high","R",[ev("https://www.sofeyiahome.com/","body","server HTML contains content + schema + H1")],
+add("ACC-06","pass","S1","high","R",[ev("https://www.acme-tools.com/","body","server HTML contains content + schema + H1")],
     "服务端 HTML 内容可读","Server HTML readable without JS",{"body_text_len":pages["home"]["body_text_len"]})
-add("ACC-07","na","S4","high","R",[ev("https://www.sofeyiahome.com/llms.txt","path","404")],
+add("ACC-07","na","S4","high","R",[ev("https://www.acme-tools.com/llms.txt","path","404")],
     "无 llms.txt（可选，不扣分）","No llms.txt (optional)",{"status":404})
 
 # ---- CLN ----
@@ -59,42 +61,42 @@ add("CLN-02","fail","S2","high","R",[ev(u,"url",u) for u in demo],
     "站点地图含模板演示页","Sitemap includes template demo pages",{"count":len(demo)})
 sampled_ratio=(len([p for p in pages.values() if p["role"] in ("demo","system","legal")]))/len(pages)
 add("CLN-09","fail","S2","medium" if sampled_ratio<0.2 else "high","R",
-    [ev("https://www.sofeyiahome.com/sitemap_index.xml","sitemap",f"demo+system+legal in sitemap: {len(demo)+len(sysp)+len(legp)}/{len(scope['content_pages'])}; page-sitemap content ratio {site['sitemap'].get('page_sitemap_content_ratio')}")],
+    [ev("https://www.acme-tools.com/sitemap_index.xml","sitemap",f"demo+system+legal in sitemap: {len(demo)+len(sysp)+len(legp)}/{len(scope['content_pages'])}; page-sitemap content ratio {site['sitemap'].get('page_sitemap_content_ratio')}")],
     "索引膨胀：系统/演示/合规页进入站点地图与统计","Index bloat: system/demo/legal pages indexed",
     {"sampled_ratio":round(sampled_ratio,3),"sitemap_demo":len(demo),"sitemap_system":len(sysp),"sitemap_legal":len(legp),
      "page_sitemap_content_ratio":site["sitemap"].get("page_sitemap_content_ratio")})
 residue_score=min(100, len(lorem_pages)*12 + len(zero_pages)*8 + len(legal_pages)*8 + len(demo)*4)
 residue_level="severe" if residue_score>=70 else ("significant" if residue_score>=30 else ("low" if residue_score>0 else "none"))
-add("CLN-10","fail","S2","medium","R",[ev("https://www.sofeyiahome.com/","site","lorem/zero/default-legal/demo aggregated")],
+add("CLN-10","fail","S2","medium","R",[ev("https://www.acme-tools.com/","site","lorem/zero/default-legal/demo aggregated")],
     "模板残留显著","Significant template residue",{"template_residue_score":residue_score,"level":residue_level})
 
 # ---- OGP ----
 home=pages["home"]["ogp"]
 placeholder_ogp=(home.get("og:title","").strip().lower() in ("homepage","home","index","")) or bool(re.search(r"lorem|primis",home.get("og:description",""),re.I))
-add("OGP-01","fail" if placeholder_ogp else "pass","S3","high","R",[ev("https://www.sofeyiahome.com/","meta[property=og:title]",str(home.get("og:title"))),ev("https://www.sofeyiahome.com/","meta[property=og:description]",str(home.get("og:description"))[:200])],
+add("OGP-01","fail" if placeholder_ogp else "pass","S3","high","R",[ev("https://www.acme-tools.com/","meta[property=og:title]",str(home.get("og:title"))),ev("https://www.acme-tools.com/","meta[property=og:description]",str(home.get("og:description"))[:200])],
     "OGP 为占位/拼接文本（存在但不可用）","OGP present but placeholder/concatenated",{"og:title":home.get("og:title")})
 tw=pages["home"]["twitter"]
 add("OGP-02","fail" if not(tw.get("twitter:title") and tw.get("twitter:description")) else "pass","S4","high","R",
-    [ev("https://www.sofeyiahome.com/","meta[name^=twitter:]",json.dumps(tw))],"Twitter Card 缺 title/description","Twitter Card lacks title/description",tw)
+    [ev("https://www.acme-tools.com/","meta[name^=twitter:]",json.dumps(tw))],"Twitter Card 缺 title/description","Twitter Card lacks title/description",tw)
 
 # ---- SCH ----
 org_missing=[k for k in ["sameAs","description","contactPoint"] if not pages["home"].get("org_name") or True]
-add("SCH-02","fail","S3","high","R",[ev("https://www.sofeyiahome.com/","script[type=application/ld+json]","Organization: name/url/logo present; sameAs/description/contactPoint missing")],
+add("SCH-02","fail","S3","high","R",[ev("https://www.acme-tools.com/","script[type=application/ld+json]","Organization: name/url/logo present; sameAs/description/contactPoint missing")],
     "Organization 属性不完整（缺 sameAs/description/contactPoint）","Incomplete Organization attributes",{"missing":["sameAs","description","contactPoint"]})
-add("SCH-04","fail","S3","high","R",[ev("https://www.sofeyiahome.com/","script[...]",'Organization.name="sofeyia" (lowercase, not brand "Sofeyia"/"Suofeiya")')],
-    "schema 名称与展示品牌大小写/写法不一致","Schema name inconsistent with displayed brand",{"schema_name":"sofeyia"})
+add("SCH-04","fail","S3","high","R",[ev("https://www.acme-tools.com/","script[...]",'Organization.name="acme" (lowercase, not brand "Acme"/"Akme")')],
+    "schema 名称与展示品牌大小写/写法不一致","Schema name inconsistent with displayed brand",{"schema_name":"acme"})
 
 # ---- ENT ----
 brands={b["value"]:b["count"] for b in site["brand_candidates"]}
 add("ENT-01","fail" if len(brands)>=2 else "pass","S1","high","R",
-    [ev("https://www.sofeyiahome.com/about-us/","h1","About Suofeiya"),ev("https://www.sofeyiahome.com/","title","homepage - sofeyia")],
-    "品牌写法不一致（Sofeyia / Suofeiya）","Brand spelling inconsistent",brands)
+    [ev("https://www.acme-tools.com/about-us/","h1","About Akme"),ev("https://www.acme-tools.com/","title","homepage - acme")],
+    "品牌写法不一致（Acme / Akme）","Brand spelling inconsistent",brands)
 emails={e["value"]:e["domain"] for e in site["emails"]}
-mismatch={k:v for k,v in emails.items() if v!="sofeyiahome.com"}
+mismatch={k:v for k,v in emails.items() if v!="acme-tools.com"}
 add("ENT-02","fail" if mismatch or len(set(emails.values()))>1 else "pass","S1","high","R",
-    [ev("https://www.sofeyiahome.com/contact-us/","mailto/text",f"{k} (domain {v})") for k,v in emails.items()],
+    [ev("https://www.acme-tools.com/contact-us/","mailto/text",f"{k} (domain {v})") for k,v in emails.items()],
     "同时公开了两个邮箱域名","Two conflicting email domains",emails)
-add("ENT-04","fail","S2","high","R",[ev("https://www.sofeyiahome.com/contact-us/","body","Suofeiya Home Collection Co., Ltd"),ev("https://www.sofeyiahome.com/","footer","Sofeyia Home Collection Co., Ltd")],
+add("ENT-04","fail","S2","high","R",[ev("https://www.acme-tools.com/contact-us/","body","Akme Tools Collection Co., Ltd"),ev("https://www.acme-tools.com/","footer","Acme Tools Collection Co., Ltd")],
     "公司名两种写法","Two company-name spellings",{})
 handles={}
 for p in pages.values():
@@ -102,8 +104,8 @@ for p in pages.values():
         if x.get("platform"): handles.setdefault(x["platform"],set()).add(re.sub(r"https?://(www\.)?","",x["url"]).split("?")[0])
 flat={k:sorted(v) for k,v in handles.items()}
 add("ENT-05","fail" if len({h.split('/')[-1] for v in handles.values() for h in v})>1 else "pass","S3","medium","R",
-    [ev("https://www.sofeyiahome.com/contact-us/","social links",json.dumps(flat,ensure_ascii=False)[:300])],
-    "社交账号命名不一致（SofeyiaOfficial vs sofeyiahome）","Social handles inconsistent",flat)
+    [ev("https://www.acme-tools.com/contact-us/","social links",json.dumps(flat,ensure_ascii=False)[:300])],
+    "社交账号命名不一致（AcmeOfficial vs acme-tools）","Social handles inconsistent",flat)
 
 # ---- ONP ----
 meta_missing=[p for p,v in pages.items() if v["meta_description"]["length"]==0]
@@ -131,15 +133,15 @@ add("RCH-04","fail" if len(dated)/max(len(content_sampled),1)<0.5 else "pass","S
 # ---- KG / TRU / TEC ----
 auth_links=[x for p in pages.values() for x in p["external_links"] if x["authority"]]
 add("KG-04","fail" if not auth_links else "pass","S3","high","R",
-    [ev("https://www.sofeyiahome.com/","main external links",f"authority links={len(auth_links)}; other external={sum(len([x for x in p['external_links']]) for p in pages.values())}")],
+    [ev("https://www.acme-tools.com/","main external links",f"authority links={len(auth_links)}; other external={sum(len([x for x in p['external_links']]) for p in pages.values())}")],
     "正文缺少权威外部引用（仅社交/系统外链）","No authoritative outbound citations",{"authority":len(auth_links)})
-add("KG-01","fail","S3","high","R",[ev("https://www.sofeyiahome.com/","Organization",'sameAs missing')],"Organization 无 sameAs","No sameAs in Organization",{})
-add("KG-02","fail","S3","high","R",[ev("https://www.sofeyiahome.com/","Organization",'knowsAbout missing')],"无 knowsAbout","No knowsAbout",{})
+add("KG-01","fail","S3","high","R",[ev("https://www.acme-tools.com/","Organization",'sameAs missing')],"Organization 无 sameAs","No sameAs in Organization",{})
+add("KG-02","fail","S3","high","R",[ev("https://www.acme-tools.com/","Organization",'knowsAbout missing')],"无 knowsAbout","No knowsAbout",{})
 author_pages=[p for p,v in pages.items() if "person" in v["schema_types"]]
 add("TRU-01","pass" if author_pages else "fail","S3","high","R",[ev(pages[p]["url"],"schema","Person present") for p in author_pages],
     "文章页含作者 Schema","Author schema present on articles",{"pages":author_pages})
 add("TEC-01","pass" if all(v["canonical"] for v in pages.values()) else "fail","S2","high","R",
-    [ev("https://www.sofeyiahome.com/","link[rel=canonical]",f"coverage {sum(1 for v in pages.values() if v['canonical'])}/{len(pages)}")],
+    [ev("https://www.acme-tools.com/","link[rel=canonical]",f"coverage {sum(1 for v in pages.values() if v['canonical'])}/{len(pages)}")],
     "canonical 全覆盖","Canonical coverage full",{})
 heavy=[p for p,v in pages.items() if v["html_size"]>500_000]
 add("TEC-03","pass" if not heavy else "fail","S3","high","R",[],"无 >500KB 页面","No pages over 500KB",{"max_kb":round(max(v['html_size'] for v in pages.values())/1024)})
@@ -161,7 +163,7 @@ issues.sort(key=lambda x:(-x["priority_weight"],-x["impact"]))
 trust_ceiling={"applied":any(i["rule_id"] in ("ENT-01","ENT-02") for i in issues),"type":"consistency",
    "triggers":[i["rule_id"] for i in issues if i["rule_id"] in ("ENT-01","ENT-02")],
    "caps":{"trust_max_pct":50,"entity_max_pct":30,"overall_max":70}}
-run={"schema_version":"eval-1.1","run_id":"sofeyiahome-2026-09-13-run02","analyze_id":"7fcad2e6-f63c-447e-ac66-8ad716539fbb",
+run={"schema_version":"eval-1.1","run_id":"acme-tools-2026-09-13-run02","analyze_id":"7fcad2e6-f63c-447e-ac66-8ad716539fbb",
  "status":"rules_done","site":site,"scope":scope,"rule_results":results,"issues":issues,
  "scores":{"category_scores":{k:{"score":None,"max":m,"percentage":None,"grade":None} for k,m in
     [("schema",15),("entity",15),("ogp",5),("richness",15),("knowledge_graph",10),("absorption",15),("trust",15),("on_page",5),("quality",5)]},
@@ -180,7 +182,7 @@ run={"schema_version":"eval-1.1","run_id":"sofeyiahome-2026-09-13-run02","analyz
     [f"TRU-{i:02d}" for i in range(1,8)]+[f"CIT-{i:02d}" for i in range(1,4)]+[f"QLT-{i:02d}" for i in range(1,4)]+
     [f"TEC-{i:02d}" for i in range(1,4)]
  ) - {r["rule_id"] for r in results}),
- "extra_findings":[{"id":"TLS-APEX","severity":"S2","detail":"https://sofeyiahome.com/ 证书主机名不匹配（apex 域名 TLS 失败），仅 www 可用"}],
+ "extra_findings":[{"id":"TLS-APEX","severity":"S2","detail":"https://acme-tools.com/ 证书主机名不匹配（apex 域名 TLS 失败），仅 www 可用"}],
  "created_at":datetime.datetime.now().astimezone().isoformat(),"updated_at":datetime.datetime.now().astimezone().isoformat()}
 json.dump(results, open(os.path.join(ROOT,"rule_results.json"),"w",encoding="utf-8"), ensure_ascii=False, indent=2)
 json.dump(run, open(os.path.join(ROOT,"run.json"),"w",encoding="utf-8"), ensure_ascii=False, indent=2)

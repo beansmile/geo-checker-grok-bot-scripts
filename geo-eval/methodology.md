@@ -1,7 +1,7 @@
 # GEO 检测指南：检测项、流程、检测与校验规则、打分规则、输出规范（v2026.10）
 
 > 本文是 GEO 检测的技术指南：检测什么、按什么流程检测、每项的检测与校验规则、如何打分、如何输出报告。
-> 编制依据：`docs/GEO评测权威资料汇编.md`（权威来源汇编）、`geo_ready/GEO_SCORING_RULES_COMPLETE.md`（v5.0）与 `GEO_SCORING_RULES_v4.md`（旧版）、`geo_ready/GEO 论文学习材料：从 Citation Selection 到 Citation Absorption.md`、索菲亚报告复盘（`docs/sofeyia_case_review.md`、`docs/geo_report_problems_and_upgrade.md`），以及 Google / Bing / OpenAI 官方文档与 GEO 学术研究。
+> 编制依据：`docs/GEO评测权威资料汇编.md`（权威来源汇编）、`geo_ready/GEO_SCORING_RULES_COMPLETE.md`（v5.0）与 `GEO_SCORING_RULES_v4.md`（旧版）、`geo_ready/GEO 论文学习材料：从 Citation Selection 到 Citation Absorption.md`、案例复盘（`docs/case_review.md`、`docs/geo_report_problems_and_upgrade.md`），以及 Google / Bing / OpenAI 官方文档与 GEO 学术研究。
 > 本文是**检测方法论与规则草案**，不是当前代码复述；落地时逐条转成检测器并用基准站点集校准。
 >
 > **阈值定位声明（重要）**：本文出现的具体数值阈值（Title 10–60 字符、Meta Description 50–155 字符、自包含答案块长度（仅作参考，不以长度为准）、每页一个 H1、文章数量下限等）均为**本模型内部推荐阈值**，用于统一打分口径，**不是 Google / Bing / OpenAI 公布的硬性标准**。对外报告必须写明“本模型推荐”，不得表述为搜索引擎要求。官方口径依据见 §6。
@@ -12,9 +12,9 @@
 
 1. **目标：从“标记在不在”升级为“内容是否正确、建议是否可用”。** 检测存在（presence）是必要不充分条件：页面“有 Schema/有作者/有 Contact”不能证明“可信”。检测回答三件事：**内容是否存在（existence）→ 内容是否正确（correctness）→ 修改建议是否合理（actionable）**。
 2. **三层检测 + 语义复核**：L0 可访问与发现（规则）→ L1 结构存在性（规则）→ L2 质量与正确性（规则为主，LLM 做语义复核）；内容质量与吸收潜质属于 L2 的内容侧检测。
-3. **“信任上限（Trust Ceiling）”原则**：当站点**未声明实体映射**（品牌写法/邮箱域名冲突，且 Organization 缺少 sameAs / alternateName / parentOrganization 等关联声明）或存在 lorem 占位、伪造经验、复制站等严重问题时，相关维度与总分不得超过上限——索菲亚 E-E-A-T 10/10 就是缺这条规则造成的。**注意**：判定对象是“是否声明了实体关系”，而不是“是否存在多种写法”；集团/上市主体/海外品牌/英文转写可以并存，只要关系被明确声明。
+3. **“信任上限（Trust Ceiling）”原则**：当站点**未声明实体映射**（品牌写法/邮箱域名冲突，且 Organization 缺少 sameAs / alternateName / parentOrganization 等关联声明）或存在 lorem 占位、伪造经验、复制站等严重问题时，相关维度与总分不得超过上限——示例站点 E-E-A-T 10/10 就是缺这条规则造成的。**注意**：判定对象是“是否声明了实体关系”，而不是“是否存在多种写法”；集团/上市主体/海外品牌/英文转写可以并存，只要关系被明确声明。
 4. **内容统计必须基于“干净正文页口径”**：剔除系统页/演示页/占位页后再算密度、新鲜度、可引用率、对题率；比率类指标一律按唯一页面分母并封顶 100%。
-5. **任何结论要带证据与置信度**，修复建议禁止搬运占位/伪造内容（索菲亚 lorem 被写进 Organization 建议即反面教材）。
+5. **任何结论要带证据与置信度**，修复建议禁止搬运占位/伪造内容（示例站点 lorem 被写进 Organization 建议即反面教材）。
 6. **方法可版本化、可复现**：检测规则、口径、评分权重与 prompt 版本随报告输出；基准站点集用于回归。
 
 ---
@@ -78,13 +78,13 @@
 | 方向 key | 名称 | 主层 | 检测方法 | 主要依据 |
 |---|---|---|---|---|
 | `access` | 可访问与爬取（robots 语义、AI UA 可达、HTTPS/重定向、sitemap） | L0 | 规则 | A2/A3 |
-| `cleanliness` | 页面清洁度（系统/演示页、占位/模板残留、软404、复制页、索引膨胀） | L1/L2 | 规则 + LLM 复核 | 索菲亚复盘 |
+| `cleanliness` | 页面清洁度（系统/演示页、占位/模板残留、软404、复制页、索引膨胀） | L1/L2 | 规则 + LLM 复核 | 案例复盘 |
 | `schema` | 结构化数据正确性（类型/属性/嵌套/实体一致/可解析） | L1/L2 | 规则 + LLM 复核 | A1/A2/A4 |
 | `entity` | 品牌与实体一致性（站名/公司名/邮箱/电话/地址/子品牌关系） | L2 | 规则 + LLM 复核 | A2/A4/A9 |
 | `onpage` | 页面主题呈现（title/meta/H1/层级/顶部关键信息/单主题） | L1 | 规则（+LLM 语义） | A2 |
 | `ogp` | 开放图谱与社交呈现（og:title/description/image/url + Twitter Card） | L1 | 规则 | A2 |
 | `kg` | 知识图谱/实体权威（sameAs、knowsAbout、foundingDate、位置/服务区域、正文权威外链、内链） | L1/L2 | 规则 | A4/A9 |
-| `richness` | 内容丰富度与真实新鲜度 | L1 | 规则 | 索菲亚复盘 |
+| `richness` | 内容丰富度与真实新鲜度 | L1 | 规则 | 案例复盘 |
 | `absorption` | 证据可吸收性（定义/数据/对比/步骤/对题/自包含） | L1+L2 | 规则 + LLM | A5/A6/A7 |
 | `trust` | E-E-A-T 与信任（作者/信任页/资质/经验 + 一致性真实性） | L2 | 规则 + LLM 复核 | A4/A9 |
 | `citations` | 引用与来源（外链权威、声明出处、可交叉验证） | L2 | 规则 + LLM | A4/A6 |
@@ -122,7 +122,7 @@
 | 模板源指纹 | 路径/资源/页面结构/meta | `pabriz-*`/`elementor-*`/模板残留页路径与资源名、主题作者 metadata（如 `moxcreative`）、结构化模板指纹与公开 Template Kit 特征比对 → 提示“疑似基于 XX 模板二开”（低置信标注） | LLM 复核提示 + 指纹证据 | 可选 |
 | 默认合规/占位物 | 法律页/CTA/链接 | 默认 Privacy Policy 模板句式、Placeholder CTA（`Click here`/空锚文本）、空链接、0 值 JS 计数器 → 内容治理提示 | issue | 否 |
 
-> 案例：索菲亚首页保留 `Create. Enhance. and Sustain.`/`Primis non dignissim…`（Pabriz Elementor Template Kit 的 Demo 文案）并残留模板演示页，属于典型“模板残留”发现；对客户话术应避免攻击技术栈，而指向内容治理/QA/AI 可读性（见 `geo_report_problems_and_upgrade.md` §2.3、§P2-5）。
+> 案例：示例站点首页保留 `Create. Enhance. and Sustain.`/`Primis non dignissim…`（Pabriz Elementor Template Kit 的 Demo 文案）并残留模板演示页，属于典型“模板残留”发现；对客户话术应避免攻击技术栈，而指向内容治理/QA/AI 可读性（见 `geo_report_problems_and_upgrade.md` §2.3、§P2-5）。
 
 ### 3.3 `schema` 结构化数据正确性（L1+L2）
 
@@ -140,7 +140,7 @@
 
 ### 3.4 `entity` 品牌与实体一致性（L2）
 
-这是索菲亚案例的核心缺口（两个拼写品牌、两个邮箱、Sogal/源自法国混乱）。
+这是示例案例的核心缺口（两个拼写品牌、两个邮箱、Northbrand/源自海外混乱）。
 
 | 检测项 | 输入 | 判定（草案） | 输出 | LLM |
 |---|---|---|---|---|
@@ -158,9 +158,9 @@
 ### 3.6 `richness` 内容丰富度与真实新鲜度（L1）
 
 沿用 v5 权重框架（FAQ/blog/knowledge/freshness），但执行三条修复：
-1. **口径**：所有统计基于正文页（剔除系统/演示/legal 页）。FAQ 仍以“1 个高质量 FAQ 页即可满分”为理念（答案资产+schema 覆盖），但 **FAQPage Schema 覆盖率必须真实**（索菲亚 FAQ 页 schema 覆盖 0% 却因 answer_asset 100% 拿 5/6 → 应补扣）。
+1. **口径**：所有统计基于正文页（剔除系统/演示/legal 页）。FAQ 仍以“1 个高质量 FAQ 页即可满分”为理念（答案资产+schema 覆盖），但 **FAQPage Schema 覆盖率必须真实**（示例站点 FAQ 页 schema 覆盖 0% 却因 answer_asset 100% 拿 5/6 → 应补扣）。
 2. **freshness 修复**：分母=含日期的唯一正文页数；rate=覆盖页数/正文页数，封顶 100%；日期字段仅统计一次/页；datePublished>dateModified 或未来日期 → 不计并提示。
-3. **knowledge 收紧**：guide/tech 页必须有文档性证据（路径 `/docs|/guides|/help|/tutorial` 或结构化标题），排除演示/系统页（索菲亚 `tech_pages≈40` 为反面）。
+3. **knowledge 收紧**：guide/tech 页必须有文档性证据（路径 `/docs|/guides|/help|/tutorial` 或结构化标题），排除演示/系统页（示例站点 `tech_pages≈40` 为反面）。
 
 ### 3.7 `absorption` 证据可吸收性（L1+L2）
 
@@ -217,7 +217,7 @@
 | 维度 | v5 现权重 | v6 建议权重 | 变化与理由 |
 |---|---|---|---|
 | Schema 存在性（类型14/属性6/嵌套5→正确性内置） | 25 | **15**（v2026.10 由 20 下调） | 结构化数据不是通用排名因子；FAQPage 富媒体自 2023-08 起仅面向权威政府/医疗站点，故 FAQPage 降为辅助项不计分，正确性并入该维扣分 |
-| 实体与品牌一致性（`entity`） | 0 | **15**（v2026.10 由 10 上调） | 新增（索菲亚教训）并上调：实体映射不清是本次最主要问题，权重应与其影响匹配 |
+| 实体与品牌一致性（`entity`） | 0 | **15**（v2026.10 由 10 上调） | 新增（示例站点教训）并上调：实体映射不清是本次最主要问题，权重应与其影响匹配 |
 | OGP/社交 | 5 | 5 | 保留存在性 |
 | 内容丰富度+真实新鲜度 | 20 | 15 | 收紧口径后权重略降 |
 | 知识图谱/外部权威 | 15 | 10 | 由“链接数”转向“可验证权威/背书” |
@@ -279,7 +279,7 @@
 
 ## 7. 验证、回归与持续校准
 
-1. **基准站点集**：建立 ≥20 个手工标注站点（覆盖电商/SaaS/企业/个人/博客/中英；含索菲亚这类“存在但不可信”样本、复制站、纯模板站、健康站点），作为规则回归与权重校准金标准。
+1. **基准站点集**：建立 ≥20 个手工标注站点（覆盖电商/SaaS/企业/个人/博客/中英；含示例站点这类“存在但不可信”样本、复制站、纯模板站、健康站点），作为规则回归与权重校准金标准。
 2. **人工抽检**：每周抽检 N 条 LLM 结论与建议（幻觉率、证据正确性），记录并回流 prompt/规则。
 3. **人工抽检**：LLM 结论必须经人工抽检（幻觉率、证据正确性、建议可用性），并回流 prompt/规则。
 4. **版本治理**：方法/规则版本化；历史对比时提示版本差异，避免误读趋势。

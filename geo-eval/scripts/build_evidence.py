@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 2: 把抓取的 HTML 解析为 eval-1.1 的 SiteProfile / PageEvidence / scope，
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 2: 把抓取的 HTML 解析为 eval-1.1 的 SiteProfile / PageEvidence / scope，
 并跑一批确定性规则（R）输出 rule_results.json（其余规则标记 pending）。"""
 import json, os, re, sys
 from html.parser import HTMLParser
@@ -9,7 +11,7 @@ from urllib.parse import urljoin, urlparse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES_DIR = os.path.join(ROOT, "evidence", "pages")
 OUT_PAGES = os.path.join(ROOT, "pages")
-SITE_DOMAIN = "sofeyiahome.com"
+SITE_DOMAIN = "acme-tools.com"
 AUTHORITY = ["wikipedia.org","ieee.org","iso.org","iec.ch","europa.eu","gov.cn","gov.uk",
              ".gov",".edu",".ac.","standards.","nist.gov","rfc-editor.org","docs.google.com",
              "developer.mozilla.org","w3.org"]
@@ -23,8 +25,8 @@ WP_PRIVACY_RE = re.compile(r"(when visitors leave comments on the site|gravatar 
 CTA_RE = re.compile(r"\b(discover more|read more|click here|learn more)\b", re.I)
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 PHONE_RE = re.compile(r"\+?\d[\d\s\-()]{7,}\d")
-COMPANY_RE = re.compile(r"((?:Sofeyia|Suofeiya|Sogal)[A-Za-z'&.\- ]{0,40}?(?:Co\.,?\s*Ltd\.?|Group))")
-BRAND_RE = re.compile(r"\b(Suofeiya|Sofeyia)\b")
+COMPANY_RE = re.compile(r"((?:Acme|Akme|Northbrand)[A-Za-z'&.\- ]{0,40}?(?:Co\.,?\s*Ltd\.?|Group))")
+BRAND_RE = re.compile(r"\b(Akme|Acme)\b")
 
 class Parser(HTMLParser):
     def __init__(self):
@@ -206,7 +208,7 @@ def main():
         "llms":{"llms_txt":{"present":False,"status":404},"llms_full":{"present":False,"status":404}},
         "sitemap":{"url_count":None,"content_ratio":None},
         "tech":{"https":True,"http_redirects_to_https":True,"redirect_hops":0,"canonical_coverage":None,
-                "cms_hint":"WordPress+Yoast","apex_tls_ok":False,"apex_tls_error":"certificate hostname mismatch for sofeyiahome.com"}
+                "cms_hint":"WordPress+Yoast","apex_tls_ok":False,"apex_tls_error":"certificate hostname mismatch for acme-tools.com"}
     }
     json.dump(site, open(os.path.join(ROOT,"site.json"),"w",encoding="utf-8"), ensure_ascii=False, indent=2)
     # scope (from sitemap)

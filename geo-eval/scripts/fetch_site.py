@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 1: 重新抓取目标站点证据包（robots / sitemaps / llms / 24 个深检页面）。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 1: 重新抓取目标站点证据包（robots / sitemaps / llms / 24 个深检页面）。
 产出 evidence/{robots.txt, sitemap_index.xml, *-sitemap.xml, llms*.txt, pages/*.html}
 以及 evidence/pages.list（slug|url 清单，供 build_evidence.py 还原页面 URL）。"""
 import os, re, sys, time, json, urllib.request, urllib.error
@@ -9,7 +11,7 @@ from urllib.parse import urljoin
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EVID = os.path.join(ROOT, "evidence")
 PAGES = os.path.join(EVID, "pages")
-BASE = "https://www.sofeyiahome.com"
+BASE = "https://www.acme-tools.com"
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"}
 
 # 深检页面（与 2026-09-10 首轮同一组 24 页，保证口径可比）
@@ -20,8 +22,8 @@ SAMPLED = {
     "faq": "/faq/",
     "news": "/news/",
     "company_news": "/company-news/",
-    "article_hq": "/company-news/company-news-sofeyia-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/",
-    "article_canton": "/company-news/exhibition-news-sofeyia-at-the-137th-canton-fair-2025/",
+    "article_hq": "/company-news/company-news-acme-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/",
+    "article_canton": "/company-news/exhibition-news-acme-at-the-137th-canton-fair-2025/",
     "products": "/products/",
     "product_detail": "/detail/alpha-pro-series/",
     "project": "/project/",

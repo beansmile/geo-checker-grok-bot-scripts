@@ -1,9 +1,9 @@
 # GEO 检测规则手册（Step 1：规则规格 v1.0）
 
-> 用途：把 `docs/geo_evaluation_methodology_latest.md`（GEO 检测指南）转成**可直接实现、可逐条执行的检测规则**。开发按本手册实现检测器；专家按本手册逐条核验与出结论；索菲亚案例作为首个 golden case 验收。
+> 用途：把 `docs/geo_evaluation_methodology_latest.md`（GEO 检测指南）转成**可直接实现、可逐条执行的检测规则**。开发按本手册实现检测器；专家按本手册逐条核验与出结论；示例案例作为首个 golden case 验收。
 > 规则字段：`ID / 规则名 / 目标 / 输入 / 判定与阈值 / 输出与证据 / 严重度 / 分值影响 / 方法 / 页面范围`。
 > 本手册只覆盖面向**企业官网 GEO** 的检测；agent 可用性/协议类检测（MCP、OAuth、API、Web Bot Auth 等）不在本手册，归第三方报告解读（`third_party_report`）。
-> 配套：方法论文档（检测方向与打分模型）、`docs/sofeyia_case_review.md`（案例证据）、`docs/geo_deep_detection_agent_plans.md`（实现方案与流程）。
+> 配套：方法论文档（检测方向与打分模型）、`docs/case_review.md`（案例证据）、`docs/geo_deep_detection_agent_plans.md`（实现方案与流程）。
 >
 > **阈值定位（v2026.10）**：本手册中的长度/数量类阈值（Title 10–60 字符、Meta 50–155 字符、段落 100–200 词等）均为**本模型内部推荐阈值**，不是搜索引擎官方硬性要求；官方口径依据见方法论 §6。对外报告中一律标注“本模型推荐”。
 
@@ -124,11 +124,11 @@
 
 | ID | 规则 | 判定与阈值 | 严重度 | 分值影响 | 方法 | 范围 |
 |---|---|---|---|---|---|---|
-| ENT-01 | 品牌写法一致性 | 归一化（小写、去空格/连字符/法律后缀）后，从 schema.name / og:site_name / title 后缀 / 版权 / 页脚公司块 / About H1 收集品牌写法；≥2 个显著不同且各出现 ≥3 次 → S1；拼写近似（编辑距离 ≤2，如 Sofeyia/Suofeiya）→ S1。**排除**：`alternateName` 已声明的别名、与声明名互相包含的标题/页脚噪声（如「品牌名+隐私政策」）、口号/句子，以及**按 locale 分组后不在同一 locale 内共现**的写法（多语言本地化不是写法不一致） | S1 | -8~-12；Trust Ceiling | R | site |
+| ENT-01 | 品牌写法一致性 | 归一化（小写、去空格/连字符/法律后缀）后，从 schema.name / og:site_name / title 后缀 / 版权 / 页脚公司块 / About H1 收集品牌写法；≥2 个显著不同且各出现 ≥3 次 → S1；拼写近似（编辑距离 ≤2，如 Acme/Akme）→ S1。**排除**：`alternateName` 已声明的别名、与声明名互相包含的标题/页脚噪声（如「品牌名+隐私政策」）、口号/句子，以及**按 locale 分组后不在同一 locale 内共现**的写法（多语言本地化不是写法不一致） | S1 | -8~-12；Trust Ceiling | R | site |
 | ENT-02 | 邮箱域名一致性 | 收集 `mailto:` 与正文邮箱。**单一域名 ≠ 站点注册域（含 126/163/qq/gmail 等免费邮箱）→ W 警告项，不计分**，仅在报告中作为建议项列出（主体仍唯一，不构成实体冲突；免费邮箱与外部域名邮箱不区分，修法相同）；**同时出现 ≥2 个不同邮箱域 → S1**（站点自相矛盾） | S1 / W | 0（W）；≥2 域时 -5~-10；Trust Ceiling 仅 S1 | R | site |
 | ENT-03 | 电话/地址真实性 | 占位电话（xxx/000/1234567）；地址字段缺失或与页脚不一致 → S3 | S3 | 3 | R | site |
 | ENT-04 | 公司法定名一致性 | 含 Co., Ltd/Group/Corporation 的名称在不同位置不一致 → S2 | S2 | 5 | R | site |
-| ENT-05 | 社交账号一致性 | sameAs/页脚社交 handle 命名不一致（如 SofeyiaOfficial vs sofeyiahome）→ **W 警告/建议项（不计分）**：品牌可能有多个运营账号与策略，仅提示统一或说明 | W | 0 | R | site |
+| ENT-05 | 社交账号一致性 | sameAs/页脚社交 handle 命名不一致（如 AcmeOfficial vs acme-tools）→ **W 警告/建议项（不计分）**：品牌可能有多个运营账号与策略，仅提示统一或说明 | W | 0 | R | site |
 | ENT-06 | 子品牌/代理关系清晰 | 出现“引入/代理/合作/源自/partner/introduce/distributor”等关系动词，但主体无法对应到已声明 Organization/品牌实体 → S2 | S2 | 5 | R+LLM | site |
 | ENT-07 | 声明/历史矛盾 | 跨页或同页矛盾（成立年份、发源地、归属主体、员工/营收数字）→ S2 | S2 | 6 | LLM | site |
 | ENT-08 | 信任页内容匹配 | privacy/contact/terms 页面内容与页名不符（空页/软 404/无关内容）→ S2 | S2 | 4 | R+LLM | trust |
@@ -340,7 +340,7 @@
 
 ---
 
-## 6. 索菲亚案例应用（Step 1 验收样例）
+## 6. 示例案例应用（Step 1 验收样例）
 
 | 规则 | 现场证据（已核验） | 期望判定 |
 |---|---|---|
@@ -348,12 +348,12 @@
 | CLN-04 | 首页/About 计数器 `0 Years Experience`、`0 + Projects Worldwide`、`￥0 Billion` 等 | S2 命中 |
 | CLN-05 | `/_privacy-policy/` 为 WordPress 默认模板全文 | S2 命中 |
 | CLN-02 | `/pabriz-header/` 等模板演示页 200 在线，sitemap 含 `pabriz-*` | S2 命中 |
-| ENT-01 | `Sofeyia`（版权/站名）vs `Suofeiya`（About H1/公司块） | S1 命中 |
-| ENT-02 | Contact 同页 `sales@suofeiyahome.com` + `sales@sofeyiahome.com`（**同时出现 2 个不同邮箱域**） | S1 命中 |
-| ENT-02 | `chunshanzaiwang@126.com`（官网域名 `resunhotel.cn`，单一 off-domain 邮箱） | **W 命中：列出但不计分**，entity 不扣分、不触发 Trust Ceiling |
-| ENT-04 | `Sofeyia Home Collection Co., Ltd` vs `Suofeiya Home Collection Co., Ltd` | S2 命中 |
-| ENT-07 | “引入 Sogal 20 年”“源自 1981”“45 年行业”“14 年上市”并存 | S2 命中（LLM） |
-| SCH-04 | Organization.name=`sofeyia`（小写，与展示品牌 `Sofeyia`/`Suofeiya` 不一致）；缺 sameAs/description/contactPoint | S2 命中 |
+| ENT-01 | `Acme`（版权/站名）vs `Akme`（About H1/公司块） | S1 命中 |
+| ENT-02 | Contact 同页 `hello@acme-tools.co` + `sales@acme-tools.com`（**同时出现 2 个不同邮箱域**） | S1 命中 |
+| ENT-02 | `booking@example.net`（官网域名 `acme-hotel.example`，单一 off-domain 邮箱） | **W 命中：列出但不计分**，entity 不扣分、不触发 Trust Ceiling |
+| ENT-04 | `Acme Tools Collection Co., Ltd` vs `Akme Tools Collection Co., Ltd` | S2 命中 |
+| ENT-07 | “引入 Northbrand 20 年”“源自 1981”“45 年行业”“14 年上市”并存 | S2 命中（LLM） |
+| SCH-04 | Organization.name=`acme`（小写，与展示品牌 `Acme`/`Akme` 不一致）；缺 sameAs/description/contactPoint | S2 命中 |
 | TRU-07 | 上述 S1 命中 → Trust Ceiling 生效 | E-E-A-T 不得超过 50% |
 | RCH-04 | 报告 freshness 916.7% → 分母/封顶修复后重算 | 修正后重评 |
 | ABS-01 | 段落可引用率 0%/内容块 2.5% | S2 命中（与内容实况一致） |
@@ -366,7 +366,7 @@
 
 | 项 | 标准 |
 |---|---|
-| 单元校验 | 每条 R 规则有 golden 输入/输出样例；索菲亚页面作为回归样本 |
+| 单元校验 | 每条 R 规则有 golden 输入/输出样例；示例页面作为回归样本 |
 | 证据校验 | 100% `fail` 带证据；quote 必须可在证据包中定位 |
 | 占位校验 | 建议/代码中零占位串（lorem/xxx/示例电话） |
 | 口径校验 | 比率 ≤100%；分母=content 页；system/demo 单独计数 |
@@ -380,10 +380,10 @@
 | 步骤 | 内容 | 产物 |
 |---|---|---|
 | Step 1（本文） | 规则规格 | 本手册 |
-| Step 2 | 索菲亚证据包（页面/截图/schema/robots/历史） | golden evidence pack（结构见 `docs/geo_evaluation_data_structure.md`） |
+| Step 2 | 示例证据包（页面/截图/schema/robots/历史） | golden evidence pack（结构见 `docs/geo_evaluation_data_structure.md`） |
 | Step 3 | 按规则跑检测（R + R+LLM + LLM），产出带证据的 issue | 检测结果 JSON |
 | Step 4 | 专家逐条核验（Accept/Edit/Reject）+ 客户定制结论 | 正式报告草稿 |
-| Step 5 | 报告定稿与线下交付 | 索菲亚正式报告 |
+| Step 5 | 报告定稿与线下交付 | 示例正式报告 |
 
 ---
 
@@ -412,4 +412,4 @@
 
 ---
 
-*本手册与 `docs/geo_evaluation_methodology_latest.md` 同步；规则阈值为 v1.0 草案，随索菲亚案例回归校准。*
+*本手册与 `docs/geo_evaluation_methodology_latest.md` 同步；规则阈值为 v1.0 草案，随示例案例回归校准。*

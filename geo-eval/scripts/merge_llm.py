@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 3b: 由主模型（非百炼）完成 LLM 类规则判定 + 规则→维度评分映射，
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 3b: 由主模型（非百炼）完成 LLM 类规则判定 + 规则→维度评分映射，
 合并进 run.json / rule_results.json，输出 llm_checks.json 与 scoring_map.json。"""
 import json, os, datetime
 
@@ -19,12 +21,12 @@ def R(rid,verdict,sev,conf,method,evidence,zh,en,metrics=None):
     return {"rule_id":rid,"rule_domain":rid.split("-")[0],"page_id":None,"applicable":True,"verdict":verdict,
         "severity":sev,"confidence":conf,"method":method,"metrics":metrics or {},"evidence":evidence,
         "recommendation":{"zh-CN":zh,"en-US":en},"run":{"rules_version":"1.0","model":"agent-manual","tokens":None,"latency_ms":0}}
-U="https://www.sofeyiahome.com"
+U="https://www.acme-tools.com"
 llm=[
 R("QLT-01","fail","S2","medium","LLM",[
   ev(U+"/services/","p","Massa volutpat ridiculus consectetuer euismod lobortis potenti dapibus nec risus dictumst at."),
   ev(U+"/team/","p","Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus… (×3)"),
-  ev(U+"/company-news/company-news-sofeyia-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","body","正文段落仅评论表单与页脚，缺少可核验的一手细节")],
+  ev(U+"/company-news/company-news-acme-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","body","正文段落仅评论表单与页脚，缺少可核验的一手细节")],
   "重点页面缺少一手经验与作者／过程／依据，多为通用营销文案与占位文本",
   "Key pages lack first-hand experience and Who/How/Why; mostly generic boilerplate and placeholders",
   {"pages":["services","team","article_hq"]}),
@@ -41,19 +43,19 @@ R("QLT-03","fail","S3","medium","LLM",[
   "存在无出处的绝对化营销表述（No.1/ONLY/World-Leading），需以可核验事实或来源支撑",
   "Unsupported superlatives (No.1/ONLY/World-Leading) need verifiable support or sources",{}),
 R("ENT-06","fail","S2","medium","LLM",[
-  ev(U+"/","p","Sofeyia introduced France’s Sogal brand to China 20 years ago, building on its legacy since 1981."),
-  ev(U+"/about-us/","p","Introduced French brand \"Schmidt Cabinetry\"（2014）；Milanna brand issued Sofeyia brand positioning（2021）")],
-  "Sofeyia/Suofeiya/Sogal/Schmidt/Milanna 之间的实体关系未声明清晰（无组织信息关联、无官方账号）",
-  "Entity relationships among Sofeyia/Suofeiya/Sogal/Schmidt/Milanna are not clearly declared",{}),
+  ev(U+"/","p","Acme introduced the Northbrand brand to China 20 years ago, building on its legacy since 1981."),
+  ev(U+"/about-us/","p","Introduced overseas brand \"Ridge Cabinetry\"（2014）；Millane brand issued Acme brand positioning（2021）")],
+  "Acme/Akme/Northbrand/Ridge/Millane 之间的实体关系未声明清晰（无组织信息关联、无官方账号）",
+  "Entity relationships among Acme/Akme/Northbrand/Ridge/Millane are not clearly declared",{}),
 R("ENT-07","fail","S2","medium","LLM",[
-  ev(U+"/","p","Sofeyia introduced France’s Sogal brand to China 20 years ago"),
-  ev(U+"/about-us/","p","45-year Leading in the Industry / Originated from France Since 1981 / 2001 Sofeyia Foundation"),
+  ev(U+"/","p","Acme introduced the Northbrand brand to China 20 years ago"),
+  ev(U+"/about-us/","p","45-year Leading in the Industry / Originated from France Since 1981 / 2001 Acme Foundation"),
   ev(U+"/about-us/","p","Sustained Steady Performance in 14 Years as a Public Company")],
-  "成立/引入/上市时间线互相冲突且主语不清；外部可核验主体为「索菲亚家居股份有限公司（002572.SZ）」，与站内 Sofeyia/Suofeiya 命名不一致",
-  "Conflicting timeline and ambiguous subject; externally verifiable entity is Suofeiya Home Collection (002572.SZ), inconsistent with on-site naming",
-  {"external_refs":["eastmoney 002572","pedaily 索菲亚上市","sfygroup.com"]}),
+  "成立/引入/上市时间线互相冲突且主语不清；外部可核验主体为「示例家居股份有限公司（ACME.EX）」，与站内 Acme/Akme 命名不一致",
+  "Conflicting timeline and ambiguous subject; externally verifiable entity is Akme Tools Collection (ACME.EX), inconsistent with on-site naming",
+  {"external_refs":["exchange sample ACME.EX","pedaily 示例站点上市","acme-group.example"]}),
 R("TRU-02","fail","S2","high","LLM",[
-  ev(U+"/company-news/company-news-sofeyia-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","schema Person",'{"@type":"Person","name":"ehaitech"}')],
+  ev(U+"/company-news/company-news-acme-group-unveils-new-hq-in-guangzhou-cbd-marking-strategic-leap/","schema Person",'{"@type":"Person","name":"ehaitech"}')],
   "文章署名指向默认/建站方账号 `ehaitech`，非真实作者；无作者页与资质",
   "Article author is the default/vendor account `ehaitech`, not a real author",{}),
 R("TRU-04","fail","S3","medium","LLM",[
@@ -62,11 +64,11 @@ R("TRU-04","fail","S3","medium","LLM",[
   "Credentials/experience are self-asserted without verifiable references",{}),
 R("TRU-05","fail","S3","medium","LLM",[
   ev(U+"/team/","p","Our Team 区域 3 段 Lorem ipsum 占位"),
-  ev(U+"/about-us/","h1","About Suofeiya（与全站 Sofeyia 不一致）")],
+  ev(U+"/about-us/","h1","About Akme（与全站 Acme 不一致）")],
   "About/Team 存在占位内容，未满足“真实团队信息”要求",
   "About/Team contain placeholders and zero counters, failing the real-team requirement",{}),
 R("TRU-06","pass","S3","medium","LLM",[
-  ev(U+"/project/","p","Penang,Malaysia:5-Star Hotel … Room Quantity: 134 / Erbil,Iraq:Apartment … Room Quantity: 745")],
+  ev(U+"/project/","p","Riverbend: hotel project … / Pine Harbor: apartment project …")],
   "存在带数量的一手项目案例（通过）","First-hand project cases with quantities present (pass)",{}),
 R("ABS-03","fail","S3","medium","LLM",[
   ev(U+"/about-us/","p","2024 Revenue: RMB 10.494 billion / Net Profit: RMB 1.371 billion（无来源/时间标注）"),
@@ -80,17 +82,17 @@ R("ABS-06","fail","S3","medium","LLM",[
   "Homepage/product pages do not directly answer query intents (low alignment)",{}),
 R("CIT-02","fail","S3","high","LLM",[
   ev(U+"/about-us/","p","营收/净利/分红等数字无出处链接"),
-  ev(U+"/","p","Sogal since 1981 等历史声明无来源")],
+  ev(U+"/","p","Northbrand since 1981 等历史声明无来源")],
   "关键数字与历史声明未标注来源，用户/AI 无法独立核验",
   "Key figures and history claims have no cited sources",{}),
 R("CIT-03","fail","S2","medium","LLM",[
-  ev("https://emweb.securities.eastmoney.com/CompanySurvey/Index?type=soft&code=SZ002572","external","索菲亚家居股份有限公司 002572.SZ（深交所）"),
-  ev("https://www.sfygroup.com/","external","上市公司官网域名为 sfygroup.com / suofeiya.com；本站使用 sofeyiahome.com + Sofeyia/Suofeiya 混用")],
+  ev("https://example.com/investor-relations","external","示例家居股份有限公司 ACME.EX"),
+  ev("https://www.acme-group.example/","external","上市公司官网域名为 acme-group.example / acme-parent.example；本站使用 acme-tools.com + Acme/Akme 混用")],
   "站外可核验的上市主体与站内品牌/域名/邮箱不一致，实体映射不清；建议在「关于我们」/「联系我们」页面明确上市主体与品牌关系并链接公告",
   "Externally verifiable listed entity differs from on-site brand/domain/email; clarify entity mapping and link disclosures",{}),
 R("CLN-11","fail","S3","medium","R+LLM",[
   ev(U+"/","meta[name=generator]","Elementor 3.13.1; features: e_dom_optimization, …"),
-  ev(U+"/pabriz-header/","url","pabriz-header - sofeyia（202，且在 sitemap）"),
+  ev(U+"/pabriz-header/","url","pabriz-header - acme（202，且在 sitemap）"),
   ev(U+"/","h1","Create. Enhance. and Sustain.（Template Kit Demo 文案）")],
   "高度疑似基于 Elementor + Hello 主题 + Pabriz 类 Template Kit 二次开发，且未清理 Demo 内容与演示页",
   "Highly likely built from Elementor + Hello + a Pabriz-like Template Kit without cleaning demo content/pages",{}),
@@ -101,7 +103,7 @@ R("ENT-08","pass","S2","medium","R+LLM",[
   "Trust pages match their purpose (privacy quality is covered by CLN-05)",{}),
 R("CIT-01","na","S3","high","R",[ev(U,"main content","authority outbound links = 0")],
   "正文权威外链为 0（已由 KG-04 记录，避免重复计分）","No authoritative outbound links (covered by KG-04)",{}),
-R("SCH-07","fail","S2","high","R",[ev(U,"script[type=application/ld+json]","Organization contactPoint missing; emails split across sofeyiahome.com / suofeiyahome.com")],
+R("SCH-07","fail","S2","high","R",[ev(U,"script[type=application/ld+json]","Organization contactPoint missing; emails split across acme-tools.com / acme-tools.co")],
   "组织信息缺联系方式（contactPoint），且公开邮箱域名不一致","Organization lacks contactPoint; public email domains inconsistent",{}),
 R("SCH-05","pass","S3","high","R",[ev(U,"Organization.logo","HTTP 200 (image/webp)")],"logo URL 可解析","Logo URL resolves",{}),
 R("CLN-07","pass","S3","high","R",[],"内容页未见软 404","No soft-404 on content pages",{}),

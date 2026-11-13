@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""客户版 v2.0：官方正式风格（设计规范见 .impeccable.md）。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+客户版 v2.0：官方正式风格（设计规范见 .impeccable.md）。
 长文可读性优先 → 排版/层级 → 数据可视化 → 精致度；沿用产品 Indigo 色板与 Geist 字族。
-输出 report/sofeyia_geo_report_for_client_v3.1_long.html（长文版）。"""
+输出 report/sample_geo_report_for_client_v3.1_long.html（长文版）。"""
 import os, sys, json, html, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_report_client as B   # 复用证据样本 / 代码示例 / 文案（会同时刷新 v1.1）
@@ -226,11 +228,11 @@ toc_items="".join(f'<li><span class="n">{n}</span><a href="#{sid}">{E(t)}</a><sp
 actions_html="".join(f'<div class="arow"><div><h4>{E(a)}</h4><p>{E(b)}</p></div><span class="cycle">{E(d)} · {E(e)}</span></div>' for a,b,c,d,e in actions)
 HTML=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>索菲亚官网 GEO 评测报告</title>
+<title>示例站点官网 GEO 评测报告</title>
 <style>{CSS}</style></head><body><main class="sheet">
 <header class="cover">
   <div class="kicker">生成式引擎优化 · 技术与内容准备度评测报告</div>
-  <h1>索菲亚官网 GEO 评测报告</h1>
+  <h1>示例站点官网 GEO 评测报告</h1>
   <p class="sub">站内准备度：面向生成式搜索的可理解性、可信度与内容可引用性评估</p>
   <dl class="facts">
     <div><dt>站点</dt><dd class="mono">{E(site["url"])}</dd></div>
@@ -251,7 +253,7 @@ HTML=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 
 <section class="chapter" id="s1"><header class="chap-head"><span class="chap-num">01</span><h2>总体评价</h2></header>
 <p class="lead">本站 <strong>GEO 站内准备度为 {sc["overall_score"]} 分（{E(sc["grade"])}）</strong>。网站在技术基础与信息架构上具备良好起点，但在品牌与实体一致性、内容可信度、结构化数据完整性三方面存在明显短板，是当前影响 AI 搜索表现的主要因素。</p>
-<p class="prose">本次高优先级问题共 {sevc["S1"]} 项，集中在两处：品牌写法与邮箱域名混用（Sofeyia / Suofeiya、两个邮箱域名），以及页面中残留的模板占位文案与演示内容。这两类问题会直接影响 AI 与搜索引擎对“品牌是谁、内容是否可信”的判断，进而降低被正确引用的概率。</p>
+<p class="prose">本次高优先级问题共 {sevc["S1"]} 项，集中在两处：品牌写法与邮箱域名混用（Acme / Akme、两个邮箱域名），以及页面中残留的模板占位文案与演示内容。这两类问题会直接影响 AI 与搜索引擎对“品牌是谁、内容是否可信”的判断，进而降低被正确引用的概率。</p>
 <p class="prose">本报告采用新版检测口径，在原有“信号是否存在”的基础上增加了“内容是否正确、建议是否可用”的判定，因此分数与旧版报告不可直接比较。分数衡量的是网站在生成式搜索中被正确理解、信任与引用的准备度，而非排名或流量结果。</p>
 </section>
 
@@ -277,10 +279,10 @@ HTML=f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 {scope_bar()}
 <p class="prose">另有 {len(run.get("advisory_issues",[]))} 项“需确认或补充的信息”（如数据来源、资质出处、社交账号策略等）已单独整理，供贵司核对，不影响本报告评分。</p></section>
 
-<footer class="doc"><span>索菲亚官网 GEO 评测报告 · {date}</span><span class="mono">run {E(run["run_id"])}</span></footer>
+<footer class="doc"><span>示例站点官网 GEO 评测报告 · {date}</span><span class="mono">run {E(run["run_id"])}</span></footer>
 </main></body></html>'''
-open(os.path.join(ROOT,"report","sofeyia_geo_report_for_client_v3.1_long.html"),"w",encoding="utf-8").write(HTML)
+open(os.path.join(ROOT,"report","sample_geo_report_for_client_v3.1_long.html"),"w",encoding="utf-8").write(HTML)
 r=json.load(open(os.path.join(ROOT,"run.json"),encoding="utf-8"))
-r.setdefault("report_refs",{})["client_official_html"]="report/sofeyia_geo_report_for_client_v3.1_long.html"
+r.setdefault("report_refs",{})["client_official_html"]="report/sample_geo_report_for_client_v3.1_long.html"
 json.dump(r,open(os.path.join(ROOT,"run.json"),"w",encoding="utf-8"),ensure_ascii=False,indent=2)
-print("wrote report/sofeyia_geo_report_for_client_v3.1_long.html",len(HTML),"chars")
+print("wrote report/sample_geo_report_for_client_v3.1_long.html",len(HTML),"chars")

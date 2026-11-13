@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 2/3a 摘要：读取 site.json / scope.json / run.json / pages/*.json，输出 report/evidence_summary.md"""
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 2/3a 摘要：读取 site.json / scope.json / run.json / pages/*.json，输出 report/evidence_summary.md"""
 import json, os, glob
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 L=lambda n: json.load(open(os.path.join(ROOT,n),encoding="utf-8"))
@@ -13,7 +15,7 @@ h1bad=[p for p,v in pages.items() if len(v["h1"])!=1]
 auth=sum(1 for p in pages.values() for x in p["external_links"] if x["authority"])
 
 md=[]
-md.append("# 索菲亚评测证据包摘要（Step 2 / 3）\n")
+md.append("# 示例站点评测证据包摘要（Step 2 / 3）\n")
 md.append(f"- run_id：`{run['run_id']}`；analyze_id：`{run['analyze_id']}`")
 md.append(f"- 站点：{site['url']}（{site['site_type']['type']}，{site['tech']['cms_hint']}）")
 md.append(f"- sitemap：{site['sitemap']['url_count']} URL（content ratio {site['sitemap']['content_ratio']}）；page-sitemap {site['sitemap']['page_sitemap_total']} URL（content ratio {site['sitemap']['page_sitemap_content_ratio']}）")
@@ -28,12 +30,12 @@ md.append("|---|---|")
 md.append(f"| CMS/插件 | generator=`{gen}`；robots 为 Yoast 生成；模板标记 elementor={pages['home']['template_markers']['elementor']}，pabriz={pages['home']['template_markers']['pabriz']} |")
 md.append(f"| AI 爬虫 | robots 未屏蔽；OAI-SearchBot/GPTBot/ClaudeBot/PerplexityBot 实抓均 **200** |")
 md.append(f"| llms.txt | `/llms.txt`、`/llms-full.txt` 均 **404**（可选，不扣分） |")
-md.append(f"| HTTPS | http://www → 301 https；主链 0 跳；**apex `sofeyiahome.com` 证书主机名不匹配（TLS 失败）** |")
-md.append(f"| 品牌写法 | `Sofeyia`（{dict((b['value'],b['count']) for b in site['brand_candidates'])['Sofeyia']} 次）/ `Suofeiya`（{dict((b['value'],b['count']) for b in site['brand_candidates'])['Suofeiya']} 次） |")
+md.append(f"| HTTPS | http://www → 301 https；主链 0 跳；**apex `acme-tools.com` 证书主机名不匹配（TLS 失败）** |")
+md.append(f"| 品牌写法 | `Acme`（{dict((b['value'],b['count']) for b in site['brand_candidates'])['Acme']} 次）/ `Akme`（{dict((b['value'],b['count']) for b in site['brand_candidates'])['Akme']} 次） |")
 md.append(f"| 公司名 | {', '.join(site['company_names'])} |")
 md.append(f"| 邮箱 | {', '.join(e['value']+'('+e['domain']+')' for e in site['emails'])} |")
-md.append(f"| 社交 | {len(site['socials'])} 个（Facebook `SofeyiaOfficial` vs 其它 `sofeyiahome`） |")
-md.append(f"| Schema | Organization.name=`sofeyia`（小写）；**缺 sameAs / description / contactPoint** |")
+md.append(f"| 社交 | {len(site['socials'])} 个（Facebook `AcmeOfficial` vs 其它 `acme-tools`） |")
+md.append(f"| Schema | Organization.name=`acme`（小写）；**缺 sameAs / description / contactPoint** |")
 md.append(f"| OGP | og:title=`homepage`（占位）；og:description 含 lorem/整页拼接；twitter 仅 card |")
 md.append(f"| 站点级链接 | 正文权威外链 **{auth}** 条（其余为社交/系统链接） |\n")
 

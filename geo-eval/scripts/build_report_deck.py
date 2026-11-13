@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""客户版 v3.0：幻灯式（一页一节）正式报告。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+客户版 v3.0：幻灯式（一页一节）正式报告。
 - 品牌页眉（Logo + 报告名 + 站点 + 页码），不做“模板原版 vs 当前页”对比
 - 每个 section 一张独立卡片，向下滚动 / ← → 翻页，ESC 打开索引
 - 封面为深色封套，含文件编号；末页为结论与签核栏
 - 内容沿用 v1.1/v2.0：问题内容原文 + 修复示例（仅供参考）+ 无工期无工作量
-输出 report/sofeyia_geo_report_for_client_v3.1.html（主报告·卡片式）。
+输出 report/sample_geo_report_for_client_v3.1.html（主报告·卡片式）。
 """
 import os, sys, json, html, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +43,7 @@ OWNER_COLOR = {"贵司确认":"primary","建站商执行":"info","法务确认":
 # 关键发现“这对您意味着什么”（业务后果人话）
 IMPACT_ZH = {
  "CLN-03":"网站多页残留乱码般的假文字，像没装修完就开业，客户和 AI 都会觉得这网站还没做完。",
- "ENT-01":"Sofeyia 和 Suofeiya 看起来像两家公司，多年积累的品牌认知会被分流。",
+ "ENT-01":"Acme 和 Akme 看起来像两家公司，多年积累的品牌认知会被分流。",
  "ENT-02":"官网用 A 域名、留的邮箱却是 B 域名，像名片印错，客户会怕是钓鱼。",
  "ENT-04":"公司名几种写法并存，AI 难以确定是不是同一家。",
  "ENT-06":"子品牌关系没讲清，AI 和客户都分不清谁是谁。",
@@ -193,7 +195,7 @@ def r_cover(pno, total):
       <span class="cover-no mono">文件编号 {E(DOC_NO)}</span></div>
       <div class="cover-mid">
         <div class="pkicker light">生成式引擎优化 · 技术与内容准备度评测报告</div>
-        <h1>索菲亚官网<br>GEO 评测报告</h1>
+        <h1>示例站点官网<br>GEO 评测报告</h1>
         <p class="cover-sub">检查官网有没有把「我们是谁、卖什么、数字从哪来」写清楚——这是 AI 能否读懂、信任并推荐你的基础。</p>
         <div class="cover-score"><div class="cbig">{sc["overall_score"]}<small>/100</small><em>站内准备度 {E(sc["grade"])}</em></div><div>{cover_meter()}<p class="cover-score-note">60 分以下＝准备不足；它不是搜索排名，也不代表 AI 实际提到你的次数。</p></div></div>
       </div>
@@ -248,7 +250,7 @@ def r_beforeafter(pno, total):
       <div class="ptitle"><div><div class="pkicker">附录 · 改完长什么样</div><h2>首页首屏 · 改前 / 改后示意</h2></div></div>
       <div class="babx">
         <div class="bab bab-before"><b>改前（现状）</b><p class="mono">Create. Enhance. and Sustain.</p><p>Massa volutpat ridiculus consetetur euismod lobortis potenti…（拉丁占位）</p></div>
-        <div class="bab bab-after"><b>改后（示意）</b><p class="mono">Whole-House Custom Cabinetry</p><p>Sofeyia 提供橱柜、衣柜与整装定制，覆盖住宅、酒店与公寓；总部位于广州，并已在槟城、埃尔比勒等市场交付整装项目（数字需核实出处）。</p></div>
+        <div class="bab bab-after"><b>改后（示意）</b><p class="mono">Whole-House Custom Cabinetry</p><p>Acme 提供橱柜、衣柜与整装定制，覆盖住宅、酒店与公寓；总部位于波特兰，并已在河湾市、林港等市场交付整装项目（数字需核实出处）。</p></div>
       </div>
       <p class="note">以上为排版示意，不构成对具体文案的承诺；实际以贵司确认的口径为准。</p>'''
 add(None, None, r_cover, dark=True, cls="cover")
@@ -280,7 +282,7 @@ def r_summary(pno, total):
           <p>全部 {total_issues} 项问题的构成：严重 <b>{sevc["S1"]}</b> · 高 <b>{sevc["S2"]}</b> · 中 <b>{sevc["S3"]}</b> · 低 <b>{sevc["S4"]}</b>。多数问题由同一批模板遗留所致，集中清理一轮即可消除大部分。</p></div>
         <div><span class="statn">集中在两处</span>
           <ul class="bullets">
-            <li><b>品牌与实体一致性</b> —— 品牌写法与邮箱域名混用（<span class="mono">Sofeyia / Suofeiya</span>、两个邮箱域名），对外可核验的上市主体未在站内说明。</li>
+            <li><b>品牌与实体一致性</b> —— 品牌写法与邮箱域名混用（<span class="mono">Acme / Akme</span>、两个邮箱域名），对外可核验的上市主体未在站内说明。</li>
             <li><b>内容可信度与治理</b> —— 页面残留模板占位文案与演示内容，且缺少可被 AI 独立引用的证据型段落。</li>
           </ul></div>
         <div><span class="statn">影响</span>
@@ -410,7 +412,7 @@ add(("06", "优先改进建议"), "06 优先改进建议", r_actions)
 ADVISORY_Q = {
  "ABS-03":("关键数据（营收/净利/项目等）能否对外公开、出处是什么？","否则 AI 不敢把这些数字当事实引用","贵司 / 财务"),
  "CIT-02":("关键声明与数字的出处在哪里？","标注来源才能让 AI 敢引用","贵司 / 品牌"),
- "CIT-03":("贵司与上市公司（002572.SZ）及子品牌的关系是什么？","讲清楚才能把上市背景这笔资产用起来","贵司 / 法务"),
+ "CIT-03":("贵司与上市公司（ACME.EX）及子品牌的关系是什么？","讲清楚才能把上市背景这笔资产用起来","贵司 / 法务"),
  "ENT-05":("社交账号的命名是否统一、归属是谁？","账号不一致会让 AI 认不准","贵司 / 品牌"),
  "QLT-03":("“China's No.1 / The ONLY”等表述能否保留、依据是什么？","无依据的绝对化用语有广告法风险","法务"),
  "SCH-01":("FAQ 结构化数据是否要做？（推荐项、不计分）","可不做；做了只是锦上添花","建站商"),
@@ -433,7 +435,7 @@ GLOSSARY = [
 ADVISORY_ZH = {
  "ABS-03":"关键数据缺少来源标注（营收/净利/项目数据等）",
  "CIT-02":"关键声明与数字未标注来源",
- "CIT-03":"站内品牌与外部可核验上市主体（002572.SZ）的关系待贵司确认",
+ "CIT-03":"站内品牌与外部可核验上市主体（ACME.EX）的关系待贵司确认",
  "ENT-05":"社交账号命名不一致（属运营策略，可保留并写入官方账号声明）",
  "QLT-03":"无出处的绝对化表述（China's No.1 / The ONLY 等，有广告法风险）",
  "SCH-01":"FAQ 结构化数据（推荐项，不计分）",
@@ -455,7 +457,7 @@ def r_signoff(pno, total):
       <div class="pmeta"><span class="scorechip c-danger"><b>{sc["overall_score"]}</b><span>/100</span></span></div></div>
       <p class="narr lead">本站当前 <b>GEO 站内准备度 {sc["overall_score"]} 分（{E(sc["grade"])}）</b>。技术可用性良好，主要缺口集中在品牌与实体一致性、内容可信度、内容可吸收性三处；这三项会让 AI 更难确认“品牌是谁、内容能不能当事实”。</p>
       <div class="nextgrid">
-        <div><span class="dimcell-n mono">第一步</span><b>确认主体口径</b><p>由贵司书面确认与上市主体（002572.SZ）及子品牌的关系、品牌标准写法与主用邮箱。</p></div>
+        <div><span class="dimcell-n mono">第一步</span><b>确认主体口径</b><p>由贵司书面确认与上市主体（ACME.EX）及子品牌的关系、品牌标准写法与主用邮箱。</p></div>
         <div><span class="dimcell-n mono">第二步</span><b>先清卫生再补内容</b><p>删占位与演示/系统页、统一页脚邮箱，再补充能回答买家问题的真实内容。</p></div>
         <div><span class="dimcell-n mono">第三步</span><b>复测核验</b><p>修复后复测本报告口径，看分数与问题是否改善（复测如何预约见文末）。</p></div>
       </div>
@@ -879,12 +881,12 @@ JS = r'''
 
 HTML = f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>索菲亚官网 GEO 评测报告 · {E(DOMAIN)}</title>
+<title>示例站点官网 GEO 评测报告 · {E(DOMAIN)}</title>
 <meta name="description" content="GEO 站内准备度评测报告：{E(DOMAIN)}，站内准备度 {sc["overall_score"]}/100（{E(sc["grade"])}），。">
 <style>{CSS}</style></head><body>
 <div class="topbar"><div class="topbar-in">
   <span class="brand">{MARK}<b>GEO SCORING</b></span>
-  <span class="doc">索菲亚官网 GEO 站内准备度评测 · {E(DOMAIN)}</span>
+  <span class="doc">示例站点官网 GEO 站内准备度评测 · {E(DOMAIN)}</span>
   <span class="right"><span class="mono">报告编号 {E(DOC_NO)}</span><span class="now">第 <b id="now-page">01 / {N:02d}</b> 页</span>
   <button class="btn" type="button" onclick="document.getElementById('index').classList.add('show')">索引</button></span>
 </div><div class="progress"><i></i></div></div>
@@ -901,9 +903,9 @@ HTML = f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <script>{JS}</script>
 </body></html>'''
 
-out = os.path.join(ROOT, "report", "sofeyia_geo_report_for_client_v3.1.html")
+out = os.path.join(ROOT, "report", "sample_geo_report_for_client_v3.1.html")
 open(out, "w", encoding="utf-8").write(HTML)
 r = json.load(open(os.path.join(ROOT, "run.json"), encoding="utf-8"))
-r.setdefault("report_refs", {})["client_deck_html"] = "report/sofeyia_geo_report_for_client_v3.1.html"
+r.setdefault("report_refs", {})["client_deck_html"] = "report/sample_geo_report_for_client_v3.1.html"
 json.dump(r, open(os.path.join(ROOT, "run.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-print("wrote report/sofeyia_geo_report_for_client_v3.1.html", len(HTML), "chars ;", N, "pages ;", len(top), "finding pages")
+print("wrote report/sample_geo_report_for_client_v3.1.html", len(HTML), "chars ;", N, "pages ;", len(top), "finding pages")

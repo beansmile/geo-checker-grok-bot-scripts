@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Step 4c/5a: 应用专家决策（S2 起全部 Accept），产出 decisions CSV、结果 JSON 与报告草稿。
+"""
+DEPRECATED: one-off historical script. Not part of the GEO Checker pipeline (use run.py / analyze.py / enrich.py / build_report.py instead). Identifiers in this file are fictional examples, not a live target.
+Step 4c/5a: 应用专家决策（S2 起全部 Accept），产出 decisions CSV、结果 JSON 与报告草稿。
 不再要求手工编辑 markdown。"""
 import json, os, csv, datetime
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,7 +64,7 @@ def z(i): return i["title"]["zh-CN"]
 S=lambda sev:[r for r in final if r["severity"]==sev]
 DIMNAME={"schema":"结构化数据","entity":"实体一致性","ogp":"开放图谱","richness":"内容丰富度","knowledge_graph":"站内实体信号","absorption":"答案可吸收性","trust":"信任","on_page":"页面主题","quality":"内容质量"}
 md=[]
-md.append("# 索菲亚官网 GEO 深度评测报告（草案 v0.1）\n")
+md.append("# 示例站点官网 GEO 深度评测报告（草案 v0.1）\n")
 md.append(f"- 站点：{run['site']['url']}　|　run_id：`{run['run_id']}`　|　报告日期：{datetime.date.today().isoformat()}")
 md.append("- 出品：GEO Checker · Beansmile")
 md.append(f"- 抽样范围：站点地图 {run['scope']['pages_total']} 个页面，抽查 {len(run['scope']['sampled_pages'])} 页（正文/信任/合规/系统/演示）")
@@ -72,7 +74,7 @@ _pr=run.get("promoted_rules") or []
 if _pr: md.append(f"- 本轮新增规则已并入评分（calibration v2，{len(_pr)} 条）：{', '.join(_pr)}")
 md.append("")
 md.append("## 1. 执行摘要\n")
-md.append(f"本站 GEO 综合得分为 **{sc['overall_score']}/{sc['grade']}**。最突出的问题不是常规 SEO 项，而是**内容可信与治理**：正文/标题残留模板占位文案（模板残留评分 **100/严重**）、品牌写法与邮箱域名混用（`Sofeyia`/`Suofeiya`、`sales@sofeyiahome.com`/`sales@suofeiyahome.com`）、历史与实体关系表述矛盾；这些问题已触发 **信任上限**（信任度 ≤7、品牌与实体 ≤4、总分 ≤70）。")
+md.append(f"本站 GEO 综合得分为 **{sc['overall_score']}/{sc['grade']}**。最突出的问题不是常规 SEO 项，而是**内容可信与治理**：正文/标题残留模板占位文案（模板残留评分 **100/严重**）、品牌写法与邮箱域名混用（`Acme`/`Akme`、`sales@acme-tools.com`/`hello@acme-tools.co`）、历史与实体关系表述矛盾；这些问题已触发 **信任上限**（信任度 ≤7、品牌与实体 ≤4、总分 ≤70）。")
 s1=S("S1")
 if s1: md.append("\n**S1 级发现：**\n"+"\n".join(f"- **{z(i)}**" for i in s1))
 md.append("\n## 2. 重点风险（S1 + 代表性 S2）\n")
@@ -115,10 +117,10 @@ md.append("## 6. 修复路线图\n")
 md.append("| 阶段 | 动作 | 关联规则 |")
 md.append("|---|---|---|")
 md.append("| 立即（1–2 周） | 清理 lorem/拉丁占位与 0 值计数器；补 Meta Description/Title/H1；OGP 标题与描述改写；统一邮箱 | CLN-03/04/06、ONP-01/02/03、OGP-01/02、ENT-02 |")
-md.append("| 基础（1–2 月） | 统一品牌与公司名（Sofeyia 或 Suofeiya）；补组织信息官方账号/简介/联系方式；FAQ 结构化数据；清理演示/系统页与站点地图；关于/团队页去占位 | ENT-01/04/05/06/07、SCH-02/07、CLN-02/05/09、RCH-01、TRU-05 |")
+md.append("| 基础（1–2 月） | 统一品牌与公司名（Acme 或 Akme）；补组织信息官方账号/简介/联系方式；FAQ 结构化数据；清理演示/系统页与站点地图；关于/团队页去占位 | ENT-01/04/05/06/07、SCH-02/07、CLN-02/05/09、RCH-01、TRU-05 |")
 md.append("| 长期（2–3 月+） | 重做内容架构：证据块（定义/数据/对比/步骤）、可引用段落、数据来源标注、真实作者与资质页；明确上市主体与官网关系 | ABS-01/02/03/06、QLT-01/02/03、CIT-02/03、TRU-02/04 |")
 md.append("\n## 7. 证据、方法与边界\n")
-md.append("- 证据包：`storage/evaluations/sofeyiahome/2026-09-10_run01/`（24 页 HTML、SiteProfile、PageEvidence、rule_results、llm_checks）")
+md.append("- 证据包：`storage/evaluations/acme-tools/2026-09-10_run01/`（24 页 HTML、SiteProfile、PageEvidence、rule_results、llm_checks）")
 md.append("- 方法与规则见本次评测包内部文档；署名 GEO Checker · Beansmile")
 md.append("- 评分口径为草案，需按 `report/scoring_calibration.md` 校准后定稿；截图证据待补；报告需专家签核后交付。")
 md.append("- 本报告不承诺排名、引用或流量结果。")
