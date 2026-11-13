@@ -21,6 +21,9 @@ as fallbacks when primary prose is still English.
 from __future__ import annotations
 
 import html as html_mod
+
+from html_safe import csp_meta, inline_md as _inline_md, esc as _esc, safe_href
+from run_paths import resolve_run_dir
 import json
 import os
 import re
@@ -63,7 +66,7 @@ def grade_meta(grade: str):
 
 
 def esc(s: str) -> str:
-    return html_mod.escape(s or "", quote=False)
+    return _esc(s, quote=True)
 
 
 
@@ -80,11 +83,8 @@ def format_score(n) -> str:
 
 
 def inline_md(s: str) -> str:
-    """Light **bold** and `code` for HTML prose (already escaped)."""
-    s = esc(s)
-    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
-    s = re.sub(r"`(.+?)`", r"<code>\1</code>", s)
-    return s
+    """Escape first, then whitelist **bold**, `code`, and <strong>/<br>."""
+    return _inline_md(s, breaks=False)
 
 
 def looks_cjk(s: str | None) -> bool:
@@ -1013,20 +1013,24 @@ def render_html(data: dict, style_css: str, lang: str = "en") -> str:
     nav_topbar = topbar_index(len(index_entries), lang)
     deck_js = load_deck_js(lang)
 
+    extra_css = (
+        "/* Content GEO extras on shared technical stylesheet */\n"
+        ".page { min-height: auto; padding-bottom: 2rem; }\n"
+        ".deck { max-width: 920px; margin: 0 auto; }\n"
+        ".sev { display:inline-block; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; padding:2px 8px; border-radius:999px; background:#eee; }\n"
+        ".sev-critical { background:#fee2e2; color:#991b1b; }\n"
+        ".sev-high { background:#ffedd5; color:#9a3412; }\n"
+        ".sev-medium { background:#e0e7ff; color:#3730a3; }\n"
+        ".sev-low { background:#ecfdf5; color:#065f46; }\n"
+    )
+    style_block = f"{style_css}\n{extra_css}"
+    csp = csp_meta(deck_js, style_block)
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
+{csp}
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(domain)} {esc(S['title_suffix'])}</title>
 <meta name="description" content="{esc(S['meta_desc'].format(domain=domain, score=score_disp, grade=grade))}">
-<style>{style_css}
-/* Content GEO extras on shared technical stylesheet */
-.page {{ min-height: auto; padding-bottom: 2rem; }}
-.deck {{ max-width: 920px; margin: 0 auto; }}
-.sev {{ display:inline-block; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; padding:2px 8px; border-radius:999px; background:#eee; }}
-.sev-critical {{ background:#fee2e2; color:#991b1b; }}
-.sev-high {{ background:#ffedd5; color:#9a3412; }}
-.sev-medium {{ background:#e0e7ff; color:#3730a3; }}
-.sev-low {{ background:#ecfdf5; color:#065f46; }}
-</style></head><body>
+<style>{style_block}</style></head><body>
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><b>GEO Checker</b></span>
   <span class="doc">{esc(S['topbar_doc'].format(brand=brand, domain=domain))}</span>
@@ -1194,7 +1198,7 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: build_content_report.py <run_dir> [--lang en|zh] [--also-md]")
         sys.exit(2)
-    run_dir = sys.argv[1]
+    run_dir = resolve_run_dir(sys.argv[1])
     lang = "en"
     if "--lang" in sys.argv:
         lang = sys.argv[sys.argv.index("--lang") + 1]

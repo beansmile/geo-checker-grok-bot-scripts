@@ -17,6 +17,8 @@ import re
 from html.parser import HTMLParser
 from typing import Any
 
+from run_paths import resolve_run_dir
+
 try:
     from content_analyze import snap_half
 except ImportError:  # pragma: no cover
@@ -470,6 +472,9 @@ def attach_to_report(report: dict, run_dir: str) -> dict:
 if __name__ == "__main__":
     import sys
 
-    rd = sys.argv[1] if len(sys.argv) > 1 else "."
+    if len(sys.argv) < 2:
+        print("Usage: seo_analyze.py <run_dir>")
+        sys.exit(2)
+    rd = resolve_run_dir(sys.argv[1])
     block = build_seo_block(rd)
     print(json.dumps(block, ensure_ascii=False, indent=2))

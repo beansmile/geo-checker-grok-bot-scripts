@@ -17,6 +17,7 @@ import sys
 from datetime import datetime
 
 import page_coverage
+from run_paths import resolve_run_dir
 
 DIMS = [
     ("information_architecture", "C-IA", "Information architecture", 20),
@@ -413,7 +414,7 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: content_analyze.py <run_dir> [--ai-checks path.json] [--offsite path.json]")
         sys.exit(2)
-    run_dir = sys.argv[1]
+    run_dir = resolve_run_dir(sys.argv[1])
     ai_checks = None
     offsite = None
     args = sys.argv[2:]

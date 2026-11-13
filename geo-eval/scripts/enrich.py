@@ -27,6 +27,7 @@ import re
 import sys
 import urllib.request
 from urllib.parse import urlparse
+from run_paths import resolve_run_dir
 
 
 def _load(path):
@@ -205,7 +206,10 @@ def enrich_narratives(engine, findings):
 
 
 def main():
-    run_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+    if len(sys.argv) < 2:
+        print("Usage: enrich.py <run_dir>")
+        sys.exit(2)
+    run_dir = resolve_run_dir(sys.argv[1])
     engine_path = os.path.join(run_dir, "report.engine.json")
     if not os.path.exists(engine_path):
         # 兼容：没有 engine 快照时，把现有 report.json 当引擎

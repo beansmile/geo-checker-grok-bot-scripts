@@ -124,7 +124,6 @@ def html_to_pdf(html_path, pdf_path, title):
         chrome,
         "--headless=new",
         "--disable-gpu",
-        "--no-sandbox",
         "--no-pdf-header-footer",
         "--run-all-compositor-stages-before-draw",
         "--virtual-time-budget=8000",
@@ -134,10 +133,13 @@ def html_to_pdf(html_path, pdf_path, title):
     ]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if not os.path.exists(pdf_path):
+            r = subprocess.run(cmd[:3] + ["--no-sandbox"] + cmd[3:],
+                               capture_output=True, text=True, timeout=300)
     finally:
         shutil.rmtree(tmp_profile, ignore_errors=True)
     if not os.path.exists(pdf_path):
-        print(f"[md_to_pdf] 打印失败（exit={r.returncode}）\n{(r.stderr or '')[-1200:]}")
+        print(f"[md_to_pdf] 打印失败（exit={r.returncode})\n{(r.stderr or '')[-1200:]}")
         sys.exit(1)
 
 

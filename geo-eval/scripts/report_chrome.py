@@ -64,8 +64,7 @@ def topbar_index(total_pages: int, lang: str = "zh") -> str:
     return (
         f'<span class="now">{html_mod.escape(ui["now"])} '
         f'<b id="now-page">01 / {pad}</b></span>'
-        f'<button class="btn" type="button" '
-        f"onclick=\"document.getElementById('index').classList.add('show')\">"
+        f'<button class="btn" type="button" data-open-index>'
         f'{html_mod.escape(ui["btn"])}</button>'
     )
 

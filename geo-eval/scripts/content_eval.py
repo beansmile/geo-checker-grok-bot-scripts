@@ -28,15 +28,17 @@ import sys
 from datetime import datetime
 from urllib.parse import urlparse
 
+from net_policy import FetchBlocked, canonicalize_url, clamp_max_pages
+from public_suffix import registrable_domain as _registrable_domain
+from run_paths import find_matching_runs, resolve_run_dir, same_site_identity, skill_root as _skill_root
+
 
 def skill_root() -> str:
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return _skill_root()
 
 
 def registrable_domain(url: str) -> str:
-    host = urlparse(url).hostname or ""
-    parts = host.split(".")
-    return ".".join(parts[-2:]) if len(parts) >= 2 else host
+    return _registrable_domain(url)
 
 
 def next_run_id(domain: str, prefix: str = "content") -> str:
@@ -100,7 +102,7 @@ def main():
     ap = argparse.ArgumentParser(description="Content GEO evaluation entrypoint")
     ap.add_argument("url", nargs="?", help="Target URL (omit with --from-run)")
     ap.add_argument("--from-run", dest="from_run", help="Reuse existing run directory")
-    ap.add_argument("--max-pages", type=int, default=16)
+    ap.add_argument("--max-pages", type=int, default=16, help="Page sample size (hard cap 100)")
     ap.add_argument("--site-type", default="corporate")
     ap.add_argument("--ai-checks", help="JSON file with AI mention check records")
     ap.add_argument("--offsite", help="JSON file with off-site evidence items")
@@ -108,59 +110,57 @@ def main():
     ap.add_argument("--skip-fetch", action="store_true", help="Do not call technical run.py")
     args = ap.parse_args()
 
+    from net_policy import MAX_PAGES_CAP
+    if args.max_pages > MAX_PAGES_CAP:
+        print(f"    --max-pages {args.max_pages} exceeds cap {MAX_PAGES_CAP}; clamping")
+    args.max_pages = clamp_max_pages(args.max_pages, default=16)
+
     root = skill_root()
     if args.from_run:
-        run_dir = args.from_run
-        if not os.path.isabs(run_dir):
-            run_dir = os.path.join(root, run_dir) if not run_dir.startswith("runs/") else os.path.join(root, run_dir)
-            if not os.path.isdir(run_dir):
-                run_dir = os.path.join(root, args.from_run)
-        if not os.path.isdir(run_dir):
-            # try relative to cwd
-            run_dir = os.path.abspath(args.from_run)
-        if not os.path.isdir(run_dir):
-            raise SystemExit(f"Run dir not found: {args.from_run}")
+        run_dir = resolve_run_dir(args.from_run, root=root)
     else:
         if not args.url:
             raise SystemExit("Provide URL or --from-run")
-        url = args.url
-        if not url.startswith(("http://", "https://")):
-            url = "http://" + url
+        try:
+            url = canonicalize_url(args.url)
+        except FetchBlocked as e:
+            raise SystemExit(f"Refusing to fetch target: {e}") from e
         domain = registrable_domain(url)
         run_id = next_run_id(domain)
         run_dir = os.path.join(root, "runs", domain, run_id)
         os.makedirs(os.path.join(run_dir, "evidence", "pages"), exist_ok=True)
 
         if not args.skip_fetch:
-            # Attempt technical fetch-only crawl into this run by temporarily using run.py
-            # run.py creates its own run id — so we call it then copy, OR document reuse.
+            # run.py creates its own run id under the registrable domain. Reuse
+            # that crawl only when site.json matches this exact site — never the
+            # newest run that merely shares the same parent folder.
             print("[1] Attempting technical fetch-only crawl (may fail on WAF/region blocks)…")
             rc = run_py("run.py", [url, "--site-type", args.site_type, "--max-pages", str(args.max_pages), "--fetch-only"])
-            # Find newest run for domain and copy evidence if our run is empty
-            domain_runs = os.path.join(root, "runs", domain)
             newest = None
-            if os.path.isdir(domain_runs):
-                cands = sorted(
-                    [d for d in os.listdir(domain_runs) if os.path.isdir(os.path.join(domain_runs, d))],
-                    reverse=True,
-                )
-                for c in cands:
-                    if c == run_id:
-                        continue
-                    newest = os.path.join(domain_runs, c)
-                    break
+            for cand in find_matching_runs(url, root=root, exclude=[run_dir]):
+                newest = cand
+                break
             pages = os.path.join(run_dir, "evidence", "pages")
             if newest and (not os.listdir(pages)):
-                print(f"    Copying evidence from {newest} → {run_dir}")
-                for name in ("evidence", "site.json", "scope.json"):
-                    src = os.path.join(newest, name)
-                    dst = os.path.join(run_dir, name)
-                    if os.path.isdir(src):
-                        if os.path.exists(dst):
-                            shutil.rmtree(dst)
-                        shutil.copytree(src, dst)
-                    elif os.path.isfile(src):
-                        shutil.copy2(src, dst)
+                # Confirm identity once more from site.json
+                site_path = os.path.join(newest, "site.json")
+                site = {}
+                if os.path.isfile(site_path):
+                    with open(site_path, encoding="utf-8") as f:
+                        site = json.load(f)
+                if not same_site_identity(site, url):
+                    print(f"    Skipping copy from {newest}: site identity does not match {url}")
+                else:
+                    print(f"    Copying evidence from {newest} → {run_dir}")
+                    for name in ("evidence", "site.json", "scope.json"):
+                        src = os.path.join(newest, name)
+                        dst = os.path.join(run_dir, name)
+                        if os.path.isdir(src):
+                            if os.path.exists(dst):
+                                shutil.rmtree(dst)
+                            shutil.copytree(src, dst)
+                        elif os.path.isfile(src):
+                            shutil.copy2(src, dst)
             # Write minimal site.json if still missing
             if not os.path.isfile(os.path.join(run_dir, "site.json")):
                 site = {

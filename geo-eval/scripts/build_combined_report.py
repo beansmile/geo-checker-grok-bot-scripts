@@ -23,6 +23,9 @@ from __future__ import annotations
 
 import argparse
 import html as html_mod
+
+from html_safe import csp_meta, inline_md as _inline_md, esc as _esc, safe_href
+from run_paths import resolve_run_dir
 import json
 import os
 import re
@@ -50,15 +53,11 @@ from combined_score import (
 
 
 def esc(s: str) -> str:
-    return html_mod.escape(s or "", quote=False)
+    return _esc(s, quote=True)
 
 
 def inline_md(s: str) -> str:
-    s = esc(s)
-    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
-    s = re.sub(r"`(.+?)`", r"<code>\1</code>", s)
-    s = s.replace("\n", "<br>")
-    return s
+    return _inline_md(s, breaks=True)
 
 
 def strip_html_tags(s: str) -> str:
@@ -907,13 +906,13 @@ def render_sources(lang: str, S: dict) -> str:
         if src.get("url_alt"):
             alt_label = src.get("url_alt_label_zh") if lang == "zh" else src.get("url_alt_label_en")
             alt = (
-                f" · <a href=\"{esc(src['url_alt'])}\">{esc(alt_label or S['alt_link'])}</a>"
+                f" · <a href=\"{safe_href(src['url_alt'])}\">{esc(alt_label or S['alt_link'])}</a>"
                 f" <span class='ref-url mono'>{esc(src['url_alt'])}</span>"
             )
         items.append(
             f"<li><div class='ref-title'>{esc(title)}</div>"
             f"<div class='ref-meta'>{esc(meta)}</div>"
-            f"<div><a href=\"{esc(url)}\">{esc(url)}</a>{alt}</div></li>"
+            f"<div><a href=\"{safe_href(url)}\">{esc(url)}</a>{alt}</div></li>"
         )
     return (
         f"<p class='disclaimer'>{esc(S['refs_disclaimer'])}</p>"
@@ -1016,10 +1015,7 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
         provisional_badge = f'<span class="sev sev-warning">{esc(S["provisional"])}</span>'
 
     tech_summary = tech.get("overall_summary") or tech.get("closing") or ""
-    if "<" in tech_summary and ">" in tech_summary:
-        tech_summary_html = tech_summary
-    else:
-        tech_summary_html = inline_md(tech_summary)
+    tech_summary_html = inline_md(tech_summary)
     content_summary = content.get("overall_summary") or ""
 
     tech_strengths = "".join(f"<li>{esc(s)}</li>" for s in (tech.get("strengths") or [])[:6]) or f"<li>{esc(S['none'])}</li>"
@@ -1134,45 +1130,15 @@ def render_html(tech: dict, content: dict, style_css: str, lang: str, brand: str
     nav_topbar = topbar_index(len(index_entries), lang)
     deck_js = load_deck_js(lang)
 
+    extra_css = '/* Combined report extras on shared technical stylesheet */\n.page { min-height: auto; padding-bottom: 2rem; }\n.deck { max-width: 920px; margin: 0 auto; }\n.sev { display:inline-block; font-size:.75rem; letter-spacing:.04em; padding:2px 8px; border-radius:999px; background:#eee; }\n.sev-critical, .sev-high, .sev-高 { background:#fee2e2; color:#991b1b; }\n.sev-medium, .sev-中 { background:#e0e7ff; color:#3730a3; }\n.sev-low, .sev-低 { background:#ecfdf5; color:#065f46; }\n.sev-warning { background:#ffedd5; color:#9a3412; }\n.c-a{color:var(--success)}.c-b{color:var(--info)}.c-c{color:var(--warning)}.c-d{color:var(--danger)}\n.g-a{color:var(--success)}.g-b{color:var(--info)}.g-c{color:var(--warning)}.g-d{color:var(--danger)}\n.score-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:16px;margin-top:var(--space-5)}\n.score-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}\n.score-card.featured{border-color:var(--text-2);background:var(--surface-1)}\n.score-card .label{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:600}\n.score-card .val{font-family:var(--font-mono);font-size:28px;font-weight:650;margin-top:6px}\n.score-card.featured .val{font-size:36px}\n.score-card .val small{font-size:13px;color:var(--text-3);font-weight:500}\n.score-card .sub{font-size:12.5px;color:var(--text-3);margin-top:4px}\n@media (max-width:720px){.score-grid{grid-template-columns:1fr}}\n.formula{font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:13.5px;line-height:1.55}\n.layers{margin:18px 0 0;padding:0;list-style:none;counter-reset:layer}\n.layers>li{margin:0 0 16px;padding:14px 16px 14px 18px;border-left:3px solid var(--border);background:var(--surface-2);border-radius:0 10px 10px 0}\n.layers>li h3{margin:0 0 6px;font-size:15px}\n.gate-banner{background:#ffedd5;color:#9a3412;border-radius:8px;padding:10px 14px;font-size:14px}\n.disclaimer{font-size:13.5px;line-height:1.65;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}\nol.refs{margin:18px 0 0;padding-left:1.3em}\nol.refs li{margin:0 0 14px}\n.ref-title{font-weight:600}\n.ref-meta{color:var(--text-3);font-size:13px;margin:2px 0 4px}\n.ref-url{font-size:12px;color:var(--text-3);margin-left:6px}\n.tdetail{margin:6px 0 0;color:var(--text-2);font-size:13px}\n.actions-table td{vertical-align:top}\n.cover-comp{margin:8px 0 0;font-size:13.5px;color:#C7D2FE}\n'
+    style_block = f"{style_css}\n{extra_css}"
+    csp = csp_meta(deck_js, style_block)
     return f"""<!doctype html><html lang="{esc(S['html_lang'])}"><head><meta charset="utf-8">
+{csp}
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(domain)} {esc(S['doc_title'])}</title>
 <meta name="description" content="{esc(meta_desc)}">
-<style>{style_css}
-/* Combined report extras on shared technical stylesheet */
-.page {{ min-height: auto; padding-bottom: 2rem; }}
-.deck {{ max-width: 920px; margin: 0 auto; }}
-.sev {{ display:inline-block; font-size:.75rem; letter-spacing:.04em; padding:2px 8px; border-radius:999px; background:#eee; }}
-.sev-critical, .sev-high, .sev-高 {{ background:#fee2e2; color:#991b1b; }}
-.sev-medium, .sev-中 {{ background:#e0e7ff; color:#3730a3; }}
-.sev-low, .sev-低 {{ background:#ecfdf5; color:#065f46; }}
-.sev-warning {{ background:#ffedd5; color:#9a3412; }}
-.c-a{{color:var(--success)}}.c-b{{color:var(--info)}}.c-c{{color:var(--warning)}}.c-d{{color:var(--danger)}}
-.g-a{{color:var(--success)}}.g-b{{color:var(--info)}}.g-c{{color:var(--warning)}}.g-d{{color:var(--danger)}}
-.score-grid{{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:16px;margin-top:var(--space-5)}}
-.score-card{{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}}
-.score-card.featured{{border-color:var(--text-2);background:var(--surface-1)}}
-.score-card .label{{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:600}}
-.score-card .val{{font-family:var(--font-mono);font-size:28px;font-weight:650;margin-top:6px}}
-.score-card.featured .val{{font-size:36px}}
-.score-card .val small{{font-size:13px;color:var(--text-3);font-weight:500}}
-.score-card .sub{{font-size:12.5px;color:var(--text-3);margin-top:4px}}
-@media (max-width:720px){{.score-grid{{grid-template-columns:1fr}}}}
-.formula{{font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:13.5px;line-height:1.55}}
-.layers{{margin:18px 0 0;padding:0;list-style:none;counter-reset:layer}}
-.layers>li{{margin:0 0 16px;padding:14px 16px 14px 18px;border-left:3px solid var(--border);background:var(--surface-2);border-radius:0 10px 10px 0}}
-.layers>li h3{{margin:0 0 6px;font-size:15px}}
-.gate-banner{{background:#ffedd5;color:#9a3412;border-radius:8px;padding:10px 14px;font-size:14px}}
-.disclaimer{{font-size:13.5px;line-height:1.65;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}}
-ol.refs{{margin:18px 0 0;padding-left:1.3em}}
-ol.refs li{{margin:0 0 14px}}
-.ref-title{{font-weight:600}}
-.ref-meta{{color:var(--text-3);font-size:13px;margin:2px 0 4px}}
-.ref-url{{font-size:12px;color:var(--text-3);margin-left:6px}}
-.tdetail{{margin:6px 0 0;color:var(--text-2);font-size:13px}}
-.actions-table td{{vertical-align:top}}
-.cover-comp{{margin:8px 0 0;font-size:13.5px;color:#C7D2FE}}
-</style></head><body>
+<style>{style_block}</style></head><body>
 <div class="topbar"><div class="topbar-in">
   <span class="brand"><b>GEO Checker</b></span>
   <span class="doc">{esc(domain)} {esc(S['doc_title'])}</span>
@@ -1390,8 +1356,8 @@ def main():
     ap.add_argument("--brand", default=None)
     args = ap.parse_args()
 
-    tech_run = args.tech_run
-    content_run = args.content_run or tech_run
+    tech_run = resolve_run_dir(args.tech_run)
+    content_run = resolve_run_dir(args.content_run or tech_run)
     lang = args.lang
 
     tech = find_tech_report(tech_run)

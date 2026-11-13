@@ -4,7 +4,7 @@
 GEO 深度评测 · 参数化入口
 
 用法:
-    python3 run.py <目标网址> [--site-type corporate|personal|blog|ecommerce|saas] [--max-pages 24]
+    python3 run.py "<目标网址>" [--site-type corporate|personal|blog|ecommerce|saas] [--max-pages 24]
 
 作用:
     1) 抓 robots / sitemap / llms.txt
@@ -31,13 +31,25 @@ import page_coverage
 from urllib.parse import urljoin, urlparse
 
 import crawler_roles
+from net_policy import (
+    FIRST_PARTY_HEADERS,
+    FIRST_PARTY_UA,
+    FetchBlocked,
+    canonicalize_url,
+    check_url,
+    clamp_max_pages,
+    is_allowed_page_url,
+    robots_allowed,
+    safe_urlopen,
+    strip_userinfo,
+)
+from public_suffix import registrable_domain as _registrable_domain
+from run_paths import skill_root as _skill_root
 
-# 抓取 UA：与 geo_ready 的 HttpFetcher::USER_AGENT 保持一致的主流桌面 Chrome 串。
-# 早期带 `GeoEval/1.0` 后缀、版本停在 Chrome/126，部分站点会按「非主流 UA」直接 403/挑战。
-UA = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
-}
+# Sampling / content / discovery fetches use a first-party GEO Checker UA and
+# honor robots.txt Disallow. Third-party crawler UAs (Googlebot, etc.) are
+# used only for limited, read-only homepage reachability probes below.
+UA = FIRST_PARTY_HEADERS
 
 # 页面角色判定（优先级 demo > system > legal > trust > content）
 ROLE_RULES = [
@@ -52,7 +64,8 @@ ROLE_QUOTA = {"home": 1, "trust": 6, "content": 12, "legal": 3, "system": 4, "de
 
 # 必检页：FAQ 页决定 richness(+5) 与 absorption(+3)，About/Contact 决定 trust(+4/+3)，
 # Privacy 决定 trust 的合规项(+3)。角色配额抽样可能在达到 --max-pages 前就把它们挤掉
-# （btphysio 实测：/faqs/ 在 sitemap 里，却因 16 页上限没入样，同一事实连丢 8 分）。
+# （a site can list /faqs/ in the sitemap yet miss the sample under a tight page cap,
+#  under-scoring several dimensions for the same missing page).
 REQUIRED_PAGES = (
     ("faq", r"faq"),
     ("about", r"about"),
@@ -91,32 +104,61 @@ def backfill_required_pages(discovered, sampled):
     return sampled, warnings
 
 
-def fetch(url, timeout=15):
-    req = urllib.request.Request(url, headers=UA)
+# Per-run fetch context: the target site and robots body, set in main().
+_FETCH_SITE = None
+_ROBOTS_BODY = b""
+
+
+def fetch(url, timeout=15, honor_robots=True):
+    """First-party fetch used for discovery and page sampling.
+
+    Homepage crawler-identity probes use _probe() instead and do not honor
+    robots.txt (documented product distinction). Sampling/content fetches do.
+    """
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        url = check_url(url, allowed_site=_FETCH_SITE, resolve_dns=True)
+    except FetchBlocked as e:
+        return 0, f"blocked: {e}".encode("utf-8", "replace")
+    if honor_robots and not robots_allowed(url, _ROBOTS_BODY, FIRST_PARTY_UA):
+        return 0, b"robots-disallow"
+    try:
+        with safe_urlopen(
+            url, headers=UA, timeout=timeout, allowed_site=_FETCH_SITE
+        ) as r:
             return r.status, r.read()
+    except FetchBlocked as e:
+        return 0, f"blocked: {e}".encode("utf-8", "replace")
     except urllib.error.HTTPError as e:
-        return e.code, e.read()
+        return e.code, e.read() if e.fp else b""
     except Exception as e:  # noqa: BLE001
         return 0, str(e).encode("utf-8", "replace")
 
 
-def fetch_with_meta(url, timeout=15, headers=None):
+def fetch_with_meta(url, timeout=15, headers=None, honor_robots=True):
     """Fetch and keep status + Content-Type (used for llms.txt soft-404 / MIME checks)."""
-    req = urllib.request.Request(url, headers=headers or UA)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        url = check_url(url, allowed_site=_FETCH_SITE, resolve_dns=True)
+    except FetchBlocked as e:
+        return {"status": 0, "body": b"", "content_type": None, "error": f"blocked: {e}"}
+    if honor_robots and not robots_allowed(url, _ROBOTS_BODY, FIRST_PARTY_UA):
+        return {"status": 0, "body": b"", "content_type": None, "error": "robots-disallow"}
+    try:
+        with safe_urlopen(
+            url, headers=headers or UA, timeout=timeout, allowed_site=_FETCH_SITE
+        ) as r:
             return {
                 "status": r.status,
                 "body": r.read(),
                 "content_type": (r.headers or {}).get("Content-Type") or (r.headers or {}).get("content-type"),
                 "error": "",
+                "final_url": strip_userinfo(getattr(r, "geturl", lambda: url)() or url),
             }
+    except FetchBlocked as e:
+        return {"status": 0, "body": b"", "content_type": None, "error": f"blocked: {e}"}
     except urllib.error.HTTPError as e:
         return {
             "status": e.code,
-            "body": e.read(),
+            "body": e.read() if e.fp else b"",
             "content_type": (e.headers or {}).get("Content-Type") if e.headers else None,
             "error": "",
         }
@@ -163,14 +205,21 @@ def is_challenge_page(status, text, size, headers=None):
 
 
 def _probe(url, ua, timeout=20):
-    """用指定 UA 抓一次，返回状态/是否挑战页/响应头/耗时。"""
+    """Homepage reachability probe with a named crawler or browser UA.
+
+    These probes are limited, read-only, and do not honor robots.txt Disallow
+    (the scored access feature). Host/protocol policy still applies.
+    """
     t0 = time.time()
-    req = urllib.request.Request(url, headers={"User-Agent": ua, "Accept": "text/html,*/*"})
+    headers = {"User-Agent": ua, "Accept": "text/html,*/*"}
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        url = check_url(url, allowed_site=_FETCH_SITE, resolve_dns=True)
+        with safe_urlopen(
+            url, headers=headers, timeout=timeout, allowed_site=_FETCH_SITE
+        ) as r:
             status, body, hdrs = r.status, r.read(20000), r.headers
     except urllib.error.HTTPError as e:
-        status, body, hdrs = e.code, e.read(20000)[:20000], e.headers
+        status, body, hdrs = e.code, (e.read(20000)[:20000] if e.fp else b""), e.headers
     except Exception as e:  # noqa: BLE001
         return {"status": 0, "challenge": False, "error": str(e)[:200], "size": 0,
                 "latency_ms": int((time.time() - t0) * 1000)}
@@ -258,10 +307,20 @@ def expand_sitemap(base, body, run_dir):
     """展开 sitemap：若为 sitemapindex 则递归抓取子 sitemap，返回真实页面 URL（剔除 XML）。"""
     urls = parse_sitemap_urls(body)
     if not is_sitemap_index(body):
-        return [u for u in urls if not is_xml_url(u)]
+        out = []
+        for u in urls:
+            if is_xml_url(u):
+                continue
+            absu = urljoin(base + "/", u)
+            if is_allowed_page_url(absu, base, resolve_dns=False):
+                out.append(absu)
+        return out
 
-    children = [u for u in urls if urlparse(u).netloc == urlparse(base).netloc or not urlparse(u).netloc]
-    children = [urljoin(base + "/", u) for u in children]
+    children = []
+    for u in urls:
+        absu = urljoin(base + "/", u)
+        if is_allowed_page_url(absu, base, resolve_dns=False):
+            children.append(absu)
     print(f"      检测到 sitemapindex，展开 {len(children)} 个子 sitemap")
 
     sm_dir = os.path.join(run_dir, "evidence", "sitemaps")
@@ -277,7 +336,14 @@ def expand_sitemap(base, body, run_dir):
             if code != 200:
                 print(f"      [{code}] 子 sitemap 抓取失败：{u}")
                 continue
-            found = [x for x in parse_sitemap_urls(cbody) if not is_xml_url(x)]
+            found = []
+            for x in parse_sitemap_urls(cbody):
+                if is_xml_url(x):
+                    continue
+                absx = urljoin(base + "/", x)
+                if not is_allowed_page_url(absx, base, resolve_dns=False):
+                    continue
+                found.append(absx)
             print(f"      [{code}] {u.split('/')[-1][:48]}  → {len(found)} 个页面 URL")
             for x in found:
                 if x not in seen:
@@ -287,9 +353,7 @@ def expand_sitemap(base, body, run_dir):
 
 
 def registrable_domain(url):
-    host = urlparse(url).hostname or ""
-    parts = host.split(".")
-    return ".".join(parts[-2:]) if len(parts) >= 2 else host
+    return _registrable_domain(url)
 
 
 def next_run_id(domain):
@@ -299,7 +363,7 @@ def next_run_id(domain):
     （report.engine.json / report.json / report/ 全部被改写），无法回滚对比。
     """
     date = datetime.now().strftime("%Y-%m-%d")
-    skill_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    skill_root = _skill_root()
     domain_dir = os.path.join(skill_root, "runs", domain)
     for i in range(1, 100):
         candidate = f"{date}_run{i:02d}"
@@ -312,23 +376,35 @@ def main():
     ap = argparse.ArgumentParser(description="GEO 深度评测 · 抓站入口")
     ap.add_argument("url")
     ap.add_argument("--site-type", default=None)
-    ap.add_argument("--max-pages", type=int, default=24)
+    ap.add_argument("--max-pages", type=int, default=24,
+                    help="Page sample size (hard cap 100)")
     ap.add_argument("--fetch-only", action="store_true", help="只抓站，跳过检测与报告")
     args = ap.parse_args()
 
-    base = args.url.rstrip("/")
-    if not base.startswith(("http://", "https://")):
-        base = "https://" + base
+    from net_policy import MAX_PAGES_CAP
+    if args.max_pages > MAX_PAGES_CAP:
+        print(f"      --max-pages {args.max_pages} exceeds cap {MAX_PAGES_CAP}; clamping")
+    args.max_pages = clamp_max_pages(args.max_pages, default=24)
+
+    global _FETCH_SITE, _ROBOTS_BODY
+    try:
+        base = canonicalize_url(args.url).rstrip("/")
+        check_url(base, resolve_dns=True)
+    except FetchBlocked as e:
+        raise SystemExit(f"Refusing to fetch target: {e}") from e
+    _FETCH_SITE = base
     domain = registrable_domain(base)
 
     run_id = next_run_id(domain)
-    skill_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    skill_root = _skill_root()
     run_dir = os.path.join(skill_root, "runs", domain, run_id)
     ev = os.path.join(run_dir, "evidence", "pages")
     os.makedirs(ev, exist_ok=True)
 
     print(f"[1/4] 抓 robots / sitemap / llms  →  {base}")
-    robots_body = fetch(base + "/robots.txt")[1]
+    # robots.txt must be fetched to know the rules; do not honor Disallow on itself.
+    robots_body = fetch(base + "/robots.txt", honor_robots=False)[1]
+    _ROBOTS_BODY = robots_body
     sitemap_body = fetch(base + "/sitemap.xml")[1]
     llms_meta = fetch_with_meta(base + "/llms.txt")
     llms_body = llms_meta.get("body") or b""
@@ -347,14 +423,25 @@ def main():
     urls = expand_sitemap(base, sitemap_body, run_dir)
     print(f"      sitemap 共发现 {len(urls)} 个真实页面 URL")
 
-    home_url = base + "/"
-    discovered = [home_url] + [u for u in urls
-                               if u.rstrip("/") != base and not is_xml_url(u)
-                               and page_coverage.is_sampleable_url(u)]
-    skipped = len([u for u in urls if u.rstrip("/") != base and not is_xml_url(u)
-                   and not page_coverage.is_sampleable_url(u)])
+    home_url = strip_userinfo(base + "/")
+    discovered = [home_url]
+    skipped = 0
+    robots_skipped = 0
+    for u in urls:
+        absu = urljoin(base + "/", u)
+        if absu.rstrip("/") == base or is_xml_url(absu):
+            continue
+        if not page_coverage.is_sampleable_url(absu) or not is_allowed_page_url(absu, base, resolve_dns=False):
+            skipped += 1
+            continue
+        if not robots_allowed(absu, _ROBOTS_BODY, FIRST_PARTY_UA):
+            robots_skipped += 1
+            continue
+        discovered.append(strip_userinfo(absu))
     if skipped:
-        print(f"      已跳过 {skipped} 个非 HTML / 伪外链路径，不进入抽样")
+        print(f"      已跳过 {skipped} 个非 HTML / 伪外链 / 非同站路径，不进入抽样")
+    if robots_skipped:
+        print(f"      已按 robots.txt Disallow 跳过 {robots_skipped} 个抽样候选")
 
     # 按角色分桶后再抽样：保证 trust / legal 等少数角色不被海量商品页挤掉
     buckets = {}
@@ -429,7 +516,7 @@ def main():
             slug = re.sub(r"[^a-z0-9]+", "_", urlparse(u).path.strip("/") or "home").strip("_") or "home"
             save(os.path.join(ev, f"{slug}.html"), body)
             role = "home" if urlparse(u).path in ("", "/") else classify_role(u)
-            rec = {"url": u, "slug": slug, "role": role, "status": code,
+            rec = {"url": strip_userinfo(u), "slug": slug, "role": role, "status": code,
                    "observation": "raw_http_html"}
             if meta.get("retried"):
                 rec["retried_from"] = meta.get("first_status")
@@ -444,7 +531,7 @@ def main():
 
     # 站点画像（Step 2 build_evidence.py 的输入）
     site = {
-        "url": base + "/",
+        "url": strip_userinfo(base + "/"),
         "domain": urlparse(base).hostname or "",
         "registrable_domain": domain,
         "site_type": {"type": args.site_type or "corporate", "source": "manual" if args.site_type else "auto"},
@@ -455,8 +542,9 @@ def main():
     save(os.path.join(run_dir, "site.json"), json.dumps(site, ensure_ascii=False, indent=2))
     save(os.path.join(run_dir, "scope.json"), json.dumps({"pages": pages, "pages_total": len(urls)}, ensure_ascii=False, indent=2))
 
-    # ACC-02 / ACC-03：用真实 AI UA 实测可达性（robots.txt 只管自愿遵守，不代表能取到）
-    print("[4/5] 实测 AI 爬虫可达性（ACC-02/ACC-03）")
+    # ACC-02 / ACC-03: limited homepage reachability probes with third-party
+    # crawler UAs. These probes do not honor robots.txt; sampling fetches above do.
+    print("[4/5] 实测 AI 爬虫可达性（ACC-02/ACC-03，仅首页探测，不用于抽样）")
     try:
         # Canonical location is evidence/crawler_access.json; also copy under pages/ for older runs.
         canon = os.path.join(run_dir, "evidence", "crawler_access.json")

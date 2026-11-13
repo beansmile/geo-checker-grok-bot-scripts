@@ -3,7 +3,7 @@
 """
 把渲染好的 GEO 报告 HTML 导出为 PDF（resun hotel 报告同款「连续版式」导出）。
 
-方法（与 runs/resunhotel.cn/2026-10-10_run02/report/resunhotel_geo_report_client.pdf 一致）：
+方法（与 runs/acme-hotel.example/2026-10-10_run02/report/sample_geo_report_client.pdf 一致）：
 
   1. 中和掉响应式断点与模板自带的 @media print 块——改写成不可能的 min-width 查询。
      原因：Chrome 打印时以约 800px 视口求值媒体查询，若保留 `@media (max-width:820px)`
@@ -207,11 +207,10 @@ def print_to_pdf(source_path, pdf_path):
         sys.exit(1)
 
     tmp_profile = tempfile.mkdtemp(prefix="geo-pdf-")
-    cmd = [
+    base_cmd = [
         chrome,
         "--headless=new",
         "--disable-gpu",
-        "--no-sandbox",
         "--no-pdf-header-footer",
         "--run-all-compositor-stages-before-draw",
         "--virtual-time-budget=10000",
@@ -219,8 +218,13 @@ def print_to_pdf(source_path, pdf_path):
         f"--print-to-pdf={pdf_path}",
         "file://" + os.path.abspath(source_path),
     ]
+    # Prefer a sandboxed Chrome; only add --no-sandbox if the first attempt fails
+    # (common in restricted containers).
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        proc = subprocess.run(base_cmd, capture_output=True, text=True, timeout=300)
+        if not os.path.exists(pdf_path):
+            proc = subprocess.run(base_cmd[:3] + ["--no-sandbox"] + base_cmd[3:],
+                                  capture_output=True, text=True, timeout=300)
     finally:
         shutil.rmtree(tmp_profile, ignore_errors=True)
 

@@ -29,6 +29,7 @@ import entity_signals
 import llms_detect
 import page_coverage
 from content_analyze import snap_half
+from run_paths import resolve_run_dir
 
 # ── 指纹/正则 ──────────────────────────────────────────────
 LOREM_PATTERNS = [
@@ -2214,7 +2215,10 @@ def analyze(run_dir):
 
 
 def main():
-    run_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+    if len(sys.argv) < 2:
+        print("Usage: analyze.py <run_dir>")
+        sys.exit(2)
+    run_dir = resolve_run_dir(sys.argv[1])
     report = analyze(run_dir)
     out = os.path.join(run_dir, "report.json")
 

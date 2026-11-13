@@ -15,6 +15,7 @@ import re
 import sys
 from html.parser import HTMLParser
 from urllib.parse import urlparse
+from run_paths import resolve_run_dir
 
 
 class _PageParser(HTMLParser):
@@ -289,8 +290,9 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: content_extract.py <run_dir>")
         sys.exit(2)
-    data = extract_run(sys.argv[1])
-    print(f"Extracted {data['pages_analyzed']} pages → {sys.argv[1]}/content_extract.json")
+    run_dir = resolve_run_dir(sys.argv[1])
+    data = extract_run(run_dir)
+    print(f"Extracted {data['pages_analyzed']} pages → {run_dir}/content_extract.json")
 
 
 if __name__ == "__main__":

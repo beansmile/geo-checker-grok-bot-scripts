@@ -49,6 +49,12 @@
     });
   }
   document.addEventListener('click',function(e){
+    var opener=e.target.closest&&e.target.closest('[data-open-index]');
+    if(opener){
+      var idx=document.getElementById('index');
+      if(idx) idx.classList.add('show');
+      return;
+    }
     var btn=e.target.closest&&e.target.closest('.copy');
     if(!btn) return;
     var wrap=btn.closest('.codewrap'); if(!wrap) return;

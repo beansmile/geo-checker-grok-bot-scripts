@@ -44,37 +44,18 @@ VERSION_FALLBACK = "v1.3"
 # 极简 mustache 渲染
 # ---------------------------------------------------------------------------
 
+try:
+    from html_safe import csp_meta, inline_md, neutralize_mustache, render_mustache, esc as html_esc
+    from run_paths import resolve_run_dir
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from html_safe import csp_meta, inline_md, neutralize_mustache, render_mustache, esc as html_esc
+    from run_paths import resolve_run_dir
+
+
 def render(template, data):
-    """极简模板渲染：{{var}} 替换；{{#list}}...{{/list}} 循环（{{field}} 取项字段，{{.}} 取项本身）。"""
-    def expand_lists(text):
-        out = []
-        i = 0
-        while i < len(text):
-            m = re.search(r"\{\{#(\w+)\}\}(.*?)\{\{/\1\}\}", text[i:], re.S)
-            if not m:
-                out.append(text[i:])
-                break
-            out.append(text[i:i + m.start()])
-            key, body = m.group(1), m.group(2)
-            items = data.get(key) or []
-            for item in items:
-                rendered = body
-                if isinstance(item, dict):
-                    for k, v in item.items():
-                        rendered = rendered.replace("{{%s}}" % k, str(v))
-                else:
-                    rendered = rendered.replace("{{.}}", str(item))
-                out.append(rendered)
-            i += m.end()
-        return "".join(out)
-
-    text = expand_lists(template)
-
-    def sub(m):
-        key = m.group(1)
-        return str(data.get(key, ""))
-    return re.sub(r"\{\{(\w+)\}\}", sub, text)
-
+    """Mustache renderer that will not re-interpolate values already inserted."""
+    return render_mustache(template, data)
 
 def load_report(run_dir, source="report.json"):
     p = os.path.join(run_dir, source)
@@ -362,7 +343,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
     advices = {d["key"]: (d.get("advice") or "") for d in report.get("dimension_details", [])}
 
     # HTML 模式下对正文做一次转义；Markdown 模式保持原文
-    E = html_mod.escape if escape_html else (lambda s: s)
+    E = (lambda s: html_esc(s, quote=True)) if escape_html else (lambda s: s)
 
     # ---------- findings ----------
     findings = []
@@ -377,8 +358,8 @@ def flatten(report, brand, lang="zh", escape_html=False):
             if not (url or quote):
                 continue
             url_disp = url or ("site" if lang == "en" else "站点")
-            url_txt = html_mod.escape(str(url_disp))
-            quote_txt = html_mod.escape(str(quote))
+            url_txt = html_esc(url_disp, quote=True)
+            quote_txt = html_esc(quote, quote=True)
             ev_parts.append(f"{url_disp}「{quote}」" if quote else url_disp)
             ev_md_parts.append(f"- `{url_disp}`「{quote}」" if quote else f"- `{url_disp}`")
             ev_rows.append(
@@ -414,7 +395,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
                 f'<span class="hint">{S["code_hint"]}</span></div>'
                 f'<div class="codewrap"><div class="codebar"><span class="mono">{S["code_label"]}</span>'
                 f'<button class="copy" type="button">{S["copy_label"]}</button></div>'
-                f'<pre class="mono">{html_mod.escape(code)}</pre></div>'
+                f'<pre class="mono">{html_esc(code, quote=True)}</pre></div>'
             )
 
         findings.append({
@@ -587,7 +568,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         for f in findings
     )
     toc_dims_html = "".join(
-        f'<li><span class="n mono">{d["n"]}</span><a href="#{d["anchor"]}">{html_mod.escape(d["name"])}</a>'
+        f'<li><span class="n mono">{d["n"]}</span><a href="#{d["anchor"]}">{html_esc(d["name"], quote=True)}</a>'
         f'<span class="dots"></span><span class="c mono">{d["score"]}/{d["max"]} · {d["grade"]}</span></li>'
         for d in dim_pages
     )
@@ -607,7 +588,7 @@ def flatten(report, brand, lang="zh", escape_html=False):
         + f'<a href="#p{p_dims_index}"><span class="mono">{p_dims_index:02d}</span>{S["idx_dims"]}</a>'
         + "".join(
             f'<a href="#{d["anchor"]}"><span class="mono">{d["page"]:02d}</span>'
-            f'{S["idx_dim"]} {d["n"]} · {html_mod.escape(d["name"])}</a>'
+            f'{S["idx_dim"]} {d["n"]} · {html_esc(d["name"], quote=True)}</a>'
             for d in dim_pages
         )
         + f'<a href="#p{p_actions}"><span class="mono">{p_actions:02d}</span>{S["idx_actions"]}</a>'
@@ -833,9 +814,12 @@ def flatten(report, brand, lang="zh", escape_html=False):
                 )
             ),
         ),
-        # closing / overall_summary 允许含 <strong>/<br>，两种语言都不转义
-        "closing": report.get("closing", ""),
-        "overall_summary": report.get("overall_summary", report.get("closing", "")),
+        # Narrative: escape first, then whitelist <strong>/<br> (and **bold**)
+        "closing": (inline_md(report.get("closing", "")) if escape_html else report.get("closing", "")),
+        "overall_summary": (
+            inline_md(report.get("overall_summary", report.get("closing", "")))
+            if escape_html else report.get("overall_summary", report.get("closing", ""))
+        ),
         "sitemap_count": report.get("sitemap_count", 0),
         "sampled_count": report.get("sampled_count", 0),
         "total_pages": total_pages,
@@ -907,6 +891,9 @@ def main():
         print(f"[build_report] 未知语言 {lang!r}，可选 {sorted(STRINGS)}")
         sys.exit(2)
 
+    if run_dir and not str(run_dir).startswith("-"):
+        run_dir = resolve_run_dir(run_dir)
+
     report = load_report(run_dir, source)
     S = STRINGS[lang]
 
@@ -930,6 +917,7 @@ def main():
     if lang == "en":
         deck_js = deck_js.replace("已复制", "Copied")
     data_html["script"] = deck_js
+    data_html["csp_meta"] = csp_meta(deck_js, style)
     tpl_html = open(os.path.join(tpl_dir, S["template_html"]), encoding="utf-8").read()
     html = render(tpl_html, data_html)
     # Language-based client filenames (EN/ZH). --suffix overrides the stem when set.
